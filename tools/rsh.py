@@ -52,8 +52,17 @@ def main():
     c = client()
     _, out, err = c.exec_command(cmd, timeout=timeout)
     rc = out.channel.recv_exit_status()
-    sys.stdout.write(out.read().decode(errors="replace"))
-    sys.stderr.write(err.read().decode(errors="replace"))
+    out.channel.settimeout(5)
+    err.channel.settimeout(5)
+    import socket as _socket
+    try:
+        sys.stdout.write(out.read().decode(errors="replace"))
+    except (_socket.timeout, OSError):
+        pass
+    try:
+        sys.stderr.write(err.read().decode(errors="replace"))
+    except (_socket.timeout, OSError):
+        pass
     c.close()
     sys.exit(rc)
 

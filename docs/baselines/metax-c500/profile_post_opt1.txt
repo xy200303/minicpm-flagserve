@@ -1,0 +1,69 @@
+total events: 27347012
+kernel span: 40.74s, kernels: 405344
+GPU busy: 24.28s = 59.6% of span  (idle 40.4%)
+
+=== TOP GPU KERNELS (by total us) ===
+    13390013 us  n=105000 avg=    127.5 us  mm_kernel_nt
+     4620601 us  n=26838  avg=    172.2 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t, 128, Fl
+     1093980 us  n=2856   avg=    383.0 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 128, 64, 4, true, true, mctlass::bfloat16_t, 128, F
+     1019312 us  n=2604   avg=    391.4 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 64, 64, 4, true, true, mctlass::bfloat16_t, 128, Fl
+      998597 us  n=641    avg=   1557.9 us  _top_k_top_p_kernel
+      429901 us  n=26922  avg=     16.0 us  triton_poi_fused_mul_silu_1
+      364980 us  n=26922  avg=     13.6 us  triton_red_fused_fused_add_rms_norm_2
+      362643 us  n=641    avg=    565.7 us  linear_kernel
+      280167 us  n=26922  avg=     10.4 us  triton_red_fused_fused_add_rms_norm_0
+      231435 us  n=5460   avg=     42.4 us  Memcpy DtoH (Device -> Pageable)
+      231042 us  n=26281  avg=      8.8 us  triton_poi_fused_cat_3
+      202864 us  n=26922  avg=      7.5 us  void vllm::reshape_and_cache_flash_kernel<__maca_bfloat16, __maca_bfloat16, (vllm::Fp8KVCacheDataType)0>(__mac
+      195154 us  n=19698  avg=      9.9 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t,
+      186448 us  n=32298  avg=      5.8 us  _copy_kernel_kernel_rank_3
+      127927 us  n=26281  avg=      4.9 us  triton_poi_fused_cat_4
+       76196 us  n=641    avg=    118.9 us  true_div_func_kernel_rank_2
+       61029 us  n=641    avg=     95.2 us  argmax_kernel_inner
+       59134 us  n=10395  avg=      5.7 us  Memcpy HtoD (Pinned -> Device)
+       56005 us  n=641    avg=     87.4 us  softmax_kernel_inner
+       54167 us  n=2688   avg=     20.2 us  mm_kernel_splitk
+       38367 us  n=3906   avg=      9.8 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t,
+       36237 us  n=641    avg=     56.5 us  true_div_func_kernel_rank_1
+       21701 us  n=641    avg=     33.9 us  fused_exponential_kernel_opt
+       21088 us  n=1923   avg=     11.0 us  _to_copy_func_kernel_rank_1
+       19390 us  n=1596   avg=     12.1 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t,
+       17127 us  n=798    avg=     21.5 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t,
+       15580 us  n=5460   avg=      2.9 us  reduce_then_scan_root_scan_kernel_row
+       15511 us  n=5460   avg=      2.8 us  _copy_kernel
+       12191 us  n=840    avg=     14.5 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t,
+        8033 us  n=2796   avg=      2.9 us  zero_persistent_kernel
+
+=== TOP CPU OPS (by total us) ===
+    13284662 us  n=5460   avg=   2433.1 us  vllm::unified_attention_with_output
+     9734964 us  n=21840  avg=    445.7 us  aten::mm
+     7584781 us  n=30631  avg=    247.6 us  aten::copy_
+     4497595 us  n=16945  avg=    265.4 us  aten::to
+     4464791 us  n=14315  avg=    311.9 us  aten::_to_copy
+     1616241 us  n=1314   avg=   1230.0 us  aten::index
+     1112719 us  n=7447   avg=    149.4 us  aten::lift_fresh
+      916327 us  n=5460   avg=    167.8 us  aten::cumsum
+      745842 us  n=1923   avg=    387.9 us  aten::add
+      702962 us  n=5380   avg=    130.7 us  aten::fill_
+      651503 us  n=5460   avg=    119.3 us  FlashAttnVarlenFunc
+      644619 us  n=10752  avg=     60.0 us  aten::transpose
+      573578 us  n=6101   avg=     94.0 us  aten::unbind
+      472802 us  n=641    avg=    737.6 us  aten::linear
+      465412 us  n=1412   avg=    329.6 us  aten::sub
+      440148 us  n=1282   avg=    343.3 us  aten::div_
+      293110 us  n=47498  avg=      6.2 us  aten::empty
+      276388 us  n=7383   avg=     37.4 us  aten::resolve_neg
+      203357 us  n=27845  avg=      7.3 us  aten::empty_strided
+      186338 us  n=641    avg=    290.7 us  aten::softmax
+
+=== TOP RUNTIME/DRIVER CALLS ===
+     2798568 us  n=16496  avg=    169.7 us  mcMemcpyAsync
+     1681472 us  n=1284   avg=   1309.6 us  mcEventSynchronize
+      810686 us  n=84971  avg=      9.5 us  mcModuleLaunchKernel
+      253162 us  n=253040 avg=      1.0 us  mcPointerGetAttribute
+      230585 us  n=21672  avg=     10.6 us  mcLaunchKernel
+       39745 us  n=511    avg=     77.8 us  mcGraphLaunch
+       39584 us  n=32508  avg=      1.2 us  mcGetDeviceProperties
+       27152 us  n=126    avg=    215.5 us  mcModuleLoadData
+       23948 us  n=10920  avg=      2.2 us  mcStreamSynchronize
+        9502 us  n=5460   avg=      1.7 us  mcFuncSetAttribute
