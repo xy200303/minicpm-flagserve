@@ -1,4 +1,8 @@
-# xlang2026-flagos-s2
+# FlagServe
+
+基于 FlagOS 统一栈（vllm-plugin-FL + FlagGems）的 MiniCPM 大模型多芯片高吞吐推理优化：面向天数 BI-V150 / 沐曦 C500 等国产加速卡的算子融合、内核重写与 KV/调度优化。
+
+> 当前为 FlagOS 开放计算全球大赛 S2 赛道二的参赛工作区（XLANG2026, @xy200303）。
 
 FlagOS 开放计算全球大赛 S2 · 赛道二（MiniCPM5-2B 推理吞吐优化）· 队伍 XLANG2026（邓乾 @xy200303）
 
@@ -17,8 +21,8 @@ FlagOS 开放计算全球大赛 S2 · 赛道二（MiniCPM5-2B 推理吞吐优化
 
 ```bash
 cd /workspace
-git clone -b vllm-plugin-FL/flagos-2026-s2 https://github.com/xy200303/xlang2026-flagos-s2.git vllm-plugin-FL
-git clone -b FlagGems/v5.3.5       https://github.com/xy200303/xlang2026-flagos-s2.git FlagGems
+git clone -b vllm-plugin-FL/flagos-2026-s2 https://github.com/xy200303/flagserve.git vllm-plugin-FL
+git clone -b FlagGems/v5.3.5       https://github.com/xy200303/flagserve.git FlagGems
 # 各自的 dev 分支同理；pip install --no-build-isolation -e .
 ```
 
