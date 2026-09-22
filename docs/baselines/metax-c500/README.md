@@ -46,4 +46,5 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 RMSNorm / RoPE / SiLU-mul → FlagGems Triton；attention → MetaX vendor flash_attn；
 sampler → eager PyTorch（被补丁禁用 Triton 版）；lm_head GEMM → torch native。
-精度基线待 evalscope math_500 Level 3 结果（官方基线 0.962，要求 ≥0.95）。
+精度：evalscope math_500 Level 3（官方原命令）= **98.1%**（105 题），高于官方基线 0.962 与及格线 0.95。
+评测输出在评测机 `/workspace/evalscope-datasets/level3/20260922_131027/`。
