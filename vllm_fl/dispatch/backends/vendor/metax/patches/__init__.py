@@ -9,6 +9,7 @@ from . import topk_topp_sampler
 from . import linear_nn_repack
 from . import slow_step_logger
 from . import gdn_linear_attn  # noqa: F401 — register MacaGatedDeltaNetAttention
+from . import mm_autotune_warmup  # noqa: F401 — keep last: warmup is optional
 
 # --------------------------------------------------
 # MetaX C550 does not support third-party Triton kernels (Triton upgrade required).
