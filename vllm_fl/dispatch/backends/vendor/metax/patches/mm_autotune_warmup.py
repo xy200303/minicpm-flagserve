@@ -31,10 +31,11 @@ def _unique_linear_weights(model):
     seen = {}
     for module in model.modules():
         w_nn = getattr(module, "_fl_w_nn", None)
-        w = getattr(module, "weight", None)
-        if w_nn is None or w is None or w.dim() != 2:
+        if w_nn is None or w_nn.dim() != 2:
             continue
-        key = (tuple(w.shape), str(w.dtype))
+        # layer.weight may be an empty shell after the nt copy is released
+        w = getattr(module, "weight", None)
+        key = (tuple(w_nn.shape), str(w_nn.dtype))
         if key not in seen:
             seen[key] = (w, w_nn)
     return list(seen.values())
@@ -62,15 +63,18 @@ def _warmup_mm_autotune(runner):
         flush=True,
     )
     t0 = time.time()
+    torch.cuda.empty_cache()  # make released nt-layout storage visible to mem_get_info
     with torch.no_grad():
         for w, w_nn in weights:
-            n, k = w.shape
+            k, n = w_nn.shape  # w_nn is [K, N]
             for m in _FL_WARMUP_SMALL_M:
-                x = torch.empty(m, k, dtype=w.dtype, device=w.device)
-                torch.nn.functional.linear(x, w)
+                x = torch.empty(m, k, dtype=w_nn.dtype, device=w_nn.device)
+                if w is not None and w.numel() > 0:
+                    torch.nn.functional.linear(x, w)
+                torch.mm(x, w_nn)  # nn_db skinny-M path
                 del x
             for m in prefill_m:
-                x = torch.empty(m, k, dtype=w.dtype, device=w.device)
+                x = torch.empty(m, k, dtype=w_nn.dtype, device=w_nn.device)
                 torch.mm(x, w_nn)
                 del x
     torch.cuda.synchronize()
