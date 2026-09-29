@@ -164,7 +164,7 @@ indicator 驱动」设计模式值得借鉴。[arXiv 2607.20475](https://arxiv.o
 
 | # | 项目 | 预期收益 | 工程量 | 风险 |
 |---|---|---|---|---|
-| 1 | **排查/强制 async scheduling**（插件 config 钩子） | 命中 40% GPU 空闲，可能两位数 % | 小时级排查 + 验证 | 低（0.24 已内置，验证正确性） |
+| 1 | ~~排查/强制 async scheduling~~ **已证伪**：vLLM 0.24 默认解析为开启（UniProcExecutor 支持），serve 日志确认 "Asynchronous scheduling is enabled"；cudagraph 已是 FULL_AND_PIECEWISE（纯 decode 步全图） | — | — | 无需做 |
 | 2 | CPU 进程绑核 + pinned DtoH + stream_interval | 削调度抖动（4k 波动 ±10%） | 1 天 | 低 |
 | 3 | **Gumbel-Max 采样全融合**（单 kernel，进 graph） | 每步省 ~0.4ms+launch | 3-5 天 | 中（RNG graph 坑已明确） |
 | 4 | Attention head packing（先实测 vendor 是否已共享 KV） | 5-15% 或数倍 | 1-2 周 | 中 |
@@ -175,5 +175,4 @@ indicator 驱动」设计模式值得借鉴。[arXiv 2607.20475](https://arxiv.o
 | 9 | FlashSampling（lm_head 融采样） | TPOT 最多 -10% | 2 周+ | 高（重写 lm_head） |
 | 10 | FP8 KV cache（官网已明文允许自研量化） | 16k KV 流量减半 | 2 周+ | **高（精度余量薄，暂缓）** |
 
-**立即执行建议**：#1 → #3 → #4/#5（并行验证）→ #2。天数卡审批下来后优先做基线复现 +
-两个已有内核的移植（warp size 同为 64，思路直接复用）。
+**立即执行建议**（2026-09-29 修订）：~~#1~~（已证伪，见上）→ #3（Gumbel-Max 采样融合，消灭每步 eager 小内核群与 CPU launch）→ #4/#5（attention 实测后定）→ #2（CPU 绑核/pinned）。#1 证伪后的新判断：40% 空闲的剩余大头在**混合步（PIECEWISE/半 eager）的 CPU 开销**与每步采样尾部——两者都指向"减少每步 CPU 工作量"。天数卡审批下来后优先做基线复现 + 两个已有内核的移植（warp size 同为 64，思路直接复用）。
