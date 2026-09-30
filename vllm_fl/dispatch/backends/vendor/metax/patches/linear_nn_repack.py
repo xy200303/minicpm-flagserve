@@ -20,7 +20,12 @@ import vllm.model_executor.layers.utils as layer_utils
 
 _FL_NN_MAX_N = 16384  # huge-N (lm_head) keeps its existing path
 _FL_NN_MIN_N = 512
-_FL_FREE_NT = os.getenv("VLLM_FL_FREE_NT_WEIGHTS", "1") == "1"
+_FL_FREE_NT = os.getenv("VLLM_FL_FREE_NT_WEIGHTS", "0") == "1"
+# 192 = dual-layout (default): skinny M keeps F.linear on the nt copy,
+# large M uses the nn-repacked copy.  0 = single nn layout for all M
+# (requires FREE_NT_WEIGHTS=1); measured within noise of dual, kept as an
+# option for memory-tight deployments.
+_FL_NN_MIN_M = int(os.getenv("VLLM_FL_NN_MIN_M", "192"))
 
 _orig_pw = UnquantizedLinearMethod.process_weights_after_loading
 
@@ -52,8 +57,9 @@ def _metax_unquantized_gemm(layer, x, weight, bias):
     wn = getattr(layer, "_fl_w_nn", None)
     if wn is not None and bias is None and x.dim() >= 2:
         m = x.numel() // x.shape[-1]
-        out = torch.mm(x.reshape(-1, x.shape[-1]), wn)
-        return out.view(*x.shape[:-1], wn.shape[1])
+        if m > _FL_NN_MIN_M or weight.numel() == 0:
+            out = torch.mm(x.reshape(-1, x.shape[-1]), wn)
+            return out.view(*x.shape[:-1], wn.shape[1])
     return torch.nn.functional.linear(x, weight, bias)
 
 
