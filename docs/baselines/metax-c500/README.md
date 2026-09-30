@@ -46,5 +46,19 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 RMSNorm / RoPE / SiLU-mul → FlagGems Triton；attention → MetaX vendor flash_attn；
 sampler → eager PyTorch（被补丁禁用 Triton 版）；lm_head GEMM → torch native。
-精度：evalscope math_500 Level 3（官方原命令）= **98.1%**（105 题），高于官方基线 0.962 与及格线 0.95。
-评测输出在评测机 `/workspace/evalscope-datasets/level3/20260922_131027/`。
+
+## 优化定稿成绩（opt1~opt6 全部落地，双布局，2026-09-30）
+
+| 场景 | 官网基线 total tok/s | 定稿（官方 benchmark + 官方聚合口径） | 提升 |
+|---|---|---|---|
+| 4k  [4096,1024,64,256]  | 5089.645 | **8135.29** | **+59.9%** |
+| 16k [16384,1024,64,128] | 7029.675 | **8683.08** | **+23.5%** |
+
+- 精度：evalscope math_500 Level 3（官方原命令）= **98.1%**（105 题），
+  高于官方基线 0.962 与及格线 0.95。基线复现时同为 98.1%。
+  定稿评测输出：`eval_math_500_dual_final.json`；
+  基线评测输出在评测机 `/workspace/evalscope-datasets/level3/20260922_131027/`。
+- 定稿原始数据：`summary_opt6_dual_4k.csv` / `raw_runs_opt6_dual_4k.csv`（4k 双布局）、
+  `summary_opt6_dual_16k.csv` / `raw_runs_opt6_dual_16k.csv`（16k 双布局）、
+  `summary_opt6_single_4k.csv` / `raw_runs_opt6_single_4k.csv`（单 nn 布局 A/B 对照）。
+- 各优化逐项记录见 `opt1-sampler.md` ~ `opt6-nn-db-single-layout.md`。

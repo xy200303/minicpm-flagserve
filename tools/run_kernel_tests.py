@@ -12,6 +12,7 @@ SUITES = [
     ("top_k_top_p (sort-free threshold)", "/workspace/test_top_k_top_p.py", "ALL PASS", ()),
     ("gumbel_max_sample (fused sampling)", "/workspace/test_gumbel.py", "OK (ours", ("SUSPECT",)),
     ("nt_db GEMM (double-buffered)", "/workspace/verify_nt_db.py", "done", ("BAD",)),
+    ("nn_db GEMM (nn-layout double-buffered)", "/workspace/verify_nn_db.py", "ALL PASS", ("BAD",)),
 ]
 
 

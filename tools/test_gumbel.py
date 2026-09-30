@@ -45,7 +45,8 @@ print(f"masked-set violation count: {bad} (must be 0)")
 # --- determinism: same step/seed twice gives same tokens ---
 a1 = gumbel_max_sample(masked.clone(), seed=7)
 # reset counter to force same step
-import flag_gems.fused.gumbel_max_sample as gm
+import importlib
+gm = importlib.import_module("flag_gems.fused.gumbel_max_sample")
 gm._STEP_COUNTER["value"] -= 1
 a2 = gumbel_max_sample(masked.clone(), seed=7)
 print(f"determinism: identical={torch.equal(a1, a2)}")
