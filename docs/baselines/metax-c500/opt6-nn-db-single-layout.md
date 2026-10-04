@@ -50,10 +50,21 @@ VLLM_FL_FREE_NT_WEIGHTS=1` 保留为显存紧张部署的备选（报告写作�
 
 ## 附：平台问题调查（与代码无关，已证伪所有嫌疑）
 
-评测期间模力方舟 64GB 规格实例（.53×3、.182×1）反复在 benchmark 加压时
+评测期间模力方舟 64GB 内存规格实例（.53×3、.182×2）反复在启动/压测时
 SIGKILL 服务。对照实验：镜像原版代码同样被杀；tiny 负载被杀；单个
 `vllm bench` 子进程即可触发；而 60GB 内存加压、54GB 显存爬升、128 stream、
-8 个 CUDA 子进程、safetensors+H2D 单项探针全部通过。被杀时本机 57GB 空闲、
-cgroup OOM 计数为 0。结论：宿主机层问题，与代码/负载模式无关；
-128GB 规格机器全程稳定。工具：tools/mem_pressure.py、tools/gpu_pressure.py、
+8 个 CUDA 子进程、safetensors+H2D 单项探针全部通过。
+
+**2026-10-04 根因实锤（.182 纯镜像原版，启动即复现 4/4）**：cgroup v2
+`memory.events` 里 `oom_kill` 计数随每次启动 +1（1→2→3→4），1s 级采样抓到
+完整曲线——vLLM 启动阶段匿名内存以 ~2GB/s 爬升，**inductor compile_worker
+子进程每个占 ~19-22GB RSS**，加上 APIServer/EngineCore，峰值冲到 63.4GB
+撞穿 64GB cgroup 上限，内核 OOM killer 杀 EngineCore（GPU 显存当时仅
+858MiB，与显存无关）。128GB 内存规格实例（.81）峰值远未触限，全程稳定。
+结论：64GB 内存规格装不下这套栈原版启动的瞬时峰值，属平台规格问题，
+与我们的代码、vllm 版本、负载模式均无关。（早期「57GB 空闲、cgroup 计数为 0」
+的观测是死亡后采样/粗采样漏掉尖峰所致，以本次 1s 级 cgroup 取证为准。
+证据：cgroup_watch_stock_182.log、stat_watch_stock_182.log。）
+
+工具：tools/mem_pressure.py、tools/gpu_pressure.py、
 tools/mini_bench.py（轻量压测客户端，绕开 12GB 的 vllm bench 子进程）。
