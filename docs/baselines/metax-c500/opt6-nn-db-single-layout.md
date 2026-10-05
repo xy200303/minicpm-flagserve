@@ -68,3 +68,10 @@ SIGKILL 服务。对照实验：镜像原版代码同样被杀；tiny 负载被�
 
 工具：tools/mem_pressure.py、tools/gpu_pressure.py、
 tools/mini_bench.py（轻量压测客户端，绕开 12GB 的 vllm bench 子进程）。
+
+**2026-10-05 追加（.81 新实例）**：stream 创建级死锁。`torch.cuda.Stream()` 挂死
+（faulthandler 栈：triton autotuner `_bench` → `Stream.__new__`），基本 CUDA
+算子正常；杀光持卡进程后仍挂死 → 驱动/虚拟化层 wedge，容器内不可恢复，
+只能重启实例。触发点：verify_nt_db 首个 fp32 GEMM 的 autotune bench。
+教训：这台栈上 LibTuner bench 会建 stream，实例不稳定时表现为「测试卡死」
+而非崩溃，诊断路径：faulthandler.dump_traceback_later → 最小 stream 复现。
