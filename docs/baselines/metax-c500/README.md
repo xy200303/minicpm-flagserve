@@ -80,3 +80,21 @@ sampler → eager PyTorch（被补丁禁用 Triton 版）；lm_head GEMM → tor
   top-p 阈值 + mask 采样一趟完成）；lm_head 重排 nn 布局走 vendor torch.mm。
 - 细节与坑（循环导入 TTS-init 钩子、spec_token_ids 空列表、buffer 缓存）
   见 `opt7-sampler-tail.md`；原始数据 `summary_opt7_sampler_tail.csv`。
+
+## opt8：Prefill GEMM 直调 vendor mcBLAS（2026-10-06）
+
+| 场景 | opt7 | opt8 | Δ | 相对官网基线 |
+|---|---|---|---|---|
+| 4k  [4096,1024,64,256]  | 8273.58 | **10946.86** | **+32.3%** | **+115.1%** |
+| 16k [16384,1024,64,128] | 8716.35 | **10001.65** | **+14.7%** | **+42.3%** |
+
+TTFT 同步改善（4k 2795→2174ms，16k 23896→20814ms）。
+精度：MATH-500 Level 3 两次复测 **97.1% / 98.1%**（采样自然波动），远高于 0.95。
+
+- 关键发现：FlagGems 进程级接管 aten::mm/linear 后，vendor GEMM 从 Python
+  完全不可达；而 prefill M=2048 下 Triton `mm_kernel_nn` 即使扩扫 126 组配置
+  仍比 vendor 慢 1.35-1.67x（vendor ~197TF 逼近峰值）。
+- 落地：`patches/mcblas_mm.py` 用 ctypes 直绑 libmcblas 的 `mcblasGemmEx`
+  （cuBLAS 兼容 ABI），注册为 custom op 保证 compiled 区域安全；
+  nn 路由的 prefill GEMM 全走 vendor，decode 细瘦 M 保持 Triton nn_db 不动。
+- 细节见 `opt8-mcblas-prefill.md`；原始数据 `summary_opt8_mcblas.csv`。
