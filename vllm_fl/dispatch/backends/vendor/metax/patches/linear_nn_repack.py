@@ -17,8 +17,14 @@ import torch
 from vllm.model_executor.layers.linear import UnquantizedLinearMethod
 import vllm.model_executor.layers.linear as linear_mod
 import vllm.model_executor.layers.utils as layer_utils
+from vllm.model_executor.layers.vocab_parallel_embedding import (
+    UnquantizedEmbeddingMethod,
+)
+from vllm.logger import init_logger
 
-_FL_NN_MAX_N = 16384  # huge-N (lm_head) keeps its existing path
+logger = init_logger(__name__)
+
+_FL_NN_MAX_N = 16384  # layer GEMMs above this N keep their existing path
 _FL_NN_MIN_N = 512
 _FL_FREE_NT = os.getenv("VLLM_FL_FREE_NT_WEIGHTS", "0") == "1"
 # 192 = dual-layout (default): skinny M keeps F.linear on the nt copy,
@@ -26,12 +32,18 @@ _FL_FREE_NT = os.getenv("VLLM_FL_FREE_NT_WEIGHTS", "0") == "1"
 # (requires FREE_NT_WEIGHTS=1); measured within noise of dual, kept as an
 # option for memory-tight deployments.
 _FL_NN_MIN_M = int(os.getenv("VLLM_FL_NN_MIN_M", "192"))
+# VLLM_FL_DISABLE_LMHEAD_NN=1: lm_head keeps the stock vendor nt path (A/B switch)
+_FL_DISABLE_LMHEAD_NN = os.getenv("VLLM_FL_DISABLE_LMHEAD_NN", "0") == "1"
 
 _orig_pw = UnquantizedLinearMethod.process_weights_after_loading
 
 
 def _process_weights_after_loading_metax(self, layer):
     _orig_pw(self, layer)
+    # dynamo traces dispatch_unquantized_gemm: every attribute it reads via
+    # getattr-with-default must actually EXIST on the module, so set the
+    # flags unconditionally here instead of only when repacking.
+    layer._fl_always_nn = False
     w = getattr(layer, "weight", None)
     if (
         w is not None
@@ -53,11 +65,53 @@ def _process_weights_after_loading_metax(self, layer):
             )
 
 
+# lm_head (N = vocab = 130560) is excluded from the generic repack above
+# (_FL_NN_MAX_N) on the assumption that huge-N GEMMs are served better
+# elsewhere.  Measured on C500 (bench_lm_head*.py): the vendor nn GEMM beats
+# the vendor nt (F.linear) path ~1.75x at every decode batch size
+# (378us vs 659us at M=64), while the Triton double-buffer kernels lose badly
+# at this N (best 736us).  lm_head only ever sees skinny M here (vLLM gathers
+# last-token hidden states, M <= num_seqs), so always route it to the nn copy.
+# ParallelLMHead goes through UnquantizedEmbeddingMethod, not
+# UnquantizedLinearMethod, so it needs its own process_weights hook.
+# Cost: one extra [K, N] bf16 copy (+534MB); the nt copy stays (fallback).
+
+_orig_pw_embed = UnquantizedEmbeddingMethod.process_weights_after_loading
+
+
+def _process_weights_after_loading_embed_metax(self, layer):
+    _orig_pw_embed(self, layer)
+    layer._fl_always_nn = False
+    if _FL_DISABLE_LMHEAD_NN or type(layer).__name__ != "ParallelLMHead":
+        return
+    w = getattr(layer, "weight", None)
+    if (
+        w is not None
+        and w.dim() == 2
+        and w.dtype in (torch.bfloat16, torch.float16)
+        and w.is_cuda
+        and w.numel() > 0
+        and w.stride(1) == 1
+        and w.stride(0) == w.shape[1]
+        and w.shape[1] % 128 == 0
+    ):
+        layer._fl_w_nn = w.data.t().contiguous()
+        layer._fl_always_nn = True
+        logger.info(
+            "fl opt7: lm_head repacked to nn layout (%s), always-nn routing",
+            tuple(layer._fl_w_nn.shape),
+        )
+
+
 def _metax_unquantized_gemm(layer, x, weight, bias):
     wn = getattr(layer, "_fl_w_nn", None)
     if wn is not None and bias is None and x.dim() >= 2:
         m = x.numel() // x.shape[-1]
-        if m > _FL_NN_MIN_M or weight.numel() == 0:
+        if (
+            getattr(layer, "_fl_always_nn", False)
+            or m > _FL_NN_MIN_M
+            or weight.numel() == 0
+        ):
             out = torch.mm(x.reshape(-1, x.shape[-1]), wn)
             return out.view(*x.shape[:-1], wn.shape[1])
     return torch.nn.functional.linear(x, weight, bias)
@@ -69,6 +123,9 @@ def _dispatch_unquantized_gemm_metax():
 
 UnquantizedLinearMethod.process_weights_after_loading = (
     _process_weights_after_loading_metax
+)
+UnquantizedEmbeddingMethod.process_weights_after_loading = (
+    _process_weights_after_loading_embed_metax
 )
 layer_utils.dispatch_unquantized_gemm = _dispatch_unquantized_gemm_metax
 linear_mod.dispatch_unquantized_gemm = _dispatch_unquantized_gemm_metax
