@@ -62,3 +62,21 @@ sampler → eager PyTorch（被补丁禁用 Triton 版）；lm_head GEMM → tor
   `summary_opt6_dual_16k.csv` / `raw_runs_opt6_dual_16k.csv`（16k 双布局）、
   `summary_opt6_single_4k.csv` / `raw_runs_opt6_single_4k.csv`（单 nn 布局 A/B 对照）。
 - 各优化逐项记录见 `opt1-sampler.md` ~ `opt6-nn-db-single-layout.md`。
+
+## opt7：采样尾巴全融合 + lm_head nn 布局（2026-10-06）
+
+| 场景 | opt1-6 定稿 | opt7 | Δ |
+|---|---|---|---|
+| 4k  [4096,1024,64,256]  | 8135.29 | **8273.58** | **+1.70%** |
+| 16k [16384,1024,64,128] | 8683.08 | **8716.35** | **+0.38%** |
+
+相对官网基线：4k **+62.6%**、16k **+24.0%**。
+精度：MATH-500 Level 3 = **98.1%**（105 题），与定稿基线一致。
+
+- 关键发现：MiniCPM5-2B `generation_config.json` 自带 `top_p: 0.95`，官方
+  benchmark 每请求都跑 top_p 过滤（`_top_k_top_p_kernel` 1.61ms/步）。
+- 落地：FlagGems 新增 `fused/sampler_fused.py`（bf16 直读 + 温度折叠
+  Gumbel-Max）与 `fused/top_p_sample.py`（256-bin 质量直方图两轮缩放求
+  top-p 阈值 + mask 采样一趟完成）；lm_head 重排 nn 布局走 vendor torch.mm。
+- 细节与坑（循环导入 TTS-init 钩子、spec_token_ids 空列表、buffer 缓存）
+  见 `opt7-sampler-tail.md`；原始数据 `summary_opt7_sampler_tail.csv`。
