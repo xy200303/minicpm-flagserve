@@ -22,6 +22,11 @@ from vllm.model_executor.layers.vocab_parallel_embedding import (
 )
 from vllm.logger import init_logger
 
+try:
+    from . import mcblas_mm as _mcblas
+except Exception:  # binding must never break the stock path
+    _mcblas = None
+
 logger = init_logger(__name__)
 
 _FL_NN_MAX_N = 16384  # layer GEMMs above this N keep their existing path
@@ -112,7 +117,20 @@ def _metax_unquantized_gemm(layer, x, weight, bias):
             or m > _FL_NN_MIN_M
             or weight.numel() == 0
         ):
-            out = torch.mm(x.reshape(-1, x.shape[-1]), wn)
+            x2 = x.reshape(-1, x.shape[-1])
+            # Vendor mcBLAS beats the Triton nn kernel 1.35-1.67x at prefill
+            # M (sweep_mm_prefill.py); FlagGems' process-wide aten override
+            # makes the vendor library unreachable through torch.mm, so the
+            # ctypes-bound custom op is the only way to reach it.
+            if (
+                _mcblas is not None
+                and _mcblas.AVAILABLE
+                and wn.dtype == torch.bfloat16
+                and x2.is_contiguous()
+            ):
+                out = _mcblas.mcblas_mm(x2, wn)
+            else:
+                out = torch.mm(x2, wn)
             return out.view(*x.shape[:-1], wn.shape[1])
     return torch.nn.functional.linear(x, weight, bias)
 
