@@ -98,3 +98,20 @@ TTFT 同步改善（4k 2795→2174ms，16k 23896→20814ms）。
   （cuBLAS 兼容 ABI），注册为 custom op 保证 compiled 区域安全；
   nn 路由的 prefill GEMM 全走 vendor，decode 细瘦 M 保持 Triton nn_db 不动。
 - 细节见 `opt8-mcblas-prefill.md`；原始数据 `summary_opt8_mcblas.csv`。
+
+## opt10：消灭 prefill 每层 DtoH 同步（2026-10-07）
+
+| 场景 | opt8 | opt10 | Δ | 相对官网基线 |
+|---|---|---|---|---|
+| 4k  [4096,1024,64,256]  | 10946.86 | **12145.31** | **+10.9%** | **+138.6%** |
+| 16k [16384,1024,64,128] | 10001.65 | **10991.50** | **+9.9%** | **+56.4%** |
+
+TTFT：4k 2174→**1623ms**，16k 20814→**18048ms**。精度 MATH-500 L3 = **98.1%**。
+
+- 空洞分析：prefill trace 中 GPU 空闲 18.1%，主体是上万个 100-200µs
+  主机发射空洞；元凶之一是 metax flash_attn 每层每步
+  `torch.tensor([0]+prefill_seq_lens.tolist()).cumsum()`（DtoH 强同步 ×42 层）。
+- 修复：纯 GPU cumsum + 结果缓存在当步 attn_metadata，42 层只算一次。
+- 细节见 `opt10-prefill-sync-removal.md`；数据 `summary_opt10_sync.csv`。
+- 同轮调研：attention 内核选择（prefill/decode 双侧）全空间扫描确认已到
+  vendor 上限，见 `opt9-attention-investigation.md`。
