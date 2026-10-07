@@ -77,3 +77,14 @@ ks_set_solution 强制全部 5 组 splitkv traits × alg × splits。
   已在 HBM 带宽的较高分位，剩余空间需要新内核而非调度。
 
 **总结论：attention（prefill + decode）在内核选择层面全部到顶。**
+
+## 补：decode attention 自研可行性探针（2026-10-07，结论：放弃）
+
+C500 实测内存带宽上限（torch 大拷贝/归约）：
+- copy（读+写）：1.43-1.44 TB/s
+- sum（纯读）：**1.61 TB/s**
+
+vendor decode attention 实测 1.42 TB/s = 纯读上限的 **88%**。
+自研内核理论极限 1.13x（且需 100% 带宽利用，不现实），折算 16k 场景
+收益上限 ~5%、现实预期 2-3%，对比 2-3 天工期 + 精度风险（MATH 红线
+0.95）+ cpasync 对 paged gather 是否生效的不确定性，判定不投入。
