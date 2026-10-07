@@ -17,6 +17,7 @@ import torch
 from vllm.model_executor.layers.linear import UnquantizedLinearMethod
 import vllm.model_executor.layers.linear as linear_mod
 import vllm.model_executor.layers.utils as layer_utils
+import vllm.model_executor.layers.vocab_parallel_embedding as vpe_mod
 from vllm.model_executor.layers.vocab_parallel_embedding import (
     UnquantizedEmbeddingMethod,
 )
@@ -147,3 +148,7 @@ UnquantizedEmbeddingMethod.process_weights_after_loading = (
 )
 layer_utils.dispatch_unquantized_gemm = _dispatch_unquantized_gemm_metax
 linear_mod.dispatch_unquantized_gemm = _dispatch_unquantized_gemm_metax
+# vocab_parallel_embedding did a from-import of dispatch_unquantized_gemm at
+# module import time, so its local binding still points to the stock factory —
+# lm_head (ParallelLMHead) would never see our dispatch without this.
+vpe_mod.dispatch_unquantized_gemm = _dispatch_unquantized_gemm_metax
