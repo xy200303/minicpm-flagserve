@@ -115,3 +115,19 @@ TTFT：4k 2174→**1623ms**，16k 20814→**18048ms**。精度 MATH-500 L3 = **9
 - 细节见 `opt10-prefill-sync-removal.md`；数据 `summary_opt10_sync.csv`。
 - 同轮调研：attention 内核选择（prefill/decode 双侧）全空间扫描确认已到
   vendor 上限，见 `opt9-attention-investigation.md`。
+
+## opt11：lm_head 路由修复 + top-p 单轮直方图（2026-10-07，当前最优）
+
+| 场景 | opt10 | opt11 | Δ | 相对官网基线 |
+|---|---|---|---|---|
+| 4k  [4096,1024,64,256]  | 12145.31 | **12529.39** | **+3.2%** | **+146.2%** |
+| 16k [16384,1024,64,128] | 10991.50 | **11088.13** | **+0.9%** | **+57.7%** |
+
+TTFT：4k 1618ms、16k 17992ms。精度 MATH-500 L3 = **97.1%**（波动区间内）。
+
+- 修复 1：`vocab_parallel_embedding` 在 import 时 from-import 绑死了原版
+  `dispatch_unquantized_gemm`，lm_head 从未走我们的 nn/mcBLAS 路由——补 patch
+  该模块属性后 lm_head 603µs（Triton）→ 379µs（vendor），decode 每步省 224µs。
+- 修复 2：top-p 直方图 2×256 轮缩→单轮 1024 bins，采样链 813→310µs，
+  TV/边界统计与双轮无差异。
+- 细节见 `opt11-lmhead-fix-zoom1.md`；数据 `summary_opt11.csv`。
