@@ -798,11 +798,17 @@ class FlashAttentionImpl(AttentionImpl):
                 # For handling prefill decode split
                 num_decode_tokens = attn_metadata.num_decode_tokens
                 if attn_metadata.num_prefills > 0:
-                    cu_prefix_kv_lens = torch.tensor(
-                        [0] + attn_metadata.prefill_seq_lens.tolist(),
-                        device=attn_metadata.prefill_seq_lens.device,
-                        dtype=torch.int32,
-                    ).cumsum(dim=0, dtype=torch.int32)
+                    # fl opt10: compute once per step on GPU (the old code did
+                    # tolist()->DtoH sync + HtoD + cumsum PER LAYER = 42 syncs/step)
+                    cu_prefix_kv_lens = getattr(
+                        attn_metadata, "_fl_cu_prefix_kv_lens", None
+                    )
+                    if cu_prefix_kv_lens is None:
+                        lens = attn_metadata.prefill_seq_lens
+                        cu_prefix_kv_lens = torch.cat(
+                            [lens.new_zeros(1), lens]
+                        ).cumsum(dim=0, dtype=torch.int32)
+                        attn_metadata._fl_cu_prefix_kv_lens = cu_prefix_kv_lens
                     output[num_decode_tokens:num_actual_tokens] = (
                         flash_attn_varlen_func(
                             q=query[num_decode_tokens:num_actual_tokens],
