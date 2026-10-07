@@ -56,3 +56,24 @@ vendor 的 60-74%），自研打 vendor 高度优化的 attention 管线胜率�
 不投入。16k 场景后续空间主要在调度/主机侧（GPU idle 19%）而非内核。
 
 （SM count = 104，供后续参考。）
+
+## 补：decode 侧扫描（sweep_fa_decode.py，2026-10-07）
+
+decode 走 `flash_attn_with_kvcache`（q=[64,1,16,128]，paged KV，causal）。
+两个维度都扫：python API 的 num_splits（0=启发式 .. 32），以及
+ks_set_solution 强制全部 5 组 splitkv traits × alg × splits。
+
+| kv_len | 默认 | 全空间最优 | 提升 |
+|---|---|---|---|
+| 2048 | 147.8µs | 125.1µs（blockm_32 内核） | 1.18x |
+| 4096 | 210.8µs | 210.8µs | 1.00x |
+| 8192 | 394.0µs | 394.0µs | 1.00x |
+| 16384 | 757.6µs | 750.5µs | 1.01x |
+
+- 唯一有收益的是 kv=2048 桶（+18%），但**两个计分场景都不会落到这个桶**
+  （4k 场景 decode 时 kv≈4096+，16k 场景 kv≈16384+）→ 无计分价值。
+- num_splits 手动指定全面输启发式（如 kv16384 最好手动值 774.7µs > 757.6µs）。
+- decode attention 在 kv=16384 时单步每层读 1.07GB KV，757.6µs ≈ 1.42TB/s，
+  已在 HBM 带宽的较高分位，剩余空间需要新内核而非调度。
+
+**总结论：attention（prefill + decode）在内核选择层面全部到顶。**
