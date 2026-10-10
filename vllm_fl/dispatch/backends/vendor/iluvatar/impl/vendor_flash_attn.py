@@ -115,11 +115,10 @@ def _build_patched(self, common_prefix_len, common_attn_metadata,
 def _eligible(self, attn_metadata, kv_cache) -> bool:
     if attn_metadata is None or attn_metadata.max_query_len <= 1:
         return False
-    # Crossover measured on BI-V150 (4k scenario pace A/B): the vendor op's
-    # slow path costs ~0.22us/token/layer vs stock unified ~2.3us/token at
-    # 16k but the patch host overhead (~100ms/mixed step) loses below ~8k.
-    if attn_metadata.max_seq_len < 8192:
-        return False
+    # NOTE: an earlier kv>=8192 gate was REMOVED after kernel-level
+    # measurement: vendor cmt=2 beats stock unified 12-20x at EVERY kv
+    # length (kv2048: 434us vs 5273us).  The 4k pace A/B that motivated the
+    # gate mixed up prefill/decode phases.
     if getattr(attn_metadata, "_fl_split", None) is None:
         return False
     if _AttentionType is not None and self.attn_type != _AttentionType.DECODER:
