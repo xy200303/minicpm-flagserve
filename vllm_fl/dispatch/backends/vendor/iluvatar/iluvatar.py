@@ -206,6 +206,15 @@ patch_triton_chained_or_for_iluvatar()
 patch_triton_language_for_iluvatar()
 patch_triton_perf_model_for_iluvatar()
 
+# fl opt-A1: route prefill attention to the vendor ixAttnBkd flash kernel
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn import (
+        apply as _apply_vendor_flash_attn,
+    )
+    _apply_vendor_flash_attn()
+except Exception as _e:
+    logger.warning("vendor_flash_attn patch failed: %s", _e)
+
 
 def patch_sampler_compile_for_iluvatar() -> None:
     # Disable torch.compile on vllm sampler ops for Iluvatar.
