@@ -43,3 +43,12 @@ decode 侧（A2 调研结论，见 `a2-decode-attention-investigation.md`）：
 wall 677→353ms、GPU busy 41%→76%；32GB 卡端到端持平（16k 受
 decode/尾部/KV 排队支配），64GB 评测机上应有体现。
 最终官方 benchmark：4k 2582.04 / 16k 2488.58。
+
+## A4：GEMM pinned-config（2026-10-13，见 `a4-gemm-pinned-configs.md`）
+
+libtuner 运行时 autotune 在 event-timing 降级模式下误选 mm_kernel
+配置。对 8 个 serve 形状离线全空间扫描后在派发层 pin 最优配置：
+decode GEMM 微基准 1.22-1.81x，prefill 追平/反超 vendor。
+端到端 32GB 持平（4k 2579.14 / 16k 2485.52，噪声内），收益预计
+在 64GB 评测机体现。精度 97.1% 达标（与 A3 一致）。
+FlagGems commit `5eac6b39`（FlagGems/dev）。
