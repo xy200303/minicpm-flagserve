@@ -35,3 +35,11 @@ per-layer tolist 同步 / 分配器风暴 / 阈值门控误判与拆除）。
 decode 侧（A2 调研结论，见 `a2-decode-attention-investigation.md`）：
 自研 Triton flash-decoding 打平 stock、vendor decode 无 flash-decoding
 分段、GEMM vendor≈gems——decode 在 Triton 层面已无可挖，收官。
+
+## A3：host 侧修复（2026-10-13，见 `a3-host-sync-fix.md`）
+
+补抓 A1.5 的 16k 端到端 profile 发现 builder 里 `aten::index` 每步
+2 次隐式阻塞式 HtoD+全流同步（占混合步 wall 57%）。修复后混合步
+wall 677→353ms、GPU busy 41%→76%；32GB 卡端到端持平（16k 受
+decode/尾部/KV 排队支配），64GB 评测机上应有体现。
+最终官方 benchmark：4k 2582.04 / 16k 2488.58。
