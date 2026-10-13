@@ -62,30 +62,43 @@ def _pool(name, rows, hkv, d, dtype, dev):
 
 def _build_split(m, cu_l, seq_l):
     """Compute the decode/prefill request split from CPU lists, attach GPU
-    tensors for the decode subset.  Runs once per step in the builder."""
+    tensors for the decode subset.  Runs once per step in the builder.
+
+    Host-cost notes (real-serve CoreX profile): aten::index (GPU tensor
+    indexed by a python list) blocks ~96ms per call, and per-request
+    torch.arange + cat costs one slow launch apiece.  Everything here is
+    built on CPU and moved with a few small HtoD copies instead.
+    """
     pre_idx, dec_idx = [], []
     for i in range(len(seq_l)):
         (dec_idx if cu_l[i + 1] - cu_l[i] == 1 else pre_idx).append(i)
     dev = m.query_start_loc.device
     if dec_idx:
-        dec_rows = torch.cat([
-            torch.arange(cu_l[i], cu_l[i + 1], device=dev, dtype=torch.long)
-            for i in dec_idx
-        ])
+        n = len(dec_idx)
+        idx_t = torch.tensor(dec_idx, dtype=torch.int64).to(dev, non_blocking=True)
+        dec_rows = torch.tensor(
+            [cu_l[i] for i in dec_idx], dtype=torch.int64).to(
+                dev, non_blocking=True)
+        seq_dec = torch.tensor(
+            [seq_l[i] for i in dec_idx], dtype=m.seq_lens.dtype).to(
+                dev, non_blocking=True)
         dec_meta = dataclasses.replace(
             m,
-            num_actual_tokens=len(dec_idx),
+            num_actual_tokens=n,
             max_query_len=1,
             query_start_loc=torch.arange(
-                0, len(dec_idx) + 1, device=dev,
-                dtype=m.query_start_loc.dtype),
-            seq_lens=m.seq_lens[dec_idx],
-            block_table=m.block_table[dec_idx],
+                0, n + 1, device=dev, dtype=m.query_start_loc.dtype),
+            seq_lens=seq_dec,
+            block_table=torch.index_select(m.block_table, 0, idx_t),
         )
     else:
         dec_rows = None
         dec_meta = None
     m._fl_split = (cu_l, seq_l, pre_idx, dec_rows, dec_meta)
+    # per-step memo for prefill page lists: the .long() cast of a block_table
+    # row is one slow to_copy launch; without sharing, all 42 layers would
+    # each redo it for the same request.
+    m._fl_pages = {}
 
 
 _STEP = {"t0": 0.0, "n": 0}
@@ -164,11 +177,18 @@ def _vendor_forward(self, layer, query, key, value, kv_cache,
     _t2 = _time.perf_counter()
 
     # prefill rows: vendor flash per request on de-paged KV (pooled buffers)
+    pages_memo = attn_metadata._fl_pages
     for i in pre_idx:
         q0, q1 = cu_l[i], cu_l[i + 1]
         kv = seq_l[i]
         n_pages = (kv + bs - 1) // bs
-        pages = attn_metadata.block_table[i, :n_pages].long()
+        pages_full = pages_memo.get(i)
+        if pages_full is None:
+            # one to_copy per request per STEP (shared by all layers);
+            # block_table rows are int32 and index_select wants long
+            pages_full = attn_metadata.block_table[i].long()
+            pages_memo[i] = pages_full
+        pages = pages_full[:n_pages]
         Kp = _pool("K", n_pages * bs, hkv, d, key_cache.dtype, key_cache.device)
         Vp = _pool("V", n_pages * bs, hkv, d, value_cache.dtype, value_cache.device)
         torch.index_select(key_cache, 0, pages,
