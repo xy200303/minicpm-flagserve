@@ -215,6 +215,17 @@ try:
 except Exception as _e:
     logger.warning("vendor_flash_attn patch failed: %s", _e)
 
+# fl opt-A5: fused sampler tail (port of the MetaX opt7 patch).
+# Routes plain-sampling batches to FlagGems fused kernels:
+# bf16-direct Gumbel-Max + histogram-zoom top-p (no full-vocab sort).
+# A/B switch: VLLM_FL_DISABLE_SAMPLER_FUSION=1 keeps the stock path.
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl import (
+        sampler_tail_fusion as _sampler_tail_fusion,
+    )
+except Exception as _e:
+    logger.warning("sampler_tail_fusion patch failed: %s", _e)
+
 
 def patch_sampler_compile_for_iluvatar() -> None:
     # Disable torch.compile on vllm sampler ops for Iluvatar.
