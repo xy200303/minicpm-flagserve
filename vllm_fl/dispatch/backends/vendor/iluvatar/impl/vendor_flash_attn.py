@@ -33,6 +33,31 @@ import time as _time
 import torch
 from vllm.logger import init_logger
 
+try:
+    import ixformer as _ixf
+except Exception:
+    _ixf = None
+
+try:
+    import triton as _triton
+    import triton.language as _tl
+
+    @_triton.jit
+    def _dual_gather_kernel(KVC, PAGES, KP, VP,
+                            E: _tl.constexpr, BLOCK: _tl.constexpr):
+        # kv_cache [blocks, 2, bs, hkv, d] flat: page p's K chunk at
+        # p*2*E, V chunk right after.  One program per page copies both.
+        pid = _tl.program_id(0).to(_tl.int64)
+        page = _tl.load(PAGES + pid)
+        offs = _tl.arange(0, BLOCK)
+        src = KVC + page * (2 * E)
+        dst = pid * E
+        for i in range(0, E, BLOCK):
+            _tl.store(KP + dst + i + offs, _tl.load(src + i + offs))
+            _tl.store(VP + dst + i + offs, _tl.load(src + E + i + offs))
+except Exception:
+    _triton = None
+
 logger = init_logger(__name__)
 
 _CMT_BOTTOM_RIGHT = 2  # xFormers CausalFromBottomRight (FA2 chunked semantics)
@@ -48,6 +73,23 @@ _DISABLED = os.getenv("VLLM_FL_DISABLE_ILUVATAR_VENDOR_FA", "0") == "1"
 
 # persistent de-paged KV gather pools (shared across layers and steps)
 _POOL = {}
+_KV_POOL = {}
+
+# VLLM_FL_DISABLE_VARLEN_PREFILL=1: per-request aten path (A/B switch)
+_NO_VARLEN = os.getenv("VLLM_FL_DISABLE_VARLEN_PREFILL", "0") == "1"
+# VLLM_FL_DISABLE_DUAL_GATHER=1: 2x index_select gather (A/B switch)
+_NO_DUAL_GATHER = os.getenv("VLLM_FL_DISABLE_DUAL_GATHER", "0") == "1"
+
+
+def _pool_kv(rows, hkv, d, dtype, dev):
+    # one allocation: region 0 = K, region 1 = V (each [rows, hkv, d])
+    key = (dtype, hkv, d)
+    buf = _KV_POOL.get(key)
+    if buf is None or buf.shape[1] < rows:
+        rows = max(rows, 2048)
+        _KV_POOL[key] = torch.empty(2, rows, hkv, d, dtype=dtype, device=dev)
+        buf = _KV_POOL[key]
+    return buf
 
 
 def _pool(name, rows, hkv, d, dtype, dev):
@@ -99,6 +141,16 @@ def _build_split(m, cu_l, seq_l):
     # row is one slow to_copy launch; without sharing, all 42 layers would
     # each redo it for the same request.
     m._fl_pages = {}
+    # per-request varlen cu_seqlens ([n_pre, 2] int32 each, rebased to 0):
+    # two tiny HtoD per step, shared by all layers.
+    if pre_idx:
+        dev32 = dict(dtype=torch.int32, device=dev)
+        m._fl_cu_q = torch.tensor(
+            [[0, cu_l[i + 1] - cu_l[i]] for i in pre_idx], **dev32)
+        m._fl_cu_k = torch.tensor([[0, seq_l[i]] for i in pre_idx], **dev32)
+    else:
+        m._fl_cu_q = None
+        m._fl_cu_k = None
 
 
 _STEP = {"t0": 0.0, "n": 0}
@@ -178,7 +230,8 @@ def _vendor_forward(self, layer, query, key, value, kv_cache,
 
     # prefill rows: vendor flash per request on de-paged KV (pooled buffers)
     pages_memo = attn_metadata._fl_pages
-    for i in pre_idx:
+    use_varlen = _ixf is not None and not _NO_VARLEN
+    for j, i in enumerate(pre_idx):
         q0, q1 = cu_l[i], cu_l[i + 1]
         kv = seq_l[i]
         n_pages = (kv + bs - 1) // bs
@@ -189,21 +242,46 @@ def _vendor_forward(self, layer, query, key, value, kv_cache,
             pages_full = attn_metadata.block_table[i].long()
             pages_memo[i] = pages_full
         pages = pages_full[:n_pages]
-        Kp = _pool("K", n_pages * bs, hkv, d, key_cache.dtype, key_cache.device)
-        Vp = _pool("V", n_pages * bs, hkv, d, value_cache.dtype, value_cache.device)
-        torch.index_select(key_cache, 0, pages,
-                           out=Kp[: n_pages * bs].view(-1, hkv, d))
-        torch.index_select(value_cache, 0, pages,
-                           out=Vp[: n_pages * bs].view(-1, hkv, d))
-        K = Kp[:kv].unsqueeze(0)
-        V = Vp[:kv].unsqueeze(0)
-        oi = torch.ops.aten._efficient_attention_forward(
-            q[q0:q1].unsqueeze(0), K, V,
-            None, None, None, None, None,
-            0.0, _CMT_BOTTOM_RIGHT, False,
-            scale=self.scale,
-        )[0]
-        out[q0:q1] = oi.squeeze(0)
+        if use_varlen:
+            KVp = _pool_kv(n_pages * bs, hkv, d,
+                           kv_cache.dtype, kv_cache.device)
+            if _triton is not None and not _NO_DUAL_GATHER:
+                # one Triton launch gathers K+V pages (bit-exact vs
+                # 2x index_select: gpu 106->62us, host 68->37us)
+                _dual_gather_kernel[(n_pages,)](
+                    kv_cache, pages, KVp[0], KVp[1],
+                    E=bs * hkv * d, BLOCK=4096, num_warps=4)
+            else:
+                torch.index_select(key_cache, 0, pages,
+                                   out=KVp[0, : n_pages * bs].view(-1, hkv, d))
+                torch.index_select(value_cache, 0, pages,
+                                   out=KVp[1, : n_pages * bs].view(-1, hkv, d))
+            K = KVp[0, :kv]
+            V = KVp[1, :kv]
+            _ixf.flash_attn_varlen_func(
+                q[q0:q1], K, V,
+                attn_metadata._fl_cu_q[j], attn_metadata._fl_cu_k[j],
+                q1 - q0, kv,
+                dropout_p=0.0, softmax_scale=self.scale, causal=True,
+                out=out[q0:q1])
+        else:
+            Kp = _pool("K", n_pages * bs, hkv, d,
+                       key_cache.dtype, key_cache.device)
+            Vp = _pool("V", n_pages * bs, hkv, d,
+                       value_cache.dtype, value_cache.device)
+            torch.index_select(key_cache, 0, pages,
+                               out=Kp[: n_pages * bs].view(-1, hkv, d))
+            torch.index_select(value_cache, 0, pages,
+                               out=Vp[: n_pages * bs].view(-1, hkv, d))
+            K = Kp[:kv].unsqueeze(0)
+            V = Vp[:kv].unsqueeze(0)
+            oi = torch.ops.aten._efficient_attention_forward(
+                q[q0:q1].unsqueeze(0), K, V,
+                None, None, None, None, None,
+                0.0, _CMT_BOTTOM_RIGHT, False,
+                scale=self.scale,
+            )[0]
+            out[q0:q1] = oi.squeeze(0)
     _T["pre"] += _time.perf_counter() - _t2
     _T["calls"] += 1
     if _T["calls"] % 200 == 0:
