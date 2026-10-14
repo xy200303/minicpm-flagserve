@@ -70,3 +70,13 @@ K+V 分页（bit-exact，GPU 106→62µs），ixformer varlen flash 经
 pre 段 host 1.77→~0.13ms/call。端到端 **4k 2738.65（+5.83%）** /
 **16k 2558.37（+1.01%）**，TTFT 双场景均改善，精度 98.1% 达标。
 FL commit `ef194318`（vllm-plugin-FL/iluvatar-vendor-fa）。
+
+## A7：decode attention 发射配置 pin（2026-10-14，见 `a7-decode-launch-pin.md`）
+
+赛题组确认 shape-aware dispatch 合规后补 A2 的配置维度：stock
+Triton 默认 w4 s3 是 NVIDIA 甜点，在本芯片上严重失配。离线扫描
+后 3D 路径 pin w1 s1（TILE=16/SEG=16 本已最优），bit-exact。
+微基准 16k 6464→3524µs（1.83x）、4k 1938→1099µs（1.76x）。
+端到端 **4k 3778.65（+38.0%）** / **16k 3567.33（+39.4%）**，
+TTFT 大降（16k mean 186.4s→137.0s），精度 98.1% 达标。
+FL commit `3f05c36d`（vllm-plugin-FL/iluvatar-vendor-fa）。
