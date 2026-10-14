@@ -80,3 +80,9 @@ Triton 默认 w4 s3 是 NVIDIA 甜点，在本芯片上严重失配。离线扫�
 端到端 **4k 3778.65（+38.0%）** / **16k 3567.33（+39.4%）**，
 TTFT 大降（16k mean 186.4s→137.0s），精度 98.1% 达标。
 FL commit `3f05c36d`（vllm-plugin-FL/iluvatar-vendor-fa）。
+
+## A8/A9：收尾扫描（阴性，2026-10-14，见 `a8-a9-negative-results.md`）
+
+lm_head pin（带宽墙）、sampler 重调（现配置已最优）、dec host
+壳子（算账 <1%）、n-gram 投机（75% 请求零命中）全部否决，
+配置层油水榨干。**天数侧以 A7 收官：4k +98.7% / 16k +313.7%**。
