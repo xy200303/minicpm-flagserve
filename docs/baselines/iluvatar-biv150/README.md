@@ -61,3 +61,12 @@ Gumbel-Max + 1024-bin 直方图 zoom top-p），每 decode 步采样尾部
 2587.84（+0.34%），TTFT 无回退，精度 97.1% 达标（与 A4 一致）。
 FL commit `72a83bf3`（vllm-plugin-FL/iluvatar-vendor-fa）；
 内核 FlagGems/dev 已含。
+
+## A6：varlen vendor flash prefill + Triton dual-gather（2026-10-14，见 `a6-varlen-prefill.md`）
+
+prefill 段每请求 kernel 发射 4→2：自研 Triton 内核单发射收集
+K+V 分页（bit-exact，GPU 106→62µs），ixformer varlen flash 经
+`out=` 直写输出切片消掉 copy-out（全形状 bit-exact 探针验证）。
+pre 段 host 1.77→~0.13ms/call。端到端 **4k 2738.65（+5.83%）** /
+**16k 2558.37（+1.01%）**，TTFT 双场景均改善，精度 98.1% 达标。
+FL commit `ef194318`（vllm-plugin-FL/iluvatar-vendor-fa）。
