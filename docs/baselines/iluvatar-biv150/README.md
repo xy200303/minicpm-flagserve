@@ -52,3 +52,12 @@ decode GEMM 微基准 1.22-1.81x，prefill 追平/反超 vendor。
 端到端 32GB 持平（4k 2579.14 / 16k 2485.52，噪声内），收益预计
 在 64GB 评测机体现。精度 97.1% 达标（与 A3 一致）。
 FlagGems commit `5eac6b39`（FlagGems/dev）。
+
+## A5：sampler 尾部融合（2026-10-14，见 `a5-sampler-fusion.md`）
+
+C500 opt7 移植：sort-free 融合采样内核（bf16 直读 + 温度折叠
+Gumbel-Max + 1024-bin 直方图 zoom top-p），每 decode 步采样尾部
+12.4ms→0.67ms（18.6x）。端到端 **16k 2532.68（+1.90%）** / 4k
+2587.84（+0.34%），TTFT 无回退，精度 97.1% 达标（与 A4 一致）。
+FL commit `72a83bf3`（vllm-plugin-FL/iluvatar-vendor-fa）；
+内核 FlagGems/dev 已含。
