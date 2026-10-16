@@ -71,6 +71,22 @@ token 数 ×(k+1) 使 GEMM M=320 掉进 A4 pin 表空白区、与
 FULL_DECODE_ONLY cudagraph 兼容性未知、合规上需实质性"改进
 策略"开发量。风险收益不匹配，否决。脚本 `/tmp/a9_ngram_probe.py`。
 
+## A9 结论修订（2026-10-16，见 A10/A11）
+
+A9 的**探针做法有偏差、否决理由需要修订**：探针只按"文本离线模拟"估命中率，
+低估了复读序列在 token 流中的占比。真实端到端实测（`docs/experiments/a10-a11-spec-decode-negative.md`）：
+
+- n-gram draft 质量是**完美的**：接受率 100%（82685/82685）、接受长度 6.00、A/G 63.1%、
+  理论 decode 加速 2.71x —— 官方 benchmark 的随机 prompt 负载恰恰是 n-gram 投机的理想场景。
+- 但**净吞吐仍然全面亏损**：CPU proposer 107.68 tok/s、stock `ngram_gpu` 30–100 tok/s、
+  均匀批补丁(A11) 2–9 tok/s，对照无投机为 364.11 tok/s。
+- 真实原因不是负载，而是**这套 vLLM 0.24 + vllm-plugin-FL(fork) 栈上投机步的执行开销**：
+  裁剪同步 + 非均匀批 → FULL 图被绕过走 eager（78–131 ms/step）；
+  强行均匀化进入 FULL 图后，图内原生 attention 在 q_len=6 下病态（5–55 s/step）。
+
+最终取舍不变（天数侧不做投机解码），但对外表述应改为
+"draft 完美、上限 2.71x，亏在栈的投机步开销"，而非"负载不适配"。
+
 ## 结论
 
 shape-aware dispatch（配置层）的可挖空间在 A4/A7 已全部兑现；

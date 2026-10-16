@@ -1,0 +1,116 @@
+"""fl opt-A11: keep ngram_gpu speculative decode in uniform (padded) batches.
+
+Stock vLLM trims each request's scheduled draft tokens down to the number of
+*valid* drafts proposed last step (``update_scheduler_for_invalid_drafts``).
+With ngram proposals that count varies per request, so the verify forward is
+no longer a uniform decode batch: FULL_DECODE_ONLY cudagraphs are bypassed and
+the step runs eager. On Iluvatar the eager decode step costs ~100 ms
+(measured, BI-V150, concurrency 8: 19.3 ms/step without speculation vs
+78-131 ms/step with ngram_gpu), far more than speculation buys back.
+
+This patch keeps every request at k drafts:
+
+  * ``propose()`` padding: trailing -1 draft slots are replaced by the
+    request's own last token, so no -1 reaches the scheduler;
+  * draft trimming is disabled, which also drops the per-step
+    ``event.synchronize()`` pipeline drain inside the trim helper.
+
+Verification still decides every token, so model output is unchanged: a
+placeholder that happens to match is a legitimate accepted draft, one that
+does not is rejected exactly like a trimmed slot would have been.
+
+A/B switch: VLLM_FL_DISABLE_UNIFORM_SPEC=1 keeps stock behaviour.
+"""
+
+from __future__ import annotations
+
+import logging
+import os
+
+import torch
+
+logger = logging.getLogger(__name__)
+
+_DISABLED = os.getenv("VLLM_FL_DISABLE_UNIFORM_SPEC", "0") == "1"
+
+_APPLIED = False
+_STOCK_PROPOSE = None
+_STOCK_TRIM = None
+
+
+def _propose_uniform(
+    self,
+    num_speculative_tokens,
+    num_tokens_no_spec,
+    token_ids_gpu,
+    valid_sampled_token_ids_gpu,
+    valid_sampled_tokens_count,
+):
+    draft_tokens, num_valid_draft_tokens = _STOCK_PROPOSE(
+        self,
+        num_speculative_tokens,
+        num_tokens_no_spec,
+        token_ids_gpu,
+        valid_sampled_token_ids_gpu,
+        valid_sampled_tokens_count,
+    )
+    if _DISABLED:
+        return draft_tokens, num_valid_draft_tokens
+
+    # Pad invalid (trailing) draft slots with the request's own last token so
+    # the scheduled batch stays homogeneous (1 + k tokens for every request).
+    # No data-dependent branch here: always run the same GPU ops.
+    last_idx = (num_tokens_no_spec.to(torch.long) - 1).clamp(min=0)
+    placeholder = token_ids_gpu.gather(1, last_idx.unsqueeze(1))
+    draft_tokens = torch.where(draft_tokens == -1, placeholder, draft_tokens)
+    return draft_tokens, num_valid_draft_tokens
+
+
+def _trim_disabled(
+    num_valid_draft_tokens_event,
+    num_valid_draft_tokens_cpu,
+    scheduler_output,
+    req_id_to_index,
+):
+    # Uniform batches: nothing to trim, and no need to synchronize on the
+    # valid-draft-count D2H, which otherwise drains the pipeline every step.
+    return
+
+
+def apply() -> bool:
+    """Install the uniform speculative-decode path for ngram_gpu on Iluvatar."""
+    global _APPLIED, _STOCK_PROPOSE, _STOCK_TRIM
+    if _APPLIED:
+        return True
+    try:
+        from vllm.v1.spec_decode import ngram_proposer_gpu
+        from vllm.v1.worker import gpu_model_runner
+    except Exception as exc:  # pragma: no cover - import guard
+        logger.warning("uniform_spec_decode: vllm modules unavailable: %s", exc)
+        return False
+
+    _STOCK_PROPOSE = ngram_proposer_gpu.NgramProposerGPU.propose
+
+    ngram_proposer_gpu.NgramProposerGPU.propose = _propose_uniform
+
+    # The trim helper is imported by name into every model-runner module, so
+    # patch each module's binding; the plugin runner (ModelRunnerFL) does not
+    # go through vllm's gpu_model_runner module.
+    _targets = [gpu_model_runner]
+    try:
+        from vllm_fl.worker import model_runner as _fl_runner
+
+        _targets.append(_fl_runner)
+    except Exception:
+        pass
+    for _mod in _targets:
+        if hasattr(_mod, "update_scheduler_for_invalid_drafts"):
+            _mod.update_scheduler_for_invalid_drafts = _trim_disabled
+
+    _APPLIED = True
+    logger.info(
+        "fl opt-A11: uniform ngram_gpu speculation installed "
+        "(padding propose + trimming disabled); disable with "
+        "VLLM_FL_DISABLE_UNIFORM_SPEC=1"
+    )
+    return True

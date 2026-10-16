@@ -1,0 +1,34 @@
+--- vllm-plugin-FL/vllm_fl/worker/model_runner.py	2026-10-16 20:11:00.752277267 +0800
++++ opt_experiments/model_runner.FL-DBG.py.exp	2026-10-16 20:10:56.664272153 +0800
+@@ -4236,6 +4236,31 @@
+                 num_encoder_reqs=len(scheduler_output.scheduled_encoder_inputs),
+             )
+ 
++            # TEMP-DBG (fl): batch dispatch trace
++            try:
++                import os as _os
++                if _os.getenv("VLLM_FL_DBG_DISPATCH", "0") == "1":
++                    _g = globals().setdefault("_FL_DBG", {"n": 0})
++                    _g["n"] += 1
++                    _vals = list(scheduler_output.num_scheduled_tokens.values())
++                    if _g["n"] <= 80 or _g["n"] % 20 == 0:
++                        _m = locals()
++                        print(
++                            "[FL-DBG] step=%d cgmode=%s bdesc=%s maxq=%s "
++                            "qmin=%d qmax=%d tot=%d nreq=%d" % (
++                                _g["n"], str(_m.get("cudagraph_mode")),
++                                str(_m.get("batch_desc")),
++                                str(_m.get("max_num_scheduled_tokens")),
++                                min(_vals) if _vals else 0,
++                                max(_vals) if _vals else 0,
++                                sum(_vals) if _vals else 0,
++                                len(_vals),
++                            ),
++                            flush=True,
++                        )
++            except Exception as _e:
++                print("[FL-DBG] err", _e, flush=True)
++
+             logger.debug(
+                 "Running batch with cudagraph_mode: %s, batch_descriptor: %s, "
+                 "should_ubatch: %s, num_tokens_across_dp: %s",
