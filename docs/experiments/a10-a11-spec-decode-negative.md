@@ -33,11 +33,12 @@ serve 参数与基线完全一致，仅额外加 `--speculative-config`（组委
    `event.synchronize()` 阻塞流水线，并把每个请求的 draft 数裁到"上一步有效数"——
    各请求长度不一，导致 verify 批**非均匀**，`_is_uniform_decode()` 返回 False，
    `FULL_DECODE_ONLY` cudagraph 被绕过 → 整个 verify forward 走 eager（78–131 ms/step）。
-3. **A11 均匀化补丁：图内 attention 路径病态**。A11 用占位 token 补齐 draft 槽位并禁用裁剪后，
-   批次确实变均匀了（见下方 FL-DBG 实证），但 step 反而劣化到 **5–55 s/step**：
-   cudagraph 已捕获的 decode 图内部执行的是 vLLM 原生 attention 实现；本提交的 vendor ixAttnBkd
-   路由在**每步的 metadata builder 里做决策（图外）**，因此图内退化成该栈上 q_len=6 的病态路径
-   （vendor FA 计时日志在 graphed 步期间停止递增即为佐证）。
+3. **A11 均匀化补丁：spec + FULL cudagraph 这条组合本身不可用**。
+   A11 用占位 token 补齐 draft 槽位并禁用裁剪后，批次确实变均匀了、图也派发了（见下方 FL-DBG 实证），
+   但 step 反而劣化到 **5–55 s/step**。**注意：最初怀疑是"图内装的是原生 attention"，随后的实验把这个
+   解释推翻了**（见下节 E1/E2）：把 vendor 路径整体关掉、图内换成 stock attention 后，停滞依旧。
+   即：问题不在我们的 attention 集成，而在 vLLM 0.24 + 插件 fork 的 **spec 步 × FULL cudagraph**
+   组合本身（不均匀 draft 语义、graph-static 输入缓冲、trim 语义在这套混合版本里没有被正确打通）。
 
 ### A11 生效性实证（FL-DBG 埋点输出）
 
@@ -48,7 +49,19 @@ serve 参数与基线完全一致，仅额外加 `--speculative-config`（组委
 SpecDecoding metrics: Mean acceptance length: 6.00         # 接受长度满格 ✓
 ```
 
-即：**批次均匀性、图派发、接受率三件事都做成了，但图内 attention 使这一步变成 5–55 秒。**
+即：**批次均匀性、图派发、接受率三件事都做成了，但这一步仍要 5–55 秒。**
+
+### E1/E2：把"谁的锅"钉死（2026-10-16 晚）
+
+| 实验 | 配置 | 结果 |
+|---|---|---|
+| E1（capture 埋点） | 投机 serve，`VLLM_FL_ATTN_DBG=1` | capture 期间 `capturing=True max_q=6 branch=vendor fl_split=yes` → **图里装的是我们的 vendor kernel，不是原生 attention**（原假设被推翻）。注意：埋点在 capture 内格式化 GPU tensor 会触发 D2H 使 capture 失败，属埋点自身缺陷，不影响该结论 |
+| E2（隔离变量） | A11 + `VLLM_FL_DISABLE_ILUVATAR_VENDOR_FA=1` + `VLLM_FL_DISABLE_DECODE_PIN=1`（图内只可能是 stock 路径） | 仍然停滞：`generation 0.0–0.9 tok/s`、接受长度 6.00、8 请求 Running |
+| 附注 | A7 pin 的作用面核查 | pin 只覆盖 stock triton unified attention 的 `num_warps/num_stages`，与 vendor kernel 无关，故 E1 关 pin 与否都不会影响结论 |
+
+**结论：spec 步的 5–55 s/step 与 attention 实现无关，是 spec × FULL cudagraph 组合在这套栈上的问题。**
+要让它可用，等于修复 fork 里 spec 与 cudagraph 的整套接线（graph-static 输入缓冲、draft 语义、
+uniform decode 路径），没有任何上游可参照——投入产出不成立，故本方向终止。
 
 ## 4. 环境关键发现（对复现与评审都重要）
 
@@ -73,7 +86,8 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py --model /workspa
   --served-model-name minicpm --port 9031 --test-cases '[[4096,1024,8,32]]'
 ```
 
-实验产物（未进入提交代码）: `/workspace/opt_experiments/`（A11 补丁、FL-DBG 版 runner、阶段计时器）。
+实验产物（未进入提交代码）: `/workspace/opt_experiments/`（A11 补丁、FL-DBG 版 runner、阶段计时器、
+E1 capture 埋点日志 `diag1_capture_vendor_branch.log`、E2 日志 `e2_vendor_disabled_still_slow.log`）。
 
 ## 6. A9 结论修订
 
