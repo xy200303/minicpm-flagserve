@@ -53,6 +53,38 @@
 
 官方 4k/16k 用例 prefill 占大头，**这一项不解决，端到端打不过基线**。
 
+## 7. 混合步阻塞点的修复尝试（opt-A5b，进行中）
+
+**定位到具体调用点**：当 `spec_decode_metadata` 非空时，runner 不走 `Sampler`，而是直接调
+`RejectionSampler`；在它内部（`vllm/v1/sample/rejection_sampler.py` 的 `forward`）有这样一行：
+
+```python
+bonus_sampler_output = self.sampler(
+    logits=bonus_logits,
+    sampling_metadata=replace(sampling_metadata, max_num_logprobs=-1),
+    predict_bonus_token=True,
+    logprobs_mode_override="processed_logits" / "raw_logits",
+)
+```
+
+即 **bonus token 的采样走的是 Sampler.forward**，而我们的 A5 融合采样正是以
+`predict_bonus_token` 为由拒绝了它 → 回落到本栈上极慢的 stock top-p 采样。
+二级计时实证（wall/device 成对，单位 ms/call）：
+
+| 调用 | wall/device | 说明 |
+|---|---|---|
+| `Sampler.sample` | **974/1016** | 就是这笔开销 |
+| `rejection_sample` | 17/6 | rejection 本身很便宜 |
+| `Sampler.apply_logits_processors` | 0/0 | 无 |
+
+**A5b 改动**：在 `predict_bonus_token` 且无 penalties/bad words/processors/logprobs 语义需求时
+允许融合核处理（并返回 logits 作为 logprobs 张量，保证边缘情况不崩）；同步修正拒绝原因的报告顺序。
+
+**当前状态（E19）**：融合路径已被触发（`fl opt7: fused sampler tail ENGAGED`），但端到端未见改善，
+拒绝原因里仍出现 `top_k active` 与 `logprobs_mode_override` → 说明还有某类调用没进融合路径。
+下一步要把拒绝原因连同调用上下文（`predict_bonus_token` / `max_num_logprobs` / `top_k` 取值）一起记录，
+定位剩余拒绝来自哪一类调用；若确实需要 top_k，则在 FlagGems 里补 top_k 融合分支（与 top-p 同框架）。
+
 ## 5. 复现命令
 
 ```bash
