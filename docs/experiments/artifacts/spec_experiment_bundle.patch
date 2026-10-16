@@ -1,0 +1,178 @@
+diff --git a/vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py b/vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py
+index 2cab518..d12725b 100644
+--- a/vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py
++++ b/vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py
+@@ -238,6 +238,27 @@ except Exception as _e:
+     logger.warning("sampler_tail_fusion patch failed: %s", _e)
+ 
+ 
++# fl opt-A11 (experiment): uniform ngram_gpu speculation for cudagraph replay
++try:
++    from vllm_fl.dispatch.backends.vendor.iluvatar.impl.uniform_spec_decode import (
++        apply as _apply_uniform_spec_decode,
++    )
++    _apply_uniform_spec_decode()
++except Exception as _e:
++    logger.warning("uniform_spec_decode patch failed: %s", _e)
++
++
++# Debug only: phase timers for the spec-decode step (VLLM_FL_TIMING=1).
++try:
++    import sys as _sys
++    if "/tmp" not in _sys.path:
++        _sys.path.append("/tmp")
++    from fl_timing2 import install as _install_fl_timing2
++    _install_fl_timing2()
++except Exception as _e:
++    logger.warning("fl_timing install failed: %s", _e)
++
++
+ def patch_sampler_compile_for_iluvatar() -> None:
+     # Disable torch.compile on vllm sampler ops for Iluvatar.
+     # flagtree triton only supports Iluvatar backend, not cuda target.
+diff --git a/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py b/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
+index 31957ad..c8f29d0 100644
+--- a/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
++++ b/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
+@@ -292,11 +292,33 @@ def _vendor_forward(self, layer, query, key, value, kv_cache,
+     return output
+ 
+ 
++def _attn_dbg(self, attn_metadata, branch):
++    """TEMP-DBG: which attention branch runs per step (python values only)."""
++    try:
++        import os as _os
++        if _os.getenv("VLLM_FL_ATTN_DBG", "0") != "1":
++            return
++        sp = getattr(attn_metadata, "_fl_split", None)
++        n_pre = len(sp[2]) if sp else -1
++        n_dec = len(sp[3]) if (sp and sp[3] is not None) else 0
++        maxq = getattr(attn_metadata, "max_query_len", None)
++        key = (branch, maxq, n_pre, n_dec, bool(sp))
++        seen = globals().setdefault("_ATTN_DBG_SEEN", {})
++        seen[key] = seen.get(key, 0) + 1
++        if seen[key] <= 2 or seen[key] % 50 == 0:
++            print("[ATTN-DBG] branch=%s max_q=%s pre_rows=%s dec_rows=%s split=%s hit=%d"
++                  % (branch, maxq, n_pre, n_dec, bool(sp), seen[key]), flush=True)
++    except Exception:
++        pass
++
++
+ def _forward_iluvatar(self, layer, query, key, value, kv_cache,
+                       attn_metadata, output, output_scale=None,
+                       output_block_scale=None):
+-    if output_scale is None and output_block_scale is None and not _DISABLED \
+-            and _eligible(self, attn_metadata, kv_cache):
++    _elig = (output_scale is None and output_block_scale is None and not _DISABLED
++             and _eligible(self, attn_metadata, kv_cache))
++    _attn_dbg(self, attn_metadata, "vendor" if _elig else "stock")
++    if _elig:
+         try:
+             if _engaged["n"] == 0:
+                 logger.info("fl iluvatar: vendor flash prefill ENGAGED")
+diff --git a/vllm_fl/worker/model_runner.py b/vllm_fl/worker/model_runner.py
+index 343dfdd..2bee6d8 100644
+--- a/vllm_fl/worker/model_runner.py
++++ b/vllm_fl/worker/model_runner.py
+@@ -7,6 +7,7 @@
+ import functools
+ import gc
+ import itertools
++import os
+ import threading
+ import time
+ from collections import defaultdict
+@@ -290,6 +291,9 @@ if TYPE_CHECKING:
+ 
+ logger = init_logger(__name__)
+ 
++# fl opt-A12: CPU-side draft-token gather (see _calc_spec_decode_metadata).
++_GATHER_ON_CPU = os.getenv("VLLM_FL_SPEC_GATHER_CPU", "1") != "0"
++
+ AttnMetadataDict: TypeAlias = dict[str, AttentionMetadata]
+ # list when ubatching is enabled
+ PerLayerAttnMetadata: TypeAlias = list[AttnMetadataDict] | AttnMetadataDict
+@@ -2812,6 +2816,10 @@ class ModelRunnerFL(
+         num_draft_tokens: np.ndarray,
+         cu_num_scheduled_tokens: np.ndarray,
+     ) -> SpecDecodeMetadata:
++        import os as _os, time as _t
++        _dbg = _os.getenv("VLLM_FL_DBG_SPECMETA", "0") == "1"
++        _marks = [("enter", _t.perf_counter())] if _dbg else []
++
+         # Inputs:
+         # cu_num_scheduled_tokens:  [  4, 104, 107, 207, 209]
+         # num_draft_tokens:         [  3,   0,   2,   0,   1]
+@@ -2832,12 +2840,16 @@ class ModelRunnerFL(
+         cu_num_sampled_tokens = self._get_cumsum_and_arange(
+             num_sampled_tokens, self._arange_scratch, cumsum_dtype=np.int32
+         )
++        if _dbg:
++            _marks.append(("cumsum_sampled", _t.perf_counter()))
+         # Step 2. [0, 0, 0, 0, 103, 104, 104, 104, 206, 207, 207]
+         logits_indices = np.repeat(
+             cu_num_scheduled_tokens - num_sampled_tokens, num_sampled_tokens
+         )
+         # Step 3. [0, 1, 2, 3, 103, 104, 105, 106, 206, 207, 208]
+         logits_indices += self._arange_scratch[: cu_num_sampled_tokens[-1]]
++        if _dbg:
++            _marks.append(("logits_np", _t.perf_counter()))
+ 
+         # Compute the bonus logits indices.
+         bonus_logits_indices = cu_num_sampled_tokens - 1
+@@ -2854,6 +2866,12 @@ class ModelRunnerFL(
+         )
+         # [0, 1, 2, 5, 6, 9]
+         target_logits_indices += self._arange_scratch[: cu_num_draft_tokens[-1]]
++        if _dbg:
++            _marks.append(("target_np", _t.perf_counter()))
++
++        # fl opt-A12: keep numpy views for the CPU-side draft gather below.
++        _li_np = logits_indices.copy()
++        _tli_np = target_logits_indices.copy()
+ 
+         # TODO: Optimize the CPU -> GPU copy.
+         cu_num_draft_tokens = torch.from_numpy(cu_num_draft_tokens).to(
+@@ -2871,12 +2889,39 @@ class ModelRunnerFL(
+         bonus_logits_indices = torch.from_numpy(bonus_logits_indices).to(
+             self.device, non_blocking=True
+         )
++        if _dbg:
++            _marks.append(("h2d_x5", _t.perf_counter()))
+ 
+         # Compute the draft token ids.
+         # draft_token_indices:      [  1,   2,   3, 105, 106, 208]
+-        draft_token_ids = self.input_ids.gpu[logits_indices]
+-        draft_token_ids = draft_token_ids[target_logits_indices + 1]
+-
++        # fl opt-A12: on this stack, GPU advanced indexing (aten::index with a
++        # tensor index) costs O(max index) — with prefill-chunk indices it is
++        # seconds per call (measured 3.68 s/step in mixed batches).  Gather on
++        # the CPU copy and move only the tiny result instead.
++        draft_token_ids = None
++        if _GATHER_ON_CPU:
++            try:
++                _ids_cpu = self.input_ids.cpu
++                _ids_np = _ids_cpu.numpy() if _ids_cpu.is_contiguous() else _ids_cpu.contiguous().numpy()
++                _sel = _ids_np[_li_np][_tli_np + 1]
++                draft_token_ids = torch.from_numpy(
++                    np.ascontiguousarray(_sel)
++                ).to(self.device, dtype=self.input_ids.gpu.dtype, non_blocking=True)
++            except Exception:
++                draft_token_ids = None
++        if draft_token_ids is None:
++            draft_token_ids = self.input_ids.gpu[logits_indices]
++            draft_token_ids = draft_token_ids[target_logits_indices + 1]
++        if _dbg:
++            _marks.append(("gathers", _t.perf_counter()))
++
++        if _dbg:
++            _marks.append(("done", _t.perf_counter()))
++            _tot = (_marks[-1][1] - _marks[0][1]) * 1000
++            if _tot > 30:
++                _parts = " ".join("%s=%.1f" % (_marks[i][0], (_marks[i][1]-_marks[i-1][1])*1000)
++                                  for i in range(1, len(_marks)))
++                print("[SPECMETA] total=%.1f ms | %s | ndraft=%s" % (_tot, _parts, num_draft_tokens.tolist()[:10]), flush=True)
+         return SpecDecodeMetadata(
+             draft_token_ids=draft_token_ids,
+             num_draft_tokens=num_draft_tokens.tolist(),

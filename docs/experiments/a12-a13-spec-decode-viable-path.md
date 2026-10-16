@@ -65,3 +65,25 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
 （`VLLM_FL_UNIFORM_SPEC_MODE=notrim` 为早期被否决的写法，留作对照。）
 
 日志与证据：`/workspace/opt_experiments/`（含 E7/E12/E13 日志、specmeta 逐行埋点输出）。
+
+## 6. 混合步慢的真凶：sampler（E14，wall/device 双计时实证）
+
+用 CUDA event 同时记录"墙钟/设备"时间（`wall/device` 成对）：
+
+```
+step_wall=2725 ms | _prepare_input_ids=1261/1264  _calc_spec_decode_metadata=1230/1228
+                    sample_tokens=814/810  _sample=762/756  _model_forward=56/167
+step_wall=5647 ms | sample_tokens=3699/3641  _sample=3673/3614
+```
+
+- `_sample` 的 wall ≈ device（如 3673/3614），说明这是**真实的 GPU 队列时间**，不是 CPU 等待假象。
+- 成本随批内 token 数放大：decode（48 token）时 sampler 只要 4 ms，混合步（700–1400 token）要
+  0.6–3.7 s → 约 2.6 ms/token，说明 spec 模式下 sampler 对**批内全部 token**做全词表采样。
+- 而无投机路径上这个成本不存在：我们的 A5 采样器融合（FlagGems 融合核）在无投机时走 fast path，
+  在投机时被 `predict_bonus_token` 主动拒绝（日志：`fl opt7: fast path rejected: predict_bonus_token`），
+  于是回落到慢的 stock 采样路径。
+
+**下一步（明确、可做、合规）**：把 A5 的融合采样（bf16 Gumbel-Max + histogram-zoom top-p，无全词表排序）
+扩展到投机路径（bonus token + 拒绝采样），落在 FlagGems。预计混合步从 1.4–5.6 s 回到 ~0.2–0.5 s
+（与无投机同量级），届时端到端才有望在官方 prefill 重用例上取胜：
+decode 13 ms/48 token（基线 19.3 ms/8 token）×  prefill 回到基线水平。

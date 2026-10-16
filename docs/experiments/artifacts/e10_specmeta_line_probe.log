@@ -1,0 +1,388 @@
+INFO 10-16 22:09:55 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-16 22:09:55 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-16 22:09:55 [__init__.py:58] Loading plugin fl
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:728: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+INFO 10-16 22:10:01 [__init__.py:237] Platform plugin fl is activated
+WARNING 10-16 22:10:07 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+/usr/local/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+  warnings.warn(
+WARNING 10-16 22:10:08 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-16 22:10:08 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+WARNING 10-16 22:10:08 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+[2026-10-16 22:10:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar: vendor flash prefill patch armed (ixAttnBkd bottom-right causal, builder-side split)
+[2026-10-16 22:10:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_pin] fl iluvatar: decode unified-attention pinned to num_warps=1 num_stages=1 (3D path only, bit-exact, sweep-verified ~1.8x)
+[2026-10-16 22:10:08] [WARNING] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.uniform_spec_decode] fl opt-A11: uniform ngram_gpu speculation installed, mode=padonly (VLLM_FL_DISABLE_UNIFORM_SPEC=1 to disable)
+[2026-10-16 22:10:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_sampler_compile_for_iluvatar: unwrapped topk_topp_sampler.compiled_random_sample
+[2026-10-16 22:10:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_sampler_compile_for_iluvatar: unwrapped logprobs.batched_count_greater_than
+[2026-10-16 22:10:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_torch_inductor_for_iluvatar: backend '['iluvatar']' already supports target='cuda', no GPUTarget remap needed.
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339] 
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339]        █     █     █▄   ▄█
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339]  ▄▄ ▄█ █     █     █ ▀▄▀ █  version 0.24.0
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339]   █▄█▀ █     █     █     █  model   /workspace/MiniCPM5-2B
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339]    ▀▀  ▀▀▀▀▀ ▀▀▀▀▀ ▀     ▀
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:339] 
+(APIServer pid=48994) INFO 10-16 22:10:08 [api_utils.py:273] non-default args: {'model_tag': '/workspace/MiniCPM5-2B', 'port': 9031, 'model': '/workspace/MiniCPM5-2B', 'max_model_len': 131072, 'served_model_name': ['minicpm'], 'gpu_memory_utilization': 0.85, 'speculative_config': {'method': 'ngram_gpu', 'num_speculative_tokens': 5, 'prompt_lookup_max': 5, 'prompt_lookup_min': 2}, 'compilation_config': {'mode': None, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': [], 'ir_enable_torch_wrap': None, 'splitting_ops': None, 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': None, 'compile_ranges_endpoints': None, 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 0, 'cudagraph_capture_sizes': None, 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': None, 'pass_config': {}, 'max_cudagraph_capture_size': None, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': None, 'static_all_moe_layers': []}}
+(APIServer pid=48994) WARNING 10-16 22:10:08 [envs.py:2004] Unknown vLLM environment variable detected: VLLM_FL_UNIFORM_SPEC_MODE
+(APIServer pid=48994) WARNING 10-16 22:10:08 [envs.py:2004] Unknown vLLM environment variable detected: VLLM_FL_ATTN_DBG
+(APIServer pid=48994) INFO 10-16 22:10:08 [model.py:598] Resolved architecture: LlamaForCausalLM
+(APIServer pid=48994) INFO 10-16 22:10:08 [model.py:1725] Using max model len 131072
+(APIServer pid=48994) INFO 10-16 22:10:08 [vllm.py:1006] Asynchronous scheduling is enabled.
+(APIServer pid=48994) INFO 10-16 22:10:08 [kernel.py:276] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(APIServer pid=48994) WARNING 10-16 22:10:08 [vllm.py:1614] max_num_scheduled_tokens is set to 2048 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(APIServer pid=48994) WARNING 10-16 22:10:08 [vllm.py:541] Model Runner V2 does not yet support ngram/ngram_gpu speculative decoding; using the V1 model runner instead.
+INFO 10-16 22:10:12 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-16 22:10:12 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-16 22:10:12 [__init__.py:58] Loading plugin fl
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:728: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+INFO 10-16 22:10:19 [__init__.py:237] Platform plugin fl is activated
+(EngineCore pid=49135) WARNING 10-16 22:10:24 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/torch/jit/_script.py:362: DeprecationWarning: `torch.jit.script_method` is deprecated. Please switch to `torch.compile` or `torch.export`.
+(EngineCore pid=49135)   warnings.warn(
+(EngineCore pid=49135) WARNING 10-16 22:10:25 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+(EngineCore pid=49135) WARNING 10-16 22:10:25 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+(EngineCore pid=49135) WARNING 10-16 22:10:25 [interface.py:358] Failed to import from vllm._C: ModuleNotFoundError("No module named 'vllm._C'")
+(EngineCore pid=49135) INFO 10-16 22:10:25 [core.py:114] Initializing a V1 LLM engine (v0.24.0) with config: model='/workspace/MiniCPM5-2B', speculative_config=SpeculativeConfig(method='ngram_gpu', model='/workspace/MiniCPM5-2B', num_spec_tokens=5), tokenizer='/workspace/MiniCPM5-2B', skip_tokenizer_init=False, tokenizer_mode=auto, revision=None, tokenizer_revision=None, trust_remote_code=False, dtype=torch.bfloat16, max_seq_len=131072, download_dir=None, load_format=auto, tensor_parallel_size=1, pipeline_parallel_size=1, data_parallel_size=1, decode_context_parallel_size=1, dcp_comm_backend=ag_rs, disable_custom_all_reduce=False, quantization=None, quantization_config=None, enforce_eager=False, enable_return_routed_experts=False, kv_cache_dtype=auto, device_config=cuda, structured_outputs_config=StructuredOutputsConfig(backend='auto', disable_any_whitespace=False, disable_additional_properties=False, reasoning_parser='', reasoning_parser_plugin='', enable_in_reasoning=False), observability_config=ObservabilityConfig(show_hidden_metrics_for_version=None, otlp_traces_endpoint=None, collect_detailed_traces=None, kv_cache_metrics=False, kv_cache_metrics_sample=0.01, cudagraph_metrics=False, enable_layerwise_nvtx_tracing=False, enable_mfu_metrics=False, enable_mm_processor_stats=False, enable_logging_iteration_details=False, jit_monitor_verbose=False), seed=0, served_model_name=minicpm, enable_prefix_caching=True, enable_chunked_prefill=True, pooler_config=None, compilation_config={'mode': <CompilationMode.VLLM_COMPILE: 3>, 'debug_dump_path': None, 'cache_dir': '', 'compile_cache_save_format': 'binary', 'backend': 'inductor', 'custom_ops': ['none'], 'ir_enable_torch_wrap': True, 'splitting_ops': ['vllm::unified_attention_with_output', 'vllm::unified_mla_attention_with_output', 'vllm::mamba_mixer2', 'vllm::mamba_mixer', 'vllm::short_conv', 'vllm::linear_attention', 'vllm::plamo2_mamba_mixer', 'vllm::qwen_gdn_attention_core', 'vllm::gdn_attention_core_xpu', 'vllm::olmo_hybrid_gdn_full_forward', 'vllm::kda_attention', 'vllm::sparse_attn_indexer', 'vllm::rocm_aiter_sparse_attn_indexer', 'vllm::deepseek_v4_attention', 'vllm::unified_kv_cache_update', 'vllm::unified_mla_kv_cache_update'], 'compile_mm_encoder': False, 'cudagraph_mm_encoder': False, 'encoder_cudagraph_token_budgets': [], 'encoder_cudagraph_max_vision_items_per_batch': 0, 'encoder_cudagraph_max_frames_per_batch': None, 'compile_sizes': [], 'compile_ranges_endpoints': [2048], 'inductor_compile_config': {'enable_auto_functionalized_v2': False, 'size_asserts': False, 'alignment_asserts': False, 'scalar_asserts': False, 'combo_kernels': True, 'benchmark_combo_kernel': True}, 'inductor_passes': {}, 'cudagraph_mode': <CUDAGraphMode.FULL_DECODE_ONLY: (2, 0)>, 'cudagraph_num_of_warmups': 1, 'cudagraph_capture_sizes': [1, 2, 4, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200, 208, 216, 224, 232, 240, 248, 256, 272, 288, 304, 320, 336, 352, 368, 384, 400, 416, 432, 448, 464, 480, 496, 512], 'cudagraph_copy_inputs': False, 'cudagraph_specialize_lora': True, 'use_inductor_graph_partition': False, 'pass_config': {'fuse_norm_quant': False, 'fuse_act_quant': False, 'fuse_attn_quant': False, 'enable_sp': False, 'fuse_gemm_comms': False, 'fuse_allreduce_rms': False, 'fuse_rope_kvcache_cat_mla': False, 'fuse_act_padding': False}, 'max_cudagraph_capture_size': 512, 'dynamic_shapes_config': {'type': <DynamicShapesType.BACKED: 'backed'>, 'evaluate_guards': False, 'assume_32_bit_indexing': False}, 'local_cache_dir': None, 'fast_moe_cold_start': False, 'static_all_moe_layers': []}, kernel_config=KernelConfig(ir_op_priority=IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native']), enable_flashinfer_autotune=True, moe_backend='auto', linear_backend='auto')
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/flag_gems/config.py:171: UserWarning: resolve_user_setting: no exclude ops found; returning empty list
+(EngineCore pid=49135)   warnings.warn(
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/torch/library.py:357: UserWarning: Warning only once for all operators,  other operators may also be overridden.
+(EngineCore pid=49135)   Overriding a previously registered kernel for the same operator and the same dispatch key
+(EngineCore pid=49135)   operator: aten::__ilshift__.Tensor(Tensor(a!) self, Tensor other) -> Tensor(a!)
+(EngineCore pid=49135)     registered at /home/corex/sw_home/apps/pytorch/build/aten/src/ATen/RegisterSchema.cpp:6
+(EngineCore pid=49135)   dispatch key: CUDA
+(EngineCore pid=49135)   previous kernel: registered at /home/corex/sw_home/apps/pytorch/build/aten/src/ATen/RegisterCPU_3.cpp:7148
+(EngineCore pid=49135)        new kernel: registered at /usr/local/lib/python3.12/site-packages/flag_gems/__init__.py:62 (Triggered internally at /home/corex/sw_home/apps/pytorch/aten/src/ATen/core/dispatch/OperatorEntry.cpp:208.)
+(EngineCore pid=49135)   self.m.impl(
+(EngineCore pid=49135) WARNING:root:Skipped registering operator: This is not allowed since there's already a kernel registered from python overriding ne_.Scalar's behavior for CUDA dispatch key and aten namespace.
+(EngineCore pid=49135) WARNING:root:Skipped registering operator: This is not allowed since there's already a kernel registered from python overriding ne_.Tensor's behavior for CUDA dispatch key and aten namespace.
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar: vendor flash prefill patch armed (ixAttnBkd bottom-right causal, builder-side split)
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_pin] fl iluvatar: decode unified-attention pinned to num_warps=1 num_stages=1 (3D path only, bit-exact, sweep-verified ~1.8x)
+(EngineCore pid=49135) [2026-10-16 22:10:25] [WARNING] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.uniform_spec_decode] fl opt-A11: uniform ngram_gpu speculation installed, mode=padonly (VLLM_FL_DISABLE_UNIFORM_SPEC=1 to disable)
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_sampler_compile_for_iluvatar: unwrapped topk_topp_sampler.compiled_random_sample
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_sampler_compile_for_iluvatar: unwrapped logprobs.batched_count_greater_than
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_torch_inductor_for_iluvatar: backend '['iluvatar']' already supports target='cuda', no GPUTarget remap needed.
+(EngineCore pid=49135) [2026-10-16 22:10:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.iluvatar] patch_torch_inductor_for_iluvatar: backend '['iluvatar']' already supports target='cuda', no GPUTarget remap needed.
+(EngineCore pid=49135) INFO 10-16 22:10:25 [parallel_state.py:1588] world_size=1 rank=0 local_rank=0 distributed_init_method=tcp://172.17.0.8:56431 backend=nccl
+(EngineCore pid=49135) INFO 10-16 22:10:25 [parallel_state.py:1923] rank 0 in world size 1 is assigned as DP rank 0, PP rank 0, PCP rank 0, TP rank 0, EP rank N/A, EPLB rank N/A
+(EngineCore pid=49135) [2026-10-16 22:10:26] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fused sampler tail armed (bf16 direct + temp fold)
+(EngineCore pid=49135) INFO 10-16 22:10:26 [vllm.py:1006] Asynchronous scheduling is enabled.
+(EngineCore pid=49135) INFO 10-16 22:10:26 [kernel.py:276] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(EngineCore pid=49135) WARNING 10-16 22:10:26 [vllm.py:1614] max_num_scheduled_tokens is set to 2048 based on the speculative decoding settings. This may lead to suboptimal performance. Consider increasing max_num_batched_tokens to accommodate the additional draft token slots, or decrease num_speculative_tokens or max_num_seqs.
+(EngineCore pid=49135) WARNING 10-16 22:10:26 [vllm.py:541] Model Runner V2 does not yet support ngram/ngram_gpu speculative decoding; using the V1 model runner instead.
+(EngineCore pid=49135) INFO 10-16 22:10:26 [compilation.py:310] Enabled custom fusions: rope_kvcache_cat_mla
+(EngineCore pid=49135) INFO 10-16 22:10:27 [backends.py:1087] vLLM's torch.compile cache is disabled.
+(EngineCore pid=49135) INFO 10-16 22:10:27 [backends.py:1148] Dynamo bytecode transform time: 0.38 s
+(EngineCore pid=49135) INFO 10-16 22:10:27 [backends.py:378] Cache the graph of compile range (1, 2048) for later use
+(EngineCore pid=49135) INFO 10-16 22:10:27 [backends.py:393] Compiling a graph for compile range (1, 2048) takes 0.30 s
+(EngineCore pid=49135) INFO 10-16 22:10:27 [decorators.py:311] Directly load AOT compilation from path /root/.cache/vllm/torch_compile_cache/torch_aot_compile/9472ba6c96694725f71019c34f2d77ce11fc23e93f12297783a89728dca3f34b/rank_0_0/model
+(EngineCore pid=49135) INFO 10-16 22:10:27 [monitor.py:53] torch.compile took 0.70 s in total
+(EngineCore pid=49135) INFO 10-16 22:10:27 [monitor.py:81] Initial profiling/warmup run took 0.00 s
+(EngineCore pid=49135) WARNING 10-16 22:10:27 [__init__.py:204] min_p and logit_bias parameters won't work with speculative decoding.
+(EngineCore pid=49135) [2026-10-16 22:10:33] [INFO] [vllm_fl.dispatch.policy] Using custom config from '/usr/local/lib/python3.12/site-packages/vllm_fl/dispatch/config/iluvatar.yaml'
+(EngineCore pid=49135) [2026-10-16 22:10:33] [INFO] [vllm_fl.dispatch] Registering vendor backends for current platform: iluvatar
+(EngineCore pid=49135) [2026-10-16 22:10:33] [INFO] [vllm_fl.dispatch.manager] OpManager initialized: 11 ops with 23 implementations
+(EngineCore pid=49135) [2026-10-16 22:10:33] [INFO] [vllm_fl.dispatch.manager] Op 'attention_backend' using 'default.flagos' (kind=flagos, vendor=None)
+(EngineCore pid=49135) INFO 10-16 22:10:34 [weight_utils.py:849] Filesystem type for checkpoints: OVERLAY. Checkpoint size: 4.69 GiB. Available RAM: 474.24 GiB.
+(EngineCore pid=49135) INFO 10-16 22:10:34 [weight_utils.py:872] Auto-prefetch is disabled because the filesystem (OVERLAY) is not a recognized network FS (NFS/Lustre). If you want to force prefetching, start vLLM with --safetensors-load-strategy=prefetch.
+(EngineCore pid=49135) Loading safetensors checkpoint shards:   0% Completed | 0/1 [00:00<?, ?it/s]
+(EngineCore pid=49135) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.30s/it]
+(EngineCore pid=49135) Loading safetensors checkpoint shards: 100% Completed | 1/1 [00:01<00:00,  1.30s/it]
+(EngineCore pid=49135) 
+(EngineCore pid=49135) INFO 10-16 22:10:35 [default_loader.py:430] Loading weights took 1.46 seconds
+(EngineCore pid=49135) INFO 10-16 22:10:40 [backends.py:1148] Dynamo bytecode transform time: 3.13 s
+(EngineCore pid=49135) INFO 10-16 22:10:42 [backends.py:393] Compiling a graph for compile range (1, 2048) takes 1.88 s
+(EngineCore pid=49135) INFO 10-16 22:10:42 [decorators.py:311] Directly load AOT compilation from path /root/.cache/vllm/torch_compile_cache/torch_aot_compile/d7c8f72fb77bd9e35962edc6a61ce8ad75a463c5b9cd7200b8972774f9e8e0e4/rank_0_0/model
+(EngineCore pid=49135) INFO 10-16 22:10:42 [monitor.py:53] torch.compile took 5.52 s in total
+(EngineCore pid=49135) [ATTN-DBG] branch=stock max_q=None pre_rows=-1 dec_rows=0 split=False hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=stock max_q=None pre_rows=-1 dec_rows=0 split=False hit=2
+(EngineCore pid=49135) INFO 10-16 22:10:47 [monitor.py:81] Initial profiling/warmup run took 5.03 s
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+(EngineCore pid=49135)   resolved_benchmark = resolve_benchmarker(
+(EngineCore pid=49135) [2026-10-16 22:10:55] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: top_k active (unsupported in fused path)
+(EngineCore pid=49135) [2026-10-16 22:11:00] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: top_k active (unsupported in fused path)
+(EngineCore pid=49135) [2026-10-16 22:11:05] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) INFO 10-16 22:11:09 [kv_cache_utils.py:2146] GPU KV cache size: 507,760 tokens
+(EngineCore pid=49135) INFO 10-16 22:11:09 [kv_cache_utils.py:2147] Maximum concurrency for 131,072 tokens per request: 3.87x
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):   0%|          | 0/48 [00:00<?, ?it/s](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=83 dec_rows=0 split=True hit=1
+[2026-10-16 22:11:10] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar: vendor flash prefill ENGAGED
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=83 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=83 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):   2%|▏         | 1/48 [00:04<03:31,  4.51s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=80 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=80 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=80 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):   4%|▍         | 2/48 [00:09<03:33,  4.64s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=78 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=78 dec_rows=0 split=True hit=2
+[2026-10-16 22:11:20] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=200 dec=0.1ms pre=1654.8ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=78 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):   6%|▋         | 3/48 [00:14<03:40,  4.91s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=75 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=75 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=75 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):   8%|▊         | 4/48 [00:19<03:36,  4.93s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=72 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=72 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=72 dec_rows=0 split=True hit=50
+[2026-10-16 22:11:35] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=400 dec=0.2ms pre=3196.1ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  10%|█         | 5/48 [00:24<03:33,  4.98s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=70 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=70 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=70 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  12%|█▎        | 6/48 [00:29<03:31,  5.05s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=67 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=67 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=67 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  15%|█▍        | 7/48 [00:34<03:30,  5.14s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=64 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=64 dec_rows=0 split=True hit=2
+[2026-10-16 22:11:46] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=600 dec=0.3ms pre=4606.8ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=64 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  17%|█▋        | 8/48 [00:39<03:15,  4.88s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=62 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=62 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=62 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  19%|█▉        | 9/48 [00:44<03:18,  5.10s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=59 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=59 dec_rows=0 split=True hit=2
+[2026-10-16 22:12:01] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=800 dec=0.4ms pre=5891.0ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=59 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  21%|██        | 10/48 [00:50<03:23,  5.35s/it][2026-10-16 22:12:01] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar pace: step=20 dt=338.8ms
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=56 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=56 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=56 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  23%|██▎       | 11/48 [00:55<03:05,  5.01s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=54 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=54 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=54 dec_rows=0 split=True hit=50
+[2026-10-16 22:12:10] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=1000 dec=0.5ms pre=7031.6ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  25%|██▌       | 12/48 [00:59<02:51,  4.78s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=51 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=51 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=51 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  27%|██▋       | 13/48 [01:05<03:02,  5.22s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=48 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=48 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=48 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  29%|██▉       | 14/48 [01:09<02:46,  4.91s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=46 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=46 dec_rows=0 split=True hit=2
+[2026-10-16 22:12:20] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=1200 dec=0.6ms pre=8049.5ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=46 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  31%|███▏      | 15/48 [01:13<02:34,  4.69s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=43 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=43 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=43 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  33%|███▎      | 16/48 [01:20<02:47,  5.23s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=42 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=42 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=42 dec_rows=0 split=True hit=50
+[2026-10-16 22:12:35] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=1400 dec=0.7ms pre=8957.7ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  35%|███▌      | 17/48 [01:24<02:34,  4.97s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=40 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=40 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=40 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  38%|███▊      | 18/48 [01:28<02:21,  4.72s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=39 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=39 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=39 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  40%|███▉      | 19/48 [01:36<02:39,  5.49s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=38 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=38 dec_rows=0 split=True hit=2
+[2026-10-16 22:12:47] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=1600 dec=0.8ms pre=9785.8ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=38 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  42%|████▏     | 20/48 [01:40<02:22,  5.09s/it][2026-10-16 22:12:51] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar pace: step=40 dt=249.8ms
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=36 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=36 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=36 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  44%|████▍     | 21/48 [01:44<02:09,  4.80s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=35 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=35 dec_rows=0 split=True hit=2
+[2026-10-16 22:12:55] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=1800 dec=0.9ms pre=10547.9ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=35 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  46%|████▌     | 22/48 [01:48<01:59,  4.58s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=34 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=34 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=34 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  48%|████▊     | 23/48 [01:56<02:18,  5.54s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=32 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=32 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=32 dec_rows=0 split=True hit=50
+[2026-10-16 22:13:11] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=2000 dec=1.0ms pre=11257.7ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  50%|█████     | 24/48 [02:00<02:02,  5.09s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=31 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=31 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=31 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  52%|█████▏    | 25/48 [02:04<01:49,  4.78s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=30 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=30 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=30 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  54%|█████▍    | 26/48 [02:08<01:40,  4.55s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=28 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=28 dec_rows=0 split=True hit=2
+[2026-10-16 22:13:19] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=2200 dec=1.1ms pre=11897.4ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=28 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  56%|█████▋    | 27/48 [02:12<01:32,  4.38s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=27 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=27 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=27 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  58%|█████▊    | 28/48 [02:16<01:25,  4.27s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=26 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=26 dec_rows=0 split=True hit=2
+[2026-10-16 22:13:36] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=2400 dec=1.2ms pre=12469.3ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=26 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  60%|██████    | 29/48 [02:25<01:47,  5.66s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=24 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=24 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=24 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  62%|██████▎   | 30/48 [02:29<01:32,  5.15s/it][2026-10-16 22:13:40] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar pace: step=60 dt=176.5ms
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=23 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=23 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=23 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) [2026-10-16 22:13:44] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=2600 dec=1.2ms pre=12971.3ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  65%|██████▍   | 31/48 [02:33<01:21,  4.80s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=22 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=22 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=22 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  67%|██████▋   | 32/48 [02:37<01:12,  4.54s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=20 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=20 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=20 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  69%|██████▉   | 33/48 [02:41<01:05,  4.37s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=19 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=19 dec_rows=0 split=True hit=2
+[2026-10-16 22:13:52] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=2800 dec=1.3ms pre=13419.9ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=19 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  71%|███████   | 34/48 [02:45<00:59,  4.24s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=18 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=18 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=18 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  73%|███████▎  | 35/48 [02:54<01:16,  5.86s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=16 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=16 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=16 dec_rows=0 split=True hit=50
+[2026-10-16 22:14:09] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=3000 dec=1.4ms pre=13810.6ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  75%|███████▌  | 36/48 [02:58<01:03,  5.27s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=15 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=15 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=15 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  77%|███████▋  | 37/48 [03:02<00:53,  4.86s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=14 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=14 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=14 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  79%|███████▉  | 38/48 [03:06<00:45,  4.57s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=12 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=12 dec_rows=0 split=True hit=2
+[2026-10-16 22:14:17] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=3200 dec=1.5ms pre=14134.3ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=12 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  81%|████████▏ | 39/48 [03:10<00:39,  4.36s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=11 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=11 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=11 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  83%|████████▎ | 40/48 [03:14<00:33,  4.21s/it][2026-10-16 22:14:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar pace: step=80 dt=116.7ms
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=10 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=10 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:14:25] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=3400 dec=1.6ms pre=14380.3ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=10 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  85%|████████▌ | 41/48 [03:18<00:28,  4.11s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=8 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=8 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=8 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  88%|████████▊ | 42/48 [03:21<00:24,  4.02s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=7 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=7 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=7 dec_rows=0 split=True hit=50
+[2026-10-16 22:14:44] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=3600 dec=1.7ms pre=14564.6ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  90%|████████▉ | 43/48 [03:33<00:31,  6.28s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=6 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=6 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=6 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  92%|█████████▏| 44/48 [03:37<00:22,  5.54s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=4 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=4 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=4 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  94%|█████████▍| 45/48 [03:37<00:11,  3.93s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=3 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=3 dec_rows=0 split=True hit=2
+[2026-10-16 22:14:48] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=3800 dec=1.8ms pre=14677.4ms (host, cumulative)
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=3 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL):  96%|█████████▌| 46/48 [03:37<00:05,  2.80s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=2 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=2 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=2 dec_rows=0 split=True hit=50
+Capturing CUDA graphs (decode, FULL):  98%|█████████▊| 47/48 [03:37<00:01,  2.00s/it](EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=1 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=1 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=6 pre_rows=1 dec_rows=0 split=True hit=50
+[2026-10-16 22:14:48] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=4000 dec=1.9ms pre=14728.3ms (host, cumulative)
+(EngineCore pid=49135) Capturing CUDA graphs (decode, FULL): 100%|██████████| 48/48 [03:37<00:00,  1.44s/it]Capturing CUDA graphs (decode, FULL): 100%|██████████| 48/48 [03:37<00:00,  4.54s/it]
+(EngineCore pid=49135) [ATTN-DBG] branch=stock max_q=None pre_rows=-1 dec_rows=0 split=False hit=50
+(EngineCore pid=49135) [2026-10-16 22:15:03] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: top_k active (unsupported in fused path)
+(EngineCore pid=49135) [2026-10-16 22:15:03] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: top_k active (unsupported in fused path)
+(EngineCore pid=49135) [2026-10-16 22:15:03] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) INFO 10-16 22:15:03 [core.py:337] init engine (profile, create kv cache, warmup model) took 266.85 s (compilation: 6.21 s)
+(EngineCore pid=49135) INFO 10-16 22:15:13 [kernel.py:276] Final IR op priority after setting platform defaults: IrOpPriorityConfig(rms_norm=['native'], fused_add_rms_norm=['native'])
+(EngineCore pid=49135) /usr/local/lib/python3.12/contextlib.py:144: ResourceWarning: Unclosed context <zmq.Context() at 0x7da829f70710>
+(EngineCore pid=49135)   next(self.gen)
+(EngineCore pid=49135) ResourceWarning: Enable tracemalloc to get the object allocation traceback
+(APIServer pid=48994) INFO 10-16 22:15:13 [api_server.py:577] Supported tasks: ['generate']
+(APIServer pid=48994) WARNING 10-16 22:15:14 [model.py:1477] Default vLLM sampling parameters have been overridden by the model's `generation_config.json`: `{'temperature': 1.0, 'top_p': 0.95}`. If this is not intended, please relaunch vLLM instance with `--generation-config vllm`.
+(APIServer pid=48994) INFO 10-16 22:15:15 [hf.py:548] Detected the chat template content format to be 'string'. You can set `--chat-template-content-format` to override this.
+(APIServer pid=48994) INFO 10-16 22:15:15 [api_server.py:581] Starting vLLM server on http://0.0.0.0:9031
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:37] Available routes are:
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:46] Route: /openapi.json, Methods: HEAD, GET
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:46] Route: /docs, Methods: HEAD, GET
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:46] Route: /docs/oauth2-redirect, Methods: HEAD, GET
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:46] Route: /redoc, Methods: HEAD, GET
+(APIServer pid=48994) INFO 10-16 22:15:15 [launcher.py:46] Route: /metrics, Methods: GET
+(APIServer pid=48994) INFO:     Started server process [48994]
+(APIServer pid=48994) INFO:     Waiting for application startup.
+(APIServer pid=48994) INFO:     Application startup complete.
+(APIServer pid=48994) INFO:     127.0.0.1:60288 - "POST /tokenize HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60294 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60294 - "GET /metrics HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60294 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60302 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60314 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60316 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60326 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60340 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60344 - "POST /v1/completions HTTP/1.1" 200 OK
+(APIServer pid=48994) INFO:     127.0.0.1:60350 - "POST /v1/completions HTTP/1.1" 200 OK
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2048 pre_rows=1 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2048 pre_rows=1 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:09] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fused sampler tail ENGAGED on first batch
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2048 pre_rows=1 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+(EngineCore pid=49135)   resolved_benchmark = resolve_benchmarker(
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2042 pre_rows=2 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2042 pre_rows=2 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:10] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+(EngineCore pid=49135)   resolved_benchmark = resolve_benchmarker(
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2042 pre_rows=2 dec_rows=0 split=True hit=50
+(EngineCore pid=49135) [2026-10-16 22:16:12] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=4200 dec=2.0ms pre=14764.2ms (host, cumulative)
+(EngineCore pid=49135) [2026-10-16 22:16:12] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [2026-10-16 22:16:12] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar pace: step=100 dt=191.6ms
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2030 pre_rows=3 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2030 pre_rows=3 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:12] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(APIServer pid=48994) INFO 10-16 22:16:15 [loggers.py:273] Engine 000: Avg prompt throughput: 409.6 tokens/s, Avg generation throughput: 0.3 tokens/s, Running: 3 reqs, Waiting: 5 reqs, GPU KV cache usage: 2.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:16:15 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 0.16 tokens/s, Accepted: 0 tokens, Drafted: 10 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2036 pre_rows=3 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2036 pre_rows=3 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:16] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2006 pre_rows=4 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2006 pre_rows=4 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:17] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) /usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+(EngineCore pid=49135)   resolved_benchmark = resolve_benchmarker(
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2030 pre_rows=4 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2030 pre_rows=4 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:22] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1970 pre_rows=5 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1970 pre_rows=5 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:22] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=4400 dec=2.1ms pre=14839.0ms (host, cumulative)
+(APIServer pid=48994) INFO 10-16 22:16:25 [loggers.py:273] Engine 000: Avg prompt throughput: 819.1 tokens/s, Avg generation throughput: 0.7 tokens/s, Running: 4 reqs, Waiting: 4 reqs, GPU KV cache usage: 3.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:16:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 2.50 tokens/s, Accepted: 0 tokens, Drafted: 25 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [2026-10-16 22:16:26] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2024 pre_rows=5 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2024 pre_rows=5 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:33] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1922 pre_rows=6 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1922 pre_rows=6 dec_rows=0 split=True hit=2
+(APIServer pid=48994) INFO 10-16 22:16:35 [loggers.py:273] Engine 000: Avg prompt throughput: 409.5 tokens/s, Avg generation throughput: 0.7 tokens/s, Running: 5 reqs, Waiting: 3 reqs, GPU KV cache usage: 4.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:16:35 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 3.00 tokens/s, Accepted: 0 tokens, Drafted: 30 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [2026-10-16 22:16:37] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2018 pre_rows=6 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2018 pre_rows=6 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:45] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1862 pre_rows=7 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1862 pre_rows=7 dec_rows=0 split=True hit=2
+(APIServer pid=48994) INFO 10-16 22:16:45 [loggers.py:273] Engine 000: Avg prompt throughput: 409.5 tokens/s, Avg generation throughput: 0.9 tokens/s, Running: 6 reqs, Waiting: 2 reqs, GPU KV cache usage: 4.8%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:16:45 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 4.00 tokens/s, Accepted: 0 tokens, Drafted: 40 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [2026-10-16 22:16:49] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2012 pre_rows=7 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2012 pre_rows=7 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:16:52] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl iluvatar timing: calls=4600 dec=2.2ms pre=14989.4ms (host, cumulative)
+(APIServer pid=48994) INFO 10-16 22:16:55 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.5 tokens/s, Running: 7 reqs, Waiting: 1 reqs, GPU KV cache usage: 5.2%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:16:55 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 2.50 tokens/s, Accepted: 0 tokens, Drafted: 25 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [2026-10-16 22:16:56] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1790 pre_rows=8 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=1790 pre_rows=8 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:17:02] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(APIServer pid=48994) INFO 10-16 22:17:05 [loggers.py:273] Engine 000: Avg prompt throughput: 409.5 tokens/s, Avg generation throughput: 1.2 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.0%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:17:05 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 5.50 tokens/s, Accepted: 0 tokens, Drafted: 55 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2006 pre_rows=8 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=2006 pre_rows=8 dec_rows=0 split=True hit=2
+(EngineCore pid=49135) [2026-10-16 22:17:10] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.sampler_tail_fusion] fl opt7: fast path rejected: predict_bonus_token/logprobs_mode_override
+(APIServer pid=48994) INFO 10-16 22:17:15 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.0%, Prefix cache hit rate: 0.0%
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=300 pre_rows=8 dec_rows=0 split=True hit=1
+(EngineCore pid=49135) [ATTN-DBG] branch=vendor max_q=300 pre_rows=8 dec_rows=0 split=True hit=2
+(APIServer pid=48994) INFO 10-16 22:17:25 [loggers.py:273] Engine 000: Avg prompt throughput: 409.6 tokens/s, Avg generation throughput: 1.4 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.5%, Prefix cache hit rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:17:25 [metrics.py:120] SpecDecoding metrics: Mean acceptance length: 1.00, Accepted throughput: 0.00 tokens/s, Drafted throughput: 3.25 tokens/s, Accepted: 0 tokens, Drafted: 65 tokens, Per-position acceptance rate: 0.000, 0.000, 0.000, 0.000, 0.000, Avg Draft acceptance rate: 0.0%
+(APIServer pid=48994) INFO 10-16 22:17:35 [loggers.py:273] Engine 000: Avg prompt throughput: 0.0 tokens/s, Avg generation throughput: 0.0 tokens/s, Running: 8 reqs, Waiting: 0 reqs, GPU KV cache usage: 6.5%, Prefix cache hit rate: 0.0%
+/usr/local/lib/python3.12/multiprocessing/resource_tracker.py:279: UserWarning: resource_tracker: There appear to be 124 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '
