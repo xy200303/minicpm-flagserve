@@ -242,3 +242,28 @@ decode 步 ≈50 ms 的构成：GEMM ~12 ms（4.6 GB 权重）+ attention KV 读
 
 −0.5%，已回退。至此所有"参数/启发改动"类候选（9 个）全部否定，
 且已用带宽校准证明 GEMM 无余量——**继续提升只能靠新写 decode attention kernel**。
+
+## A20：自研 paged decode attention kernel（2026-10-17/18）
+
+设计、微基准、否决方案与 CUDA-graph 两个坑：`docs/experiments/a20/decode-attention-kernel.md`
+代码与工具：`docs/experiments/a20/`（`decode_attn_fast.py`、`apply_a20.py`、`revert_a20.sh`、
+`bench_dattn4.py`、`bench_abl2.py`、`bench_mask.py`、`parity_a20b.py`、`a20_ab.sh`、`a20_eval.sh`）
+
+微基准（B=64/kv=4096/16q-2kv/d=128/block=16/bf16）：stock 3D+A7 pin **1.04 ms/层**（258 GB/s）
+→ 自研 kernel **0.72 ms/层**（372 GB/s），对 stock 的 max|diff| 2.4e-4；
+拆解显示 PV 的 `tl.dot` 布局转换占 0.36 ms，是本轮唯一的大头。
+
+### 官方 4k（`[[4096,1024,64,256]]`，当日交错）
+
+| exp_id | 路径 | 总吞吐 tok/s | 输出 tok/s | TTFT ms | TPOT ms |
+|---|---|---|---|---|---|
+| A20_4k_A1 | stock（`VLLM_FL_DISABLE_DECODE_FAST=1`） | 2331.37 | 466.27 | 5549 | 110.58 |
+| A20_k2 | fast kernel | **2473.06** | 494.61 | 5735 | 104.52 |
+
+→ 单次对照 **+6.1%** 总吞吐、TPOT −5.5%，TTFT 在噪声内（+3.4%）。
+decode 窗口瞬时生成吞吐 991→1458–1528 tok/s，decode 步 ~57 ms→~44 ms，
+与"attention 从 ~30 ms 降到 ~19 ms（≈KV 读的带宽下限）"一致。
+
+> **状态（2026-10-18 00:00）**：交错的 A1→B1→A2→B2 与 16k A/B 在 A1 完成后被线上实验室实例重置打断
+> （SSH 全部认证失败），只拿到 1 次 stock + 1 次 fast 的完整官方数据；MATH-500 Level 3 尚未跑。
+> 需要新实例后按 `docs/experiments/a20/a20_ab.sh` + `a20_eval.sh` 补齐 A/B（各 ≥2 次）与精度。
