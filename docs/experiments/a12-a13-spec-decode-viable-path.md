@@ -175,3 +175,21 @@ decode 13 ms/48 token（基线 19.3 ms/8 token）×  prefill 回到基线水平�
 **未完成（阻塞官方口径）**：混合 prefill+decode 步仍 0.14–2.5 s（随 1+k 放大），
 官方 4k/16k 用例 prefill 占大头，端到端尚不能确认优于 A7 基线（3778.65 / 3567.33）。
 在混合步解决前，**提交仍应使用 A1–A7 栈（无投机）**，投机作为"已验证 decode 收益 + 待收尾"的探索记录。
+
+## 10. 官方口径实测（4k c64，2026-10-17）：投机模式不可用
+
+按官方 test-case `[4096,1024,64,256]` 实测（`padonly + FULL_DECODE_ONLY + k=5 + A5b`）：
+
+```
+Avg prompt throughput: 409.5 tokens/s, Avg generation throughput: 0.7 tokens/s, Running: 5, Waiting: ...
+Avg prompt throughput: 409.6 tokens/s, Avg generation throughput: 1.2 tokens/s, Running: 8, Waiting: ...
+```
+
+- 并发起不来：c64 上限下引擎只跑到 ~8 个请求（Waiting 持续积压），KV 池 514k token 不是瓶颈
+- prefill 只有 **409 tok/s**（无投机基线约 2800 tok/s，差 7 倍）
+- 生成只有 **1 tok/s**（纯 decode 步本身是 13 ms/48 token，说明几乎所有步都被混批拖住）
+- 按此速度该用例需数小时（基线 347 s）→ **官方口径下投机模式不可用**
+
+**交付决定：提交使用 A1–A7 栈（无投机）。** 投机部分作为已验证的探索记录写入技术报告：
+decode 侧 9x 收益已验证（13 ms/48 token ≈ 3700 tok/s vs 基线 19.3 ms/8 token ≈ 364 tok/s），
+混合批（prefill+decode）开销被放大 7–20 倍且无法定位（缺设备级 profiler），官方口径不可用。
