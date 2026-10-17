@@ -140,3 +140,38 @@ step_wall=5647 ms | sample_tokens=3699/3641  _sample=3673/3614
 扩展到投机路径（bonus token + 拒绝采样），落在 FlagGems。预计混合步从 1.4–5.6 s 回到 ~0.2–0.5 s
 （与无投机同量级），届时端到端才有望在官方 prefill 重用例上取胜：
 decode 13 ms/48 token（基线 19.3 ms/8 token）×  prefill 回到基线水平。
+
+## 8. 2026-10-17 第二轮：k 扫描、varlen 对照与 profiler 尝试
+
+### 8.1 关掉 varlen prefill 无效（G1）
+
+`VLLM_FL_DISABLE_VARLEN_PREFILL=1` 下混合步仍 1.4–1.5 s（`_prepare_input_ids=1215–1221`、
+`forward=183–191 ms`），与开启时一致 → A6 的 varlen 路径不是原因。
+
+### 8.2 k=1 扫描（G2）：混合步随 (1+k) 近似线性
+
+| 配置 | 混合步 wall | propose | forward | sample |
+|---|---|---|---|---|
+| k=5 | 1.4–2.5 s | 27–51 ms | 167–191 ms | 11–3610 ms（不稳定） |
+| **k=1** | **144–301 ms** | 150–316 ms | 167–171 ms | 608–883 ms（窗口平均，含个别重步） |
+
+结论：混合步成本随每请求投机 token 数（1+k）近似线性放大 → 指向"混合批里投机行的前向/采样开销"，
+不是某个固定成本。k=1 时 execute_model 之外的 `gap` 仍 0.8–1.2 s，说明调度/输出侧另有秒级开销，两者叠加。
+
+### 8.3 设备级 profiler 尝试（均未果）
+
+- `flagtree-profiler -b iluvatar -d trace -n specmix vllm serve ...` 能启动、能跑负载，
+  但进程退出后未在任何候选路径落 trace（/workspace、/root、/tmp 均查过）。
+- torch profiler（`--profiler-config`）会因厂商 `External init callback must run in same thread`
+  错误导致 EngineCore 崩溃。
+- 下一步建议：用 `flagtree-profiler` 的 `-c python -d tree` 或 ixKN（`--ixkn`）后端；
+  或在 runner 侧记录"每步 batch 形状（token 数/请求数/是否混合）+ 耗时"，用形状-耗时关联定位。
+
+## 9. 当前可交付与未完成
+
+**已验证可交付**：`padonly + FULL_DECODE_ONLY` 的纯 decode 步 = **13 ms / 48 token ≈ 3700 tok/s**
+（基线 19.3 ms / 8 token ≈ 364 tok/s），接受长度 6.00，采样器已全部走融合路径。
+
+**未完成（阻塞官方口径）**：混合 prefill+decode 步仍 0.14–2.5 s（随 1+k 放大），
+官方 4k/16k 用例 prefill 占大头，端到端尚不能确认优于 A7 基线（3778.65 / 3567.33）。
+在混合步解决前，**提交仍应使用 A1–A7 栈（无投机）**，投机作为"已验证 decode 收益 + 待收尾"的探索记录。
