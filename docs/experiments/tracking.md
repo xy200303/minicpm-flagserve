@@ -215,3 +215,30 @@ c64 下 decode 步 ≈ 50 ms（4k KV）/ ≈180 ms（16k KV），KV 带宽理论
 都已测过：stock 是当前最优，vendor 在 c64 明显更差。要拿到 ≥3% 的整机提升，需要新写一个
 面向 BI-V150 的 decode attention kernel（分块 KV 扫描 + 与本卡 warp 数匹配的 tile/segment 配置），
 属于数天级工程，不属于参数扫描能覆盖的范围。
+
+### 硬件带宽校准（2026-10-17 实测，BI-V150）
+
+| 项目 | 实测 | 带宽 |
+|---|---|---|
+| 1GB copy（读+写） | 3.657 ms | **587 GB/s** |
+| 1GB sum（纯读） | 3.065 ms | 350 GB/s |
+| matmul M=64，gate_up（权重 50 MB） | 0.12 ms | 410 GB/s |
+| matmul M=64，lm_head（权重 534 MB） | 0.98 ms | 547 GB/s |
+| matmul M=4096 | 1.15 ms | 89.4 TFLOPS |
+
+**结论**：这张卡的真实可用带宽约 **590 GB/s**（不是最初假设的 1.5 TB/s）。
+M=64 的 GEMM 已跑在 **70–93% 可达带宽**，没有余量；FlagGems 的 Triton matmul 反而慢 6 倍
+（`flag_gems.enable()` 后 0.42 ms vs 厂商 0.069 ms），所以插件不把 GEMM 交给 FlagGems 是正确的。
+
+decode 步 ≈50 ms 的构成：GEMM ~12 ms（4.6 GB 权重）+ attention KV 读 ~19 ms（11.3 GB @ 587 GB/s）+ 图内其他。
+**唯一有实质余量的是 attention kernel**（理论 19 ms vs 实际可能 ~30 ms）。
+
+### A19（2D 路径 KV tile 64）— 否决
+
+| 配置（官方 4k） | 总吞吐 | TPOT |
+|---|---|---|
+| 默认（tile 32） | 2341.07 | 110.2 |
+| `VLLM_FL_TILE_2D=64` | 2330.27 | 110.6 |
+
+−0.5%，已回退。至此所有"参数/启发改动"类候选（9 个）全部否定，
+且已用带宽校准证明 GEMM 无余量——**继续提升只能靠新写 decode attention kernel**。
