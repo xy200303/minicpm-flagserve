@@ -187,3 +187,31 @@ c64 下纯 decode 走 **2D** stock kernel（我们的 A7 pin 只管 3D），2D �
 这排除了"vendor 路径在 c64 拖累"的假设，也量化了我们已有工作的价值。
 
 16k 的同样对照正在进行（`NFA_off16k`）。
+
+## 战略评估（2026-10-17 会话末）
+
+### 已排除的参数空间（全部官方用例直测）
+
+| 维度 | 结论 |
+|---|---|
+| 3D decode pin（warps/stages） | w1s1 最优（w2 −13.9%、w4 −1.9%、s2 −9.1%） |
+| 2D decode pin | w1 −0.6% / w2 −0.2%（Triton 默认已近优） |
+| 3D vs 2D 路径 | 强制切换 −1.2%（启发式已选对） |
+| dual-gather warps | w8 −1.0%（默认 4 最优） |
+| dual-gather 关闭 | −0.5% |
+| metadata 每步 D2H 去除 | −1.5% |
+| vendor decode 核（c64） | >2.5x 慢 |
+
+### 反向验证（现有工作的价值）
+
+| 组件 | 官方 4k 贡献 |
+|---|---|
+| A1/A6 vendor FA（prefill 路由 + varlen/dual-gather） | **+38%**（关掉后 2341→1694，TTFT 5.5→14.0 s） |
+
+### 剩余空间在哪
+
+c64 下 decode 步 ≈ 50 ms（4k KV）/ ≈180 ms（16k KV），KV 带宽理论下限分别 ≈21 ms / ≈70 ms →
+**2.4–2.6 倍空间全在 decode attention kernel 本身**。现成 kernels（stock triton 3D/2D、vendor ixAttnBkd）
+都已测过：stock 是当前最优，vendor 在 c64 明显更差。要拿到 ≥3% 的整机提升，需要新写一个
+面向 BI-V150 的 decode attention kernel（分块 KV 扫描 + 与本卡 warp 数匹配的 tile/segment 配置），
+属于数天级工程，不属于参数扫描能覆盖的范围。
