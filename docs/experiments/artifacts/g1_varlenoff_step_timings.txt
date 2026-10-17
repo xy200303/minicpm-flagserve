@@ -1,0 +1,3 @@
+(EngineCore pid=6367) WARNING:fl_timing3:fl timing3 (3 steps): step_wall=1464 ms (gap 775) | _prepare_input_ids=1221/1222 sample_tokens=773/768 _sample=722/717 _model_forward=114/183 propose_draft_token_ids=51/47 _update_states=28/2
+(EngineCore pid=6367) WARNING:fl_timing3:fl timing3 (3 steps): step_wall=1409 ms (gap 52) | _prepare_input_ids=1215/1216 _model_forward=156/191 sample_tokens=51/40 propose_draft_token_ids=27/23 _sample=24/13 _update_states=2/3
+(EngineCore pid=6367) WARNING:fl_timing3:fl timing3 (3 steps): step_wall=2641 ms (gap 3681) | sample_tokens=3680/3665 _sample=3653/3637 _prepare_input_ids=2439/2440 _model_forward=191/212 propose_draft_token_ids=26/22 _update_states=2/1
