@@ -80,10 +80,31 @@ bonus_sampler_output = self.sampler(
 **A5b 改动**：在 `predict_bonus_token` 且无 penalties/bad words/processors/logprobs 语义需求时
 允许融合核处理（并返回 logits 作为 logprobs 张量，保证边缘情况不崩）；同步修正拒绝原因的报告顺序。
 
-**当前状态（E19）**：融合路径已被触发（`fl opt7: fused sampler tail ENGAGED`），但端到端未见改善，
-拒绝原因里仍出现 `top_k active` 与 `logprobs_mode_override` → 说明还有某类调用没进融合路径。
-下一步要把拒绝原因连同调用上下文（`predict_bonus_token` / `max_num_logprobs` / `top_k` 取值）一起记录，
-定位剩余拒绝来自哪一类调用；若确实需要 top_k，则在 FlagGems 里补 top_k 融合分支（与 top-p 同框架）。
+### 7.1 今日逐个打通的拦截条件（2026-10-17）
+
+| 拦截条件 | 真相 | 处理 |
+|---|---|---|
+| `predict_bonus_token` | 投机的 bonus token 采样走 `Sampler.forward` | 允许（分布不变） |
+| `logprobs_mode_override` | RejectionSampler 内部强制 `max_num_logprobs=-1` + override | 允许（无用户 logprobs 时该参数只影响返回值），并回传 logits 作 logprobs 张量 |
+| `top_k` | **该 fork 的 OpenAI 默认把 top_k 设成 vocab-1（130559 = 130560-1），只裁掉一个 padding token**，语义上等同不裁剪 | 判定放宽为"仅当 top_k < vocab-1 才算启用"；并通过 runner 钩子发布真实 vocab（`model_config.get_vocab_size()`） |
+| `generators` | 投机模式下 runner 给**每个** sampler 调用都挂 per-request generator | 放开（分布不变；放弃"同 seed 逐 token 复现"，可用 `VLLM_FL_DISABLE_SAMPLER_FUSION=1` 回退） |
+
+**结果**：拒绝日志归零，融合路径覆盖全部采样调用。实测某些混合步的 sampler 已降到 **47 ms wall / 11 ms device**
+（此前 762/756 ms），说明修复有效。
+
+### 7.2 仍未解决：混合步还有 1.4–2.5 s
+
+同一轮（F9）里另外两类步仍然慢：`sample_tokens=3695/3636`、`_prepare_input_ids=2449/2451`。
+同时 GPU 利用率采样为 **92–99%**，而 vendor attention 计时只有 **~5–26 ms/步** →
+说明瓶颈是**真实的 GPU 工作**（eager 混合批前向 + 部分仍走慢路径的采样），不是 attention、也不是单纯的 CPU 等待。
+注意：`_prepare_input_ids` 自身只做 KB 级拷贝，其 wall≈device 的 1.2–2.4 s 很可能是
+"默认流事件"在等其它流上的工作（vLLM 的 `synchronize_input_prep()` 表明输入准备在独立流上），
+因此这块的归因需要用 nsys 级别的工具或逐 kernel 计数才能钉死。
+
+**下一步**：(1) 用逐 kernel/流级工具确认那 1.4–2.5 s 到底花在哪个 kernel；
+(2) 若确认是 eager 混合批前向的 GEMM/MLP，考虑把 spec 的混合步也做成可入图（或按 q_len 拆分两段执行）；
+(3) 采样器剩余慢步（3.6 s）需确认是否还有第二条调用路径未走融合。
+
 
 ## 5. 复现命令
 
