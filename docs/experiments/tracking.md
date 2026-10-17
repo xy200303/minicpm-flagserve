@@ -175,3 +175,15 @@ c64 下纯 decode 走 **2D** stock kernel（我们的 A7 pin 只管 3D），2D �
   属于数天级工程，不是参数扫描能覆盖的。
 - 两条方法论教训已固化：代理负载必须匹配官方**并发**与 **prefill:decode 配比**。
 - 环境已全部回退到 `main@84abed0`，site-packages 同步；所有实验产物在 `docs/experiments/runs/` 与机器 `/workspace/experiments/`。
+
+### 反向验证：关掉我们的 vendor FA（A1/A6）— 官方 4k
+
+| 配置（官方 4k） | 总吞吐 | 输出 | TTFT | TPOT |
+|---|---|---|---|---|
+| 默认（A1/A6 vendor FA 生效） | **2341.07** | 468.21 | 5547 | 110.2 |
+| `VLLM_FL_DISABLE_ILUVATAR_VENDOR_FA=1` | 1694.07 | 338.81 | 14007 | 154.2 |
+
+→ **vendor FA 路径贡献 +38%**（1694 → 2341），TTFT 也从 14.0 s 降到 5.5 s。
+这排除了"vendor 路径在 c64 拖累"的假设，也量化了我们已有工作的价值。
+
+16k 的同样对照正在进行（`NFA_off16k`）。
