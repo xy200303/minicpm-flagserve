@@ -146,3 +146,32 @@ c64 下纯 decode 走 **2D** stock kernel（我们的 A7 pin 只管 3D），2D �
 | A16 强制 2D 路径 | −1.2% | 回退 |
 | A17 DG num_warps 4→8 | −1.0% | 回退 |
 | A18 2D pin w1s1 | −0.6% | 回退 |
+
+### 最后一个 env-only 候选：关掉 dual-gather — 否决
+
+| 配置（官方 4k） | 总吞吐 | 相对默认 |
+|---|---|---|
+| 默认（dual-gather on） | 2341.07 | — |
+| `VLLM_FL_DISABLE_DUAL_GATHER=1` | 2328.31 | −0.5% |
+
+## 2026-10-17 会话总结（天数 BI-V150，官方 test-case 直测）
+
+今日机器相对历史基线慢 38–60%（同代码 2346.64 vs 3778.65），所有比较均为**当日交错对照**。
+
+| # | 候选 | 官方结果 | 判定 |
+|---|---|---|---|
+| A13 | metadata 每步 D2H 去除 | −1.5% | 否决 |
+| A14 | 纯 decode 走 vendor kernel | >2.5x 慢 | 否决 |
+| — | 3D pin w2s1 | −13.9%（16k） | 否决 |
+| A16 | 强制 2D 路径 | −1.2% | 否决 |
+| A17 | dual-gather num_warps 4→8 | −1.0% | 否决 |
+| A18 | 2D 路径 pin w1 / w2 | −0.6% / −0.2% | 否决 |
+| — | 关闭 dual-gather | −0.5% | 否决 |
+
+**结论（截至本会话）**：
+- 交付栈（A1–A7）在当前 profiler 能力下已接近可调参数的包络；A7 的 `w1s1`、dual-gather 默认参数、
+  3D 路径选择、metadata 路径都是各自维度上的局部最优。
+- 继续提升需要**新的 decode attention kernel 实现**（当前 c64 下 decode 步 ~50 ms，KV 带宽理论下限 ~21 ms），
+  属于数天级工程，不是参数扫描能覆盖的。
+- 两条方法论教训已固化：代理负载必须匹配官方**并发**与 **prefill:decode 配比**。
+- 环境已全部回退到 `main@84abed0`，site-packages 同步；所有实验产物在 `docs/experiments/runs/` 与机器 `/workspace/experiments/`。
