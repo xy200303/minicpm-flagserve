@@ -193,3 +193,37 @@ Avg prompt throughput: 409.6 tokens/s, Avg generation throughput: 1.2 tokens/s, 
 **交付决定：提交使用 A1–A7 栈（无投机）。** 投机部分作为已验证的探索记录写入技术报告：
 decode 侧 9x 收益已验证（13 ms/48 token ≈ 3700 tok/s vs 基线 19.3 ms/8 token ≈ 364 tok/s），
 混合批（prefill+decode）开销被放大 7–20 倍且无法定位（缺设备级 profiler），官方口径不可用。
+
+## 11. 交付栈的官方 c64 剖面与 A13（2026-10-17 下午）
+
+### 11.1 剖面（无投机，官方 4k c64，带 wall-only 埋点）
+
+```
+[T] (25 steps): step=4.2 ms gap=52.3 tok/step=64 reqs=64 | _prepare_inputs=2.8 sample=0.4 metadata=0.2
+[T] (25 steps): step=200.2 ms gap=2.4 tok/step=2048 reqs=44.1 | _model_forward=120.0 metadata=74.0
+```
+
+- **decode 迭代 ≈ 4.2 ms（execute_model）+ ~52 ms（等 GPU 完成 + 调度/输出）** → 64 请求下 ~1100–1276 tok/s
+- **prefill 步 ≈ 200 ms**：forward 120 ms + `_build_attention_metadata` 74–82 ms + 其余
+- 即 prefill 阶段约 40% 时间在 attention metadata 构建
+
+### 11.2 元凶：补丁每步访问 GPU→CPU 拷贝属性
+
+`_build_split` 本体实测约 1 ms（idx 0.09 + rows/seq H2D 0.11 + arange 0.13 + block_table index_select 0.60），
+但外层计时显示 split 段为 **85–98 ms**。差异来自
+`common_attn_metadata.query_start_loc_cpu` / `seq_lens_cpu_upper_bound`：
+在这套栈里 `query_start_loc_cpu` 是 `decode_query_start_loc.to("cpu", non_blocking=True)` 的产物，
+**每步 `.tolist()` 会触发一次 D2H 同步，等掉整个 GPU 队列**（85–98 ms）。
+
+### 11.3 A13 尝试（未验证，已回退）
+
+实现：runner 在 `_prepare_inputs` 里把 CPU 侧 `cu_l`/`seq_l` 发布给 vendor 补丁，构建器不再碰 D2H。
+实测该配置的官方 4k 用例反而更慢（11 分钟未完成）；但同一天用**未改动代码**复测基线也只有
+**2346.64 total tok/s / 558.55 s**（历史 3778.65 / 347 s）→ **今天机器本身慢约 38–60%**，
+A13 的读数被机器漂移污染，结论不成立。已回退 A13，保留为下次"交错 A/B"的候选。
+
+### 11.4 结论与纪律
+
+- 交付：A1–A7（无投机）。今日复测 2346.64 total tok/s 是**机器变慢**，不是代码回退
+- 下一个可验证优化点：去掉 metadata 构建里的每步 D2H（A13 方向）
+- **纪律：同一天的绝对数字不可跨天比较；任何优化必须当天交错 A/B（开/关交替各 2–3 次）**
