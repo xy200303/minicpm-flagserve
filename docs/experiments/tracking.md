@@ -357,3 +357,14 @@ A20 为 43.7 ms、stock 为 57.1 ms → attention 现占 32 ms/步，KV 读带�
 |---|---|
 | int8 KV cache（per-token-head scale） | **否决**：只加载就已经 1.06 ms/层 vs bf16 0.72；1 字节 gather 在这套 Triton 后端只有 ~120 GB/s |
 | `ixformer.batch_paged_attention`（省掉 prefill 反分页 gather） | **不可用**：要求 cache 首维恰为 `max_page_num*page_size`，与 vLLM 全局池/block_table 宽度不兼容；tensor-desc 路径 BAD_PARAM |
+
+## A20 收尾：报告与提交包
+
+- 技术报告 PDF：`docs/report/技术报告-XLANG2026.pdf`（8 页，由 `tools/md2docx.py`
+  从 `docs/report-draft.md` 生成，Word 导 PDF；表格/代码/中文均校验）。
+- 提交包 readme：`docs/readme-submission.md`（vllm-plugin-FL 逐项改动 + 开关 + 复现命令）。
+- 复现性：干净 clone `vllm-plugin-FL@84abed0` + `docs/experiments/a20/apply_a20.py`
+  → 与线上运行的三个文件**字节一致**。
+- 本轮再否决：fp16 KV cache（0.699 vs bf16 0.698 ms/层，无收益）；
+  `nseg=16`（4k 同档、16k −15%）；对齐/连续性提示（`tl.multiple_of` 二维形式编译失败，
+  且该 harness 基础版本已比插件版慢 20%，未继续）。
