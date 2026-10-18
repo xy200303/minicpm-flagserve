@@ -239,6 +239,12 @@ A 操作数布局，每个 KV block 都要过一次共享内存往返；带宽�
 精度：最终代码（含混合步路径）MATH-500 Level 3 = **97.1%**（105 题），与不含
 该路径时一致。
 
+**为什么停在 372 GB/s**：BI-V150 报 compute capability **7.1**（Volta 世代，
+CUDA 10.2 工具链），只有 fp16 HMMA、**没有 bf16 tensor core**。因此 Triton 的
+`tl.dot(bf16, bf16)` 必然经过 bf16→fp16 转换与 fp32 累加器→操作数的布局搬运，
+PV 那 0.19 ms/层 就是它。实测把 K/V 换成 fp16 并不更快（0.699 vs 0.698 ms/层），
+确认瓶颈不在 dtype 转换本身，而在 MMA 前后的布局搬运。
+
 **天花板测量**：把 attention 整个跳过（探针）后，4k/B=64 的 decode 步是
 **11.7 ms**；A20 是 43.7 ms，stock 是 57.1 ms。即 attention 现为 32 ms/步，
 而 KV 读的硬件下限是 19.3 ms（11.3 GB @ 587 GB/s）。剩余 12 ms 全部卡在

@@ -175,3 +175,18 @@ kv=16384 同向（2.41 → 3.63 最好）。**只加载就已经比 bf16 慢**�
 
 → 不可用。16k prefill 的下一步只能靠"减少 KV 重读"（chunk 数固定，不可调）或换布局，
 本轮到此为止。
+
+## 11. 硬件事实：sm_71 没有 bf16 tensor core
+
+`torch.cuda.get_device_properties(0)` 报 **compute capability 7.1**（Volta 世代，
+toolchain 是 CoreX CUDA 10.2）。sm_71 只有 fp16 的 HMMA（m8n8k4 / WMMA
+m16n16k16），**没有 bf16 MMA**。所以：
+
+- Triton 的 `tl.dot(bf16, bf16)` 在这张卡上必然要经过 bf16→fp16 的转换与
+  fp32 累加器→操作数的布局搬运——这正是 PV 那 0.19 ms 的来源（见 §1/§10）；
+- 手写 CUDA 也不会凭空获得 bf16 MMA，只能改用 fp16 HMMA + 显式的
+  double-buffer，收益上限是"把 PV 的布局搬运省掉"，不是换一种算力。
+
+顺带否掉一条便宜的猜测：**fp16 KV cache 不会更快**。同一 kernel、同形状，
+bf16 K/V 0.698 ms/层、fp16 K/V 0.699 ms/层（对 stock 的 maxdiff 均为 0），
+说明瓶颈不在 cache 的 dtype 转换上，换 fp16 cache 属于无收益的框架改造。
