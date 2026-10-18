@@ -102,7 +102,7 @@ GPU cumsum 并缓存到当步 attn_metadata，42 层只算一次：
 | opt10 去同步 | 12145.31 | 10991.50 |
 | **opt11（最终）** | **12529.39** | **11088.13** |
 
-## 4. 天数 BI-V150：vendor FA 接入与发射配置重构（A1-A7）
+## 4. 天数 BI-V150：vendor FA 接入、发射配置重构与自研 decode 内核（A1–A20）
 
 ### 4.1 A1：prefill attention 切 vendor ixAttnBkd
 
@@ -274,7 +274,7 @@ PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–63
    单此一项带来 4k/16k 各 ~40% 端到端收益。
 5. **自研 decode attention 内核**：从"逐段拆解定位到 PV 的 MMA 布局转换"
    出发，用单 warp / 小 tile / base-2 softmax / 尾部 mask 四项改动把 decode
-   attention 从 258 GB/s 提到 372 GB/s（4k +9.0%、16k +7.6%，同日 A/B），
+   attention 从 258 GB/s 提到 372 GB/s（4k +9.4%、16k +15.6%，同日交错 A/B），
    并用"跳过 attention 的探针"量出该方向的天花板（19.3 ms/步）。
 6. **零精度妥协**：所有性能改动要么 bit-exact（A6/A7），要么
    统计等价且 MATH-500 L3 实测 ≥97.1%（采样融合、GEMM 路由）。
@@ -320,7 +320,9 @@ PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–63
 ## 8. 复现指南
 
 - 仓库：github.com/xy200303/minicpm-flagserve
-  - `vllm-plugin-FL/iluvatar-vendor-fa`：天数补丁（A1-A7，至 3f05c36d）
+  - `vllm-plugin-FL/iluvatar-vendor-fa`：天数补丁（A1–A7，至 3f05c36d）
+  - A20 自研 decode 内核 + 混合步 hook：`vllm-plugin-FL@84abed0` + `docs/experiments/a20/apply_a20.py`
+    （干净 clone 应用后与线上三个文件字节一致）
   - `vllm-plugin-FL/dev`：C500 补丁（opt1-opt11，至 f4971e7e）
   - `FlagGems/dev`：采样融合内核、GEMM pin 等（至 5eac6b39，
     与天数机器上的文件逐字节一致）
