@@ -245,6 +245,10 @@ A 操作数布局，每个 KV block 都要过一次共享内存往返；带宽�
 精度：最终代码（含混合步路径）MATH-500 Level 3 = **97.1%**（105 题），与不含
 该路径时一致。
 
+**可审计性**：混合步的 decode 切片每 4000 次调用打一行
+`decode_attn_fast slice: used=X skipped=Y`。16k 两次实测均为
+`used=44000, skipped=0`，即 decode 切片 100% 命中自研内核，不存在"偶尔退回 stock"。
+
 **为什么停在 372 GB/s**：BI-V150 报 compute capability **7.1**（Volta 世代，
 CUDA 10.2 工具链），只有 fp16 HMMA、**没有 bf16 tensor core**。因此 Triton 的
 `tl.dot(bf16, bf16)` 必然经过 bf16→fp16 转换与 fp32 累加器→操作数的布局搬运，
