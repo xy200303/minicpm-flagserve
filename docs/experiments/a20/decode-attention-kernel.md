@@ -190,3 +190,26 @@ m16n16k16），**没有 bf16 MMA**。所以：
 顺带否掉一条便宜的猜测：**fp16 KV cache 不会更快**。同一 kernel、同形状，
 bf16 K/V 0.698 ms/层、fp16 K/V 0.699 ms/层（对 stock 的 maxdiff 均为 0），
 说明瓶颈不在 cache 的 dtype 转换上，换 fp16 cache 属于无收益的框架改造。
+
+## 12. 混合步 engage 率（可审计）
+
+`try_fast_decode` 现在每 4000 次调用打一行 INFO：
+`decode_attn_fast slice: used=X skipped=Y`。16k 实测：
+
+| run | 结果 | engage |
+|---|---|---|
+| A20_16k_B11 | 3430.62 tok/s | used=44000, skipped=0 |
+| A20_16k_B12 | 3435.33 tok/s | used=44000, skipped=0 |
+
+即混合步的 decode 切片 **100% 走自研 kernel**，不存在"偶尔退回 stock"的情况。
+早前两次落在 stock 档的 16k B 跑（B3 2973 / B7 2929）在没有任何
+fallback/not-eligible 日志的情况下与 stock 完全同档（连 TTFT 都是 154–159 s），
+只能归因于这台共享实例的外部干扰——与台账里记录的 38–60% 跨时段漂移一致。
+
+## 13. 手写 CUDA 的路被镜像堵死
+
+`/usr/local/corex/bin/nvcc` 是**空壳**：打印 banner、返回 0、不产出任何文件
+（`-ptx` / `-c` / `-shared` 都一样，见 `docs/experiments/a20/cuda_spike_run.py`）。
+因此"把 PV 从 Triton 里拿出来手写 CUDA"在本实验室镜像里无法开发与验证。
+即便能编，BI-V150 是 sm_71（无 bf16 tensor core），收益上限也只是把
+0.19 ms/层的布局搬运省掉，不是换算力。

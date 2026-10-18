@@ -74,6 +74,7 @@ _applied = False
 _orig_forward = None
 _slab = {}
 _stats = {"fast": 0, "fallback": 0}
+_slice = {"used": 0, "skip": 0, "reasons": {}}
 _seen = set()
 
 
@@ -288,15 +289,28 @@ def _fast_forward(impl, query, kv_cache, md, output):
     return output
 
 
+def _slice_report():
+    n = _slice["used"] + _slice["skip"]
+    if n and n % 4000 == 0:
+        logger.info("decode_attn_fast slice: used=%d skipped=%d",
+                    _slice["used"], _slice["skip"])
+
+
 def try_fast_decode(impl, query, kv_cache, md, out):
     """Entry point for the mixed-step (prefill+decode) path.
 
     Returns True when the fast kernel computed `out` for the decode slice.
+    A periodic INFO line reports the engagement ratio so a run can be
+    audited from its serve log alone.
     """
     if _DISABLED or md is None:
         return False
     if not _eligible(impl, query, kv_cache, md, None):
+        _slice["skip"] += 1
+        _slice_report()
         return False
+    _slice["used"] += 1
+    _slice_report()
     try:
         return _fast_forward(impl, query, kv_cache, md, out) is not None
     except Exception as exc:

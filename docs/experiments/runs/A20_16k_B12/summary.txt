@@ -1,0 +1,7 @@
+== A20_16k_B12
+case=[[16384,1024,64,128]] runs=1
+VLLM_FL_DISABLE_DECODE_FAST=0
+(EngineCore pid=27219) [2026-10-18 22:14:34] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_fast] decode_attn_fast slice: used=44000 skipped=0
+Total token throughput (tok/s):          3435.33   
+Mean TTFT (ms):                          134202.79 
+Mean TPOT (ms):                          129.80    

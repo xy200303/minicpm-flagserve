@@ -344,6 +344,14 @@ A20 为 43.7 ms、stock 为 57.1 ms → attention 现占 32 ms/步，KV 读带�
 剩余 12 ms 全在 PV 的 MMA 布局转换路径（当前 372 GB/s ≈ 可达负载带宽的 70%）。
 （`A20_skip` / `A20_skip64` 是诊断 run，输出为垃圾值，不计入成绩。）
 
+### 混合步 engage 率与慢档归因（2026-10-18 晚）
+
+`decode_attn_fast slice: used=X skipped=Y` 每 4000 次调用一行 INFO：
+B11（3430.62）/ B12（3435.33）均为 `used=44000 skipped=0`，即 decode 切片 100% 命中。
+加上 B8/B9（3433/3439），今晚 4 次 16k 全部落在 3430–3439 且无任何 fallback。
+早前 B3（2973）/B7（2929）虽与 stock 同档，但同样无 fallback/not-eligible 日志，
+归因为共享实例的外部干扰（与"同代码同日 2346 vs 3779"的漂移同源）。
+
 ### NSEG 16 vs 32（否决 16）
 
 隔离扫描显示 4k 下 `nseg=16`（seg 256）比 32 快 8%（0.704 vs 0.765 ms/层），
