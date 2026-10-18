@@ -59,8 +59,11 @@ _HEAD_SIZE = 128
 _NUM_Q_HEADS = 16
 _NUM_KV_HEADS = 2
 _GQA = _NUM_Q_HEADS // _NUM_KV_HEADS
-# Scratch slab: max sequences per decode step.
-_BMAX = int(os.environ.get("VLLM_FL_DECODE_FAST_BMAX", "256"))
+# Scratch slab: max sequences per decode step.  Kept small on purpose: the
+# official 16k case is KV-capacity bound (the pool holds ~32 sequences at
+# 16k), so every MiB of scratch costs concurrency.  64 sequences (the
+# official concurrency) needs 36 MiB; larger batches fall back to stock.
+_BMAX = int(os.environ.get("VLLM_FL_DECODE_FAST_BMAX", "64"))
 
 _applied = False
 _orig_forward = None
@@ -275,6 +278,22 @@ def _fast_forward(impl, query, kv_cache, md, output):
     decode_attention(query[:n], key_cache, value_cache, output[:n],
                      md.block_table, md.seq_lens, impl.scale, slab)
     return output
+
+
+def try_fast_decode(impl, query, kv_cache, md, out):
+    """Entry point for the mixed-step (prefill+decode) path.
+
+    Returns True when the fast kernel computed `out` for the decode slice.
+    """
+    if _DISABLED or md is None:
+        return False
+    if not _eligible(impl, query, kv_cache, md, None):
+        return False
+    try:
+        return _fast_forward(impl, query, kv_cache, md, out) is not None
+    except Exception as exc:
+        logger.warning("decode_attn_fast: slice fallback (%s)", exc)
+        return False
 
 
 def apply() -> None:

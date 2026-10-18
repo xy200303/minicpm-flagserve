@@ -37,6 +37,51 @@ except Exception as _e:
 '''
 
 
+VENDOR_IMPORT = """
+try:  # A20: self-developed decode-attention kernel for the decode slice
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl import (
+        decode_attn_fast as _decode_fast,
+    )
+except Exception:  # pragma: no cover
+    _decode_fast = None"""
+
+VENDOR_OLD = """    if dec_meta is not None:
+        q_dec = q.index_select(0, dec_rows)
+        out_dec = torch.empty_like(q_dec)
+        _orig_forward(self, layer, q_dec, key[:n_tok], value[:n_tok], kv_cache,
+                      dec_meta, out_dec)
+        out.index_copy_(0, dec_rows, out_dec)"""
+
+VENDOR_NEW = """    if dec_meta is not None:
+        q_dec = q.index_select(0, dec_rows)
+        out_dec = torch.empty_like(q_dec)
+        # A20: decode rows of a mixed step go through the self-developed
+        # kernel when the shape qualifies; otherwise stock unified attention.
+        if not (_decode_fast is not None
+                and _decode_fast.try_fast_decode(self, q_dec, kv_cache,
+                                                 dec_meta, out_dec)):
+            _orig_forward(self, layer, q_dec, key[:n_tok], value[:n_tok],
+                          kv_cache, dec_meta, out_dec)
+        out.index_copy_(0, dec_rows, out_dec)"""
+
+
+def patch_vendor(root: str) -> None:
+    path = os.path.join(root, REL_IMPL, "vendor_flash_attn.py")
+    if not os.path.isfile(path):
+        return
+    with open(path, encoding="utf-8") as f:
+        text = f.read()
+    if "_decode_fast" in text:
+        return
+    text = text.replace("logger = init_logger(__name__)",
+                        "logger = init_logger(__name__)" + VENDOR_IMPORT, 1)
+    assert VENDOR_OLD in text, "vendor_flash_attn decode branch not found"
+    text = text.replace(VENDOR_OLD, VENDOR_NEW, 1)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(text)
+    print(f"patched vendor_flash_attn in {root}")
+
+
 def patch_tree(root: str) -> None:
     impl = os.path.join(root, REL_IMPL)
     init = os.path.join(root, REL_INIT)
@@ -53,6 +98,7 @@ def patch_tree(root: str) -> None:
         text = text.replace(anchor, HOOK + anchor, 1)
         with open(init, "w", encoding="utf-8") as f:
             f.write(text)
+    patch_vendor(root)
     print(f"patched {root}")
 
 
