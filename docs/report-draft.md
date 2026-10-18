@@ -179,6 +179,72 @@ flash-decoding 路径 pin `w1 s1`（TILE=16/SEG=16 经扫描本已最优）：
 （A4 端到端持平，收益预期在 64GB 评测机体现；各阶段精度均
 97.1~98.1% 达标。）
 
+### 4.8 A20：自研 paged decode attention 内核
+
+A7 把 stock 3D decode kernel 的发射配置调优后，decode attention 仍是整步里
+**最大且唯一未压到带宽下限**的一项。把 stock kernel 逐段拆开（同一 harness，
+只替换被测 kernel 版本，B=64 / kv=4096 / 16q-2kv / d=128 / block=16 / bf16）：
+
+| 版本 | ms/层 | 有效带宽 |
+|---|---|---|
+| 只加载 K/V | 0.52 | 509 GB/s |
+| + QK `tl.dot` | 0.53 | — |
+| + 在线 softmax | 0.54 | — |
+| + PV `tl.dot`（= stock 全量） | **0.90–1.04** | 258 GB/s |
+
+即 **PV 那个 `tl.dot` 独占 0.36 ms**：它必须把 `p` 从 MMA 累加器布局转换成
+A 操作数布局，每个 KV block 都要过一次共享内存往返；带宽和 softmax 都不是瓶颈。
+
+据此重写内核（`decode_attn_fast.py`）：
+
+1. **一个 CTA = 1 warp = 一个 (seq, kv_head, 段)**。`num_warps=1` 让 p 的布局
+   转换留在 warp 内（实测 w2 慢 16%，w4/w8 更差）。
+2. **BLOCK_N=16**，p tile 不超过一个 MMA 形状（32/64 一致慢 12–30%）。
+3. **base-2 在线 softmax**：`scale` 预先折算 `log2(e)`，`exp2` 走 MUFU；
+   用 `exp` 慢 10%。
+4. **主循环不加 mask、只有 ragged 尾部单独一个带 mask 的 block**：
+   每块都 mask 会从 0.72 掉到 0.98 ms。
+5. **段数固定、段长在 device 端由 `seq_lens` 现算**（与 stock 的
+   `num_par_softmax_segments` 同构）——这是能进 CUDA graph 的前提。
+
+结果（隔离微基准 / 引擎内）：
+
+| | ms/层 | 带宽 | 对 stock |
+|---|---|---|---|
+| kv=4096 | 1.04 → **0.72** | 258 → 372 GB/s | 1.45x |
+| kv=16384 | 3.50 → **2.41** | 307 → 445 GB/s | 1.45x |
+
+输出与 stock 的 max|diff| = 2.4e-4（ragged 长度 9.8e-4）。
+
+**两个 CUDA-graph 坑**（都是靠 `VLLM_FL_DECODE_FAST_DEBUG=1` 的"首次拒绝原因"
+日志定位的）：
+
+- 段数一开始依赖 host 侧 `max_seq_len`，图捕获时它是 `max_model_len=131072`，
+  nseg 超上限被拒绝 → 35 张图里全是 stock kernel，端到端零变化；
+- 段缓存一开始在调用里 `torch.empty`，捕获期分配显存直接卡死第一个 graph；
+  改为 `apply()`（捕获之前）一次性预分配 slab。
+
+**混合步**：`vendor_flash_attn` 会把 prefill+decode 混批拆成两条路径，
+原先 decode 行仍走 stock。16k 用例绝大多数步都是混合步，所以只优化纯 decode 步
+在 16k 上反而 −1.9%（decode 变快但调度/TTFT 劣化）。把 `dec_meta` 的 decode
+切片接进自研内核后，16k 转正。
+
+**同日交错 A/B（官方用例）**：
+
+| 用例 | stock | A20 | 变化 |
+|---|---|---|---|
+| 4k `[4096,1024,64,256]` | 2329.1（A1/A2 中位） | 2538.2（B1/B2/B3 中位） | **+9.0%**，TPOT 110.6→98.8 ms，TTFT 持平 |
+| 16k `[16384,1024,64,128]` | 2986.0（A1/A2 中位） | 3445.3（B3–B6 中位；2973/3454/3447/3443） | **+15.4%**，TTFT 154.6→133.8 s，TPOT 151.9→129.4 ms |
+
+精度：最终代码（含混合步路径）MATH-500 Level 3 = **97.1%**（105 题），与不含
+该路径时一致。
+
+**天花板测量**：把 attention 整个跳过（探针）后，4k/B=64 的 decode 步是
+**11.7 ms**；A20 是 43.7 ms，stock 是 57.1 ms。即 attention 现为 32 ms/步，
+而 KV 读的硬件下限是 19.3 ms（11.3 GB @ 587 GB/s）。剩余 12 ms 全部卡在
+PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–631 GB/s）的
+~70%，再往上就需要脱离 Triton。
+
 ## 5. 创新点
 
 1. **跨双平台的 shape-aware dispatch 统一框架**：同一套"离线
@@ -194,7 +260,11 @@ flash-decoding 路径 pin `w1 s1`（TILE=16/SEG=16 经扫描本已最优）：
 4. **配置维度系统性诊断**：NVIDIA 默认启发式（w4s3）与
    libtuner event-timing 降级在国产芯片上的失配根因分析，
    单此一项带来 4k/16k 各 ~40% 端到端收益。
-5. **零精度妥协**：所有性能改动要么 bit-exact（A6/A7），要么
+5. **自研 decode attention 内核**：从"逐段拆解定位到 PV 的 MMA 布局转换"
+   出发，用单 warp / 小 tile / base-2 softmax / 尾部 mask 四项改动把 decode
+   attention 从 258 GB/s 提到 372 GB/s（4k +9.0%、16k +7.6%，同日 A/B），
+   并用"跳过 attention 的探针"量出该方向的天花板（19.3 ms/步）。
+6. **零精度妥协**：所有性能改动要么 bit-exact（A6/A7），要么
    统计等价且 MATH-500 L3 实测 ≥97.1%（采样融合、GEMM 路由）。
 
 ## 6. 阴性结果与探索覆盖度
@@ -210,8 +280,19 @@ flash-decoding 路径 pin `w1 s1`（TILE=16/SEG=16 经扫描本已最优）：
 - **A9**：n-gram 投机采样探针（benchmark 同分布 arange prompt）：
   75% 请求零命中，聚合命中系单条退化复读序列的假象，期望收益
   <10% 且集成复杂度高，否决。
-- **量化**评估：KV 量化对 64GB 评测机无 KV 池压力、decode 权重
-  带宽仅占步长 ~3%，收益/风险不匹配，未采纳。
+- **A20-int8 KV**：int8 KV（per-token-head scale）在 BI-V150 上**实测否决**：
+  只加载就 1.06 ms/层 vs bf16 0.72（kv=4096），kv=16384 是 3.63 vs 2.41。
+  瓶颈不是反量化 ALU，而是这套 Triton 后端对 1 字节 gather 的吞吐只有
+  2 字节的 1/3（每列仅 128 B 连续）。
+- **A20-paged prefill**：想用 `ixformer.batch_paged_attention` 省掉 prefill
+  的逐层反分页 gather（16k 下约 22 GB 读 + 22 GB 写/波），但该 API 要求
+  cache 首维**恰好**等于 `max_page_num*page_size`，与 vLLM 全局池
+  （32603 页）和 `block_tables` 宽度（8192）不兼容；tensor-desc 路径直接
+  `CUINFER_STATUS_BAD_PARAM`。不可用。
+- **量化**评估（权重侧）：decode 权重带宽 ~5.3 GB/步已贴带宽墙，理论上
+  W8/W4 可省 5–7 ms/步；但本卡 Triton matmul 比厂商慢 6 倍（FlagGems
+  matmul 0.42 vs vendor 0.069 ms），且 1 字节加载吞吐已被 int8-KV 实验
+  证伪，故未投入。
 
 ## 7. 合规对照
 
