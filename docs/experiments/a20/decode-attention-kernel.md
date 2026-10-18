@@ -121,3 +121,57 @@ prefill/容量受限（每波 TTFT 154 s，KV 池只够 32 路），decode 只�
 
 MATH-500 Level 3（同基线参数，105 题）：**97.1%**（基线 96.2%），达标 ≥95%。
 greedy 对拍在长 filler prompt 上会分叉（数值噪声翻转 argmax），但 MATH-500 上没有体现损失。
+
+## 9. 混合步（prefill+decode 混批）里的 decode 行
+
+`vendor_flash_attn` 会把混合步拆成 prefill 行（vendor FA）与 decode 行；**decode 行原先仍走 stock
+unified_attention**。16k 用例绝大多数步都是混合步（每波 prefill 154 s），所以我们的 kernel 只覆盖了
+少数纯 decode 步——这正是 16k 端到端 −1.9% 的主因（decode 变快、但调度与 TTFT 反而劣化）。
+
+改法：在 `_vendor_forward` 的 decode 分支里先调 `decode_attn_fast.try_fast_decode(...)`，
+形状不合格再退回 stock。`dec_meta` 里的 `seq_lens` / `block_table` / `max_query_len=1`
+正好就是自研 kernel 需要的入参，无需额外同步。
+
+效果（16k，同日）：
+
+| 版本 | 总吞吐 tok/s | TTFT s | TPOT ms |
+|---|---|---|---|
+| stock（A1/A2） | 2992.51 / 2979.55 | 154.5 / 154.7 | 151.6 / 152.2 |
+| fast，无混合步路径（B1/B2） | 2923.56 / 2933.99 | 158.1 / 158.2 | 156.0 / 154.9 |
+| fast，含混合步路径（B3/B4） | 2973.27 / **3454.11** | 154.2 / 133.5 | 153.3 / 129.2 |
+
+4k 不受影响：B3（最终代码）2533.86 / TPOT 98.84，与 B1/B2（2538.21 / 2563.13）同档。
+
+## 10. 否决的两条路线（有测量，勿重试）
+
+### 10.1 int8 KV cache（per-token-head scale）
+
+动机：4k decode attention 已压到 KV 读带宽下限（11.3 GB/步），KV 减半等于直接再省 ~8 ms/步；
+16k 还能把 KV 池从 32 路扩到 64 路。
+
+实测（`dattn_q8.py`，独立 kernel，同形状）：
+
+| 版本（kv=4096） | ms/层 | 有效带宽 |
+|---|---|---|
+| bf16 KV（现交付） | **0.72** | 372 GB/s |
+| int8 KV（load + fp32 反量化 + bf16） | 1.11 | 121 GB/s |
+| int8 KV（只 load + cast，**无反量化**） | 1.06 | 126 GB/s |
+| int8 KV（bf16 乘法反量化） | 1.06 | 126 GB/s |
+
+kv=16384 同向（2.41 → 3.63 最好）。**只加载就已经比 bf16 慢**，说明瓶颈不是反量化 ALU，
+而是这套 Triton 后端对 1 字节 gather 的向量化/吞吐只有 2 字节的 1/3（每列仅 128 B 连续）。
+→ int8（以及同样 1 字节的 fp8）KV 在 BI-V150 上不成立；除非把 int8 成对当作 int16 加载再拆包
+（需要沿 D 轴 interleave，代价未测）。
+
+### 10.2 vendor 的 paged prefill（`ixformer.batch_paged_attention`）
+
+如果它能直接吃 paged KV，16k prefill 就能省掉每层每步的反分页 gather（约 22 GB 读 + 22 GB 写/波）。
+实测该 API 的三条硬约束：
+
+1. kv cache 必须是 `(K, V)` 两个 **3 维** `[total_entries, kv_heads, head_size]`；
+2. 第一维必须**恰好等于** `max_page_num * page_size`——vLLM 的全局池（32603 页）与
+   `block_tables` 的宽度（按 max_model_len 的 8192）对不上；
+3. 走 tensor-desc 路径后直接 `CUINFER_STATUS_BAD_PARAM`（无文档，无法定位参数）。
+
+→ 不可用。16k prefill 的下一步只能靠"减少 KV 重读"（chunk 数固定，不可调）或换布局，
+本轮到此为止。
