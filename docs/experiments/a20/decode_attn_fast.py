@@ -34,6 +34,9 @@ A/B switch:
   VLLM_FL_DISABLE_DECODE_FAST=1        -> stock unified attention
   VLLM_FL_DECODE_FAST_SEGMENTS/_BLOCK/_WARPS/_STAGES -> kernel shape knobs
   VLLM_FL_DECODE_FAST_DEBUG=1          -> log eligibility once per reason
+  VLLM_FL_DECODE_FAST_SKIP=1           -> diagnostic: skip the launch (the
+                                          output is garbage; only for step-time
+                                          attribution)
 """
 
 import os
@@ -50,6 +53,8 @@ LOG2E = 1.4426950408889634
 
 _DISABLED = os.environ.get("VLLM_FL_DISABLE_DECODE_FAST", "0") == "1"
 _DEBUG = os.environ.get("VLLM_FL_DECODE_FAST_DEBUG", "0") == "1"
+# diagnostic only: skip the kernel launch (measures the non-attention step cost)
+_SKIP = os.environ.get("VLLM_FL_DECODE_FAST_SKIP", "0") == "1"
 _NSEG = int(os.environ.get("VLLM_FL_DECODE_FAST_SEGMENTS", "32"))
 _BLOCK_N = int(os.environ.get("VLLM_FL_DECODE_FAST_BLOCK", "16"))
 _NUM_WARPS = int(os.environ.get("VLLM_FL_DECODE_FAST_WARPS", "1"))
@@ -274,6 +279,9 @@ def _fast_forward(impl, query, kv_cache, md, output):
     slab = _get_slab(query.device)
     if slab is None:
         return None
+    if _SKIP:
+        output[:n].zero_()
+        return output
     key_cache, value_cache = kv_cache.unbind(1)
     decode_attention(query[:n], key_cache, value_cache, output[:n],
                      md.block_table, md.seq_lens, impl.scale, slab)
