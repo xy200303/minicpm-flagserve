@@ -21,11 +21,9 @@ REL_IMPL = "dispatch/backends/vendor/iluvatar/impl"
 REL_INIT = "dispatch/backends/vendor/iluvatar/iluvatar.py"
 
 HOOK = '''# fl opt-A20: self-developed paged decode-attention kernel.
-# One warp per (seq, kv_head, segment), fixed segment count with the segment
-# length derived from seq_lens on device (CUDA-graph safe), base-2 softmax,
-# unmasked main loop + masked tail. 0.72 ms/layer vs 1.04 ms stock at the
-# official 4k shape (max|diff| 2e-4 vs stock).
-# A/B switch: VLLM_FL_DISABLE_DECODE_FAST=1.
+# One warp per (seq, kv_head, 256-token segment); base-2 softmax; unmasked
+# main loop + masked tail. 0.72 ms/layer vs 1.04 ms stock at the official
+# 4k shape (max|diff| 2e-4). A/B switch: VLLM_FL_DISABLE_DECODE_FAST=1.
 try:
     from vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_fast import (
         apply as _apply_decode_attn_fast,
@@ -38,6 +36,7 @@ except Exception as _e:
 
 
 VENDOR_IMPORT = """
+
 try:  # A20: self-developed decode-attention kernel for the decode slice
     from vllm_fl.dispatch.backends.vendor.iluvatar.impl import (
         decode_attn_fast as _decode_fast,
@@ -83,6 +82,10 @@ def patch_vendor(root: str) -> None:
 
 
 def patch_tree(root: str) -> None:
+    # accept either the repo root (…/vllm-plugin-FL) or the package dir
+    pkg = os.path.join(root, "vllm_fl")
+    if os.path.isdir(os.path.join(pkg, REL_IMPL)):
+        root = pkg
     impl = os.path.join(root, REL_IMPL)
     init = os.path.join(root, REL_INIT)
     if not os.path.isdir(impl):
