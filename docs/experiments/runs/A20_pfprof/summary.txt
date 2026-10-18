@@ -1,0 +1,7 @@
+== A20_pfprof (prefill GPU split, proxy case)
+case=[[16384,16,32,16]] runs=1
+VLLM_FL_DISABLE_DECODE_FAST=0
+VLLM_FL_PREFILL_GPU_TIMING=1
+(EngineCore pid=28170) [2026-10-18 22:32:57] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl prefill gpu: calls=5320 gather=1.5ms fa=114.0ms per-layer-avg gather=0.037 fa=2.849
+(EngineCore pid=28170) [2026-10-18 22:32:57] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl prefill gpu: calls=5360 gather=1.8ms fa=130.4ms per-layer-avg gather=0.044 fa=3.260
+(EngineCore pid=28170) [2026-10-18 22:33:08] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn] fl prefill gpu: calls=5400 gather=1.9ms fa=68.2ms per-layer-avg gather=0.047 fa=1.705

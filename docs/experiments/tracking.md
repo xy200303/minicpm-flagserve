@@ -344,6 +344,19 @@ A20 为 43.7 ms、stock 为 57.1 ms → attention 现占 32 ms/步，KV 读带�
 剩余 12 ms 全在 PV 的 MMA 布局转换路径（当前 372 GB/s ≈ 可达负载带宽的 70%）。
 （`A20_skip` / `A20_skip64` 是诊断 run，输出为垃圾值，不计入成绩。）
 
+### 16k prefill 的 GPU 侧拆分（更正）
+
+`VLLM_FL_PREFILL_GPU_TIMING=1` + 代理用例 `[[16384,16,32,16]]`，CUDA 事件实测：
+
+| 每次调用（每请求 × 每层 × chunk） | 时间 |
+|---|---|
+| 反分页 gather | **0.03 – 0.05 ms** |
+| vendor FA | **1.7 – 3.3 ms** |
+
+gather 仅占 prefill GPU 时间的 ~1.5%，**此前"gather 约占一半 prefill"的估算作废**；
+16k 的 prefill 是 FA 计算受限（按 chunk≈2048 反推有效算力 ~115 TFLOPS，接近本卡上限）。
+`ixformer.batch_paged_attention` 即便可用，收益上限也只有 1–2%。
+
 ### 混合步 engage 率与慢档归因（2026-10-18 晚）
 
 `decode_attn_fast slice: used=X skipped=Y` 每 4000 次调用一行 INFO：

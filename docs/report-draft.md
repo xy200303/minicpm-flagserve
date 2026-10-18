@@ -301,10 +301,12 @@ PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–63
   瓶颈不是反量化 ALU，而是这套 Triton 后端对 1 字节 gather 的吞吐只有
   2 字节的 1/3（每列仅 128 B 连续）。
 - **A20-paged prefill**：想用 `ixformer.batch_paged_attention` 省掉 prefill
-  的逐层反分页 gather（16k 下约 22 GB 读 + 22 GB 写/波），但该 API 要求
-  cache 首维**恰好**等于 `max_page_num*page_size`，与 vLLM 全局池
-  （32603 页）和 `block_tables` 宽度（8192）不兼容；tensor-desc 路径直接
-  `CUINFER_STATUS_BAD_PARAM`。不可用。
+  的逐层反分页 gather，但该 API 要求 cache 首维**恰好**等于
+  `max_page_num*page_size`，与 vLLM 全局池（32603 页）和 `block_tables`
+  宽度（8192）不兼容；tensor-desc 路径直接 `CUINFER_STATUS_BAD_PARAM`。
+  **事后用 CUDA 事件更正了收益判断**：gather 每次仅 0.03–0.05 ms，而 vendor FA
+  每次 1.7–3.3 ms，gather 只占 prefill GPU 时间的 **~1.5%**——即便打通也只有
+  1–2% 收益。16k 的 prefill 是 FA 计算受限（有效算力 ~115 TFLOPS，接近本卡上限）。
 - **量化**评估（权重侧）：decode 权重带宽 ~5.3 GB/步已贴带宽墙，理论上
   W8/W4 可省 5–7 ms/步；但本卡 Triton matmul 比厂商慢 6 倍（FlagGems
   matmul 0.42 vs vendor 0.069 ms），且 1 字节加载吞吐已被 int8-KV 实验

@@ -213,3 +213,24 @@ fallback/not-eligible 日志的情况下与 stock 完全同档（连 TTFT 都是
 因此"把 PV 从 Triton 里拿出来手写 CUDA"在本实验室镜像里无法开发与验证。
 即便能编，BI-V150 是 sm_71（无 bf16 tensor core），收益上限也只是把
 0.19 ms/层的布局搬运省掉，不是换算力。
+
+## 14. 更正：16k prefill 不是 gather 受限，是 FA 计算受限
+
+之前按流量估算以为"每层每步的反分页 gather 约占 prefill 的一半"。用 CUDA 事件在
+prefill 路径上实测（`VLLM_FL_PREFILL_GPU_TIMING=1`，代理用例 `[[16384,16,32,16]]`）：
+
+| 每次调用（每请求 × 每层 × 每 chunk） | 时间 |
+|---|---|
+| `_dual_gather_kernel`（反分页 gather） | **0.03 – 0.05 ms** |
+| `ixformer.flash_attn_varlen_func`（vendor FA） | **1.7 – 3.3 ms** |
+
+gather 只占 prefill GPU 时间的 **~1.5%**（池子小、常驻 L2，且与 FA 的启动重叠）。
+所以：
+
+1. `ixformer.batch_paged_attention`（省掉 gather）即便可用，收益上限也只有 1–2%，
+   不是当初设想的"接近腰斩"；
+2. 16k 的 prefill 真正的大头是 **FA 的数学量**：按 chunk≈2048、kv=16384 反推，
+   vendor FA 的有效算力约 115 TFLOPS，已经接近本卡上限（M=4096 matmul 实测 89 TFLOPS），
+   没有可挖余量；
+3. 16k 端到端之所以对 decode 优化不敏感，是因为它的墙钟一半花在这段 prefill 上，
+   而与 decode 内核无关。
