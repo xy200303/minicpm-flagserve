@@ -389,3 +389,17 @@ B11（3430.62）/ B12（3435.33）均为 `used=44000 skipped=0`，即 decode 切
 - 本轮再否决：fp16 KV cache（0.699 vs bf16 0.698 ms/层，无收益）；
   `nseg=16`（4k 同档、16k −15%）；对齐/连续性提示（`tl.multiple_of` 二维形式编译失败，
   且该 harness 基础版本已比插件版慢 20%，未继续）。
+
+### A20 期间的追加排查：融合采样（A5）是否生效？——已生效，无需改动
+
+看到 serve 日志里 4 条 `fl opt7: fast path rejected: top_k active`，一度以为是
+`SamplingParams.top_k` 默认 0 被误判、导致 A5 融合采样全程失效。排查结论：
+
+- 这 4 条全部来自**图捕获阶段**的 dummy `SamplingMetadata`
+  （`gpu_model_runner` 里 `top_k=dummy_tensors(vocab-1)`，是 tensor 且 >0）；
+- 真实 decode 步的 `top_k` 是 `None`（`gpu_input_batch.no_top_k` 为真时置空），
+  所以 `_fast_path_ok` 通过——每个 run 都有 `fused sampler tail ENGAGED on first batch`；
+- 试验性的 `top_k > 0` 判断会在捕获期对 tensor 求 bool 而崩（
+  `bool value of Tensor ... is ambiguous`），**已回滚**，交付树保持 A5 原样。
+
+即：A5 的收益本来就在前面的 A1–A7 成绩里，这块没有剩余空间。
