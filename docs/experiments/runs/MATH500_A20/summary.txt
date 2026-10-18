@@ -1,0 +1,6 @@
+== MATH-500 Level 3 (A20 fast kernel)
+│ minicpm │ MATH-500  │ Accuracy ↑ │ Level 3  │   105 │ 97.1%   │
+│ minicpm │ MATH-500  │ Accuracy ↑ │ Level 3  │   105 │ 97.1%   │
+
+== serve: fast kernel enabled
+[2026-10-18 13:56:43] [INFO] [vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_fast] fl iluvatar: decode-attention fast kernel enabled (segments=32 block=16 warps=1 stages=1 bmax=256)

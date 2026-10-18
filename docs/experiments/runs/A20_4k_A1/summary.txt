@@ -1,0 +1,18 @@
+== A20_4k_A1
+exp_id=A20_4k_A1
+date=2026-10-17T23:32:28+08:00
+branch=main rev=84abed0 dirty= M vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py; M vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py;?? vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py;
+case=[[4096,1024,64,256]] runs=1
+env:
+VLLM_FL_DISABLE_DECODE_FAST=1
+-- config/env
+branch=main rev=84abed0 dirty= M vllm_fl/dispatch/backends/vendor/iluvatar/iluvatar.py; M vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py;?? vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py;
+case=[[4096,1024,64,256]] runs=1
+VLLM_FL_DISABLE_DECODE_FAST=1
+-- bench tail
+Successful requests:                     256       
+Benchmark duration (s):                  562.21    
+Output token throughput (tok/s):         466.27    
+Total token throughput (tok/s):          2331.37   
+Mean TTFT (ms):                          5549.10   
+Mean TPOT (ms):                          110.58    
