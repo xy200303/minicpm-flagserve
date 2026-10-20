@@ -250,11 +250,14 @@ A 操作数布局，每个 KV block 都要过一次共享内存往返；带宽�
 `decode_attn_fast slice: used=X skipped=Y`。16k 两次实测均为
 `used=44000, skipped=0`，即 decode 切片 100% 命中自研内核，不存在"偶尔退回 stock"。
 
-**为什么停在 372 GB/s**：BI-V150 报 compute capability **7.1**（Volta 世代，
-CUDA 10.2 工具链），只有 fp16 HMMA、**没有 bf16 tensor core**。因此 Triton 的
-`tl.dot(bf16, bf16)` 必然经过 bf16→fp16 转换与 fp32 累加器→操作数的布局搬运，
-PV 那 0.19 ms/层 就是它。实测把 K/V 换成 fp16 并不更快（0.699 vs 0.698 ms/层），
-确认瓶颈不在 dtype 转换本身，而在 MMA 前后的布局搬运。
+**为什么停在 372 GB/s**：把 Triton 编出的 Iluvatar 汇编 dump 出来可以看到，
+卡上**有 bf16 的 `ml_matrix_mad_f32_bf16_m16n16k16`**（fp32 累加），QK 与 PV 两个
+dot 都落在它上面；代价不在算力，而在 **MMA 累加器布局 → 点积操作数布局的转换**
+（TTGIR 里是一条 `ttg.convert_layout : #mma -> #ttg.dot_op`，汇编里展开成
+`ml_lsa_blkload_x1`×72 / `ml_slb_load_b32x1`×48 / `ml_lsa_store_a64_dword`×32 /
+`ml_slb_shuffle_rtn_b32`×22 / `ml_byte_permute_b32`×25 与 6 处 `sl_barrier`）。
+实测把 K/V 换成 fp16 并不更快（0.699 vs 0.698 ms/层），确认瓶颈不在 dtype，
+而在 MMA 前后的布局搬运。
 
 **天花板测量**：把 attention 整个跳过（探针）后，4k/B=64 的 decode 步是
 **11.7 ms**；A20 是 43.7 ms，stock 是 57.1 ms。即 attention 现为 32 ms/步，

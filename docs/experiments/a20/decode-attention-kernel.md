@@ -176,16 +176,38 @@ kv=16384 同向（2.41 → 3.63 最好）。**只加载就已经比 bf16 慢**�
 → 不可用。16k prefill 的下一步只能靠"减少 KV 重读"（chunk 数固定，不可调）或换布局，
 本轮到此为止。
 
-## 11. 硬件事实：sm_71 没有 bf16 tensor core
+## 11. 更正：卡上其实有 bf16 矩阵指令，PV 的代价是"布局搬运"而非"没有张量核"
 
-`torch.cuda.get_device_properties(0)` 报 **compute capability 7.1**（Volta 世代，
-toolchain 是 CoreX CUDA 10.2）。sm_71 只有 fp16 的 HMMA（m8n8k4 / WMMA
-m16n16k16），**没有 bf16 MMA**。所以：
+`torch.cuda.get_device_properties(0)` 报 compute capability 7.1，我据此写过
+"sm_71 没有 bf16 tensor core"，**这个判断是错的**。把 Triton 编出来的 Iluvatar
+汇编 dump 出来（`TRITON_KERNEL_DUMP=1`）后可以直接看到：
 
-- Triton 的 `tl.dot(bf16, bf16)` 在这张卡上必然要经过 bf16→fp16 的转换与
-  fp32 累加器→操作数的布局搬运——这正是 PV 那 0.19 ms 的来源（见 §1/§10）；
-- 手写 CUDA 也不会凭空获得 bf16 MMA，只能改用 fp16 HMMA + 显式的
-  double-buffer，收益上限是"把 PV 的布局搬运省掉"，不是换一种算力。
+```
+ml_matrix_mad_f32_bf16_m16n16k16   v[0:3], v[38:39], v[32:33], v[0:3]
+ml_matrix_mad_f32_bf16_m16n16k16   v[28:31], v[38:39], v[36:37], v[28:31]
+...
+```
+
+即 **bf16 的 m16n16k16 矩阵乘加指令是存在的**（fp32 累加），QK 与 PV 两个 dot
+都落在它上面（`_segment_kernel_paged` 共 24 条）。
+
+代价不在算力，而在 **MMA 累加器布局 → 点积操作数布局的转换**。TTGIR 里可以直接
+指到那一行：
+
+```
+%acc_54 = ttg.convert_layout %acc_53 : tensor<8x16xbf16, #mma>
+          -> tensor<8x16xbf16, #ttg.dot_op<{opIdx = 0, parent = #mma, kWidth = 2}>>
+%acc_55 = tt.dot %acc_54, %21, %acc_52 ... -> tensor<8x128xf32, #mma>
+```
+
+汇编层面这段转换展开成大量共享内存块搬运与 lane 交换，与 24 条 MMA 混在一起：
+`ml_lsa_blkload_x1` 72 次、`ml_slb_load_b32x1` 48 次、`ml_lsa_store_a64_dword` 32 次、
+`ml_mov_v2s_b32` 65 次、`ml_slb_shuffle_rtn_b32` 22 次、`ml_byte_permute_b32` 25 次，
+另有 6 处 `sl_barrier`。**这才是 PV 那 0.19 ms/层 的真实来源**。
+
+另外 TTGIR 里 10 个 dot 操作数用 `useSme = 0`、2 个用 `useSme = 2`（后者出现在
+"整页、无 mask"那个分支），说明后端有"直接从共享内存喂 MMA"的路径，只是当前
+形状下大部分操作数没走到。这是后续若能在 Triton 层诱导出 `useSme=2` 的唯一线索。
 
 顺带否掉一条便宜的猜测：**fp16 KV cache 不会更快**。同一 kernel、同形状，
 bf16 K/V 0.698 ms/层、fp16 K/V 0.699 ms/层（对 stock 的 maxdiff 均为 0），
