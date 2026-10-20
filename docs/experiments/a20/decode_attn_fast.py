@@ -42,14 +42,11 @@ A/B switch:
 import os
 
 import torch
-import triton
-import triton.language as tl
 
 from vllm.logger import init_logger
 
 logger = init_logger(__name__)
 
-LOG2E = 1.4426950408889634
 
 _DISABLED = os.environ.get("VLLM_FL_DISABLE_DECODE_FAST", "0") == "1"
 _DEBUG = os.environ.get("VLLM_FL_DECODE_FAST_DEBUG", "0") == "1"
@@ -78,110 +75,13 @@ _slice = {"used": 0, "skip": 0, "reasons": {}}
 _seen = set()
 
 
-@triton.jit
-def _segment_kernel(
-    Q, K, V, SEG_ACC, SEG_MAX, SEG_SUM, BT, SEQ_LEN,
-    stride_qb, stride_qh, stride_qd,
-    stride_kb, stride_ks, stride_kh, stride_kd,
-    stride_vb, stride_vs, stride_vh, stride_vd,
-    stride_btb, stride_btp,
-    HQ: tl.constexpr, HKV: tl.constexpr, D: tl.constexpr, BS: tl.constexpr,
-    GQA: tl.constexpr, BLOCK_N: tl.constexpr,
-    NSEG: tl.constexpr, scale,
-):
-    pid_g = tl.program_id(0)
-    pid_h = tl.program_id(1)
-    pid_s = tl.program_id(2)
-
-    offs_d = tl.arange(0, D)
-    offs_g = tl.arange(0, GQA)
-    # Segment count is a compile-time constant so the launch grid (and the
-    # scratch slab) never depend on host-side kv length: this is what makes
-    # the kernel capturable into a CUDA graph.  The per-sequence segment
-    # length is derived from seq_lens on the device, like stock's
-    # num_par_softmax_segments.
-    kvlen = tl.load(SEQ_LEN + pid_s)
-    seg_len = (kvlen + NSEG - 1) // NSEG
-    start = pid_g * seg_len
-    end = tl.minimum(start + seg_len, kvlen)
-
-    m_i = tl.full((GQA,), float("-inf"), dtype=tl.float32)
-    l_i = tl.zeros((GQA,), dtype=tl.float32)
-    acc = tl.zeros((GQA, D), dtype=tl.float32)
-
-    qv = tl.load(Q + pid_s * stride_qb + (pid_h * GQA + offs_g)[:, None] * stride_qh
-                 + offs_d[None, :] * stride_qd)
-
-    n_full = (end - start) // BLOCK_N * BLOCK_N
-    main_end = start + n_full
-
-    for tok0 in range(start, main_end, BLOCK_N):
-        offs_t = tok0 + tl.arange(0, BLOCK_N)
-        page = tl.load(BT + pid_s * stride_btb + (offs_t // BS) * stride_btp)
-        pos = offs_t % BS
-        k_ptrs = (K + page[None, :] * stride_kb + pos[None, :] * stride_ks
-                  + pid_h * stride_kh + offs_d[:, None] * stride_kd)
-        vt_ptrs = (V + page[:, None] * stride_vb + pos[:, None] * stride_vs
-                   + pid_h * stride_vh + offs_d[None, :] * stride_vd)
-        s = tl.dot(qv, tl.load(k_ptrs)) * scale
-        vt = tl.load(vt_ptrs)
-        m_new = tl.maximum(m_i, tl.max(s, 1))
-        alpha = tl.exp2(m_i - m_new)
-        p = tl.exp2(s - m_new[:, None])
-        l_i = l_i * alpha + tl.sum(p, 1)
-        acc = acc * alpha[:, None] + tl.dot(p.to(vt.dtype), vt)
-        m_i = m_new
-
-    if main_end < end:
-        offs_t = main_end + tl.arange(0, BLOCK_N)
-        mask_t = offs_t < end
-        page = tl.load(BT + pid_s * stride_btb + (offs_t // BS) * stride_btp,
-                       mask=mask_t, other=0)
-        pos = offs_t % BS
-        k_ptrs = (K + page[None, :] * stride_kb + pos[None, :] * stride_ks
-                  + pid_h * stride_kh + offs_d[:, None] * stride_kd)
-        vt_ptrs = (V + page[:, None] * stride_vb + pos[:, None] * stride_vs
-                   + pid_h * stride_vh + offs_d[None, :] * stride_vd)
-        s = tl.dot(qv, tl.load(k_ptrs, mask=mask_t[None, :], other=0.0)) * scale
-        s = tl.where(mask_t[None, :], s, float("-inf"))
-        vt = tl.load(vt_ptrs, mask=mask_t[:, None], other=0.0)
-        m_new = tl.maximum(m_i, tl.max(s, 1))
-        alpha = tl.exp2(m_i - m_new)
-        p = tl.exp2(s - m_new[:, None])
-        l_i = l_i * alpha + tl.sum(p, 1)
-        acc = acc * alpha[:, None] + tl.dot(p.to(vt.dtype), vt)
-        m_i = m_new
-
-    base = (pid_s * HKV + pid_h) * NSEG + pid_g
-    tl.store(SEG_MAX + base * GQA + offs_g, m_i)
-    tl.store(SEG_SUM + base * GQA + offs_g, l_i)
-    tl.store(SEG_ACC + (base * GQA + offs_g)[:, None] * D + offs_d[None, :], acc)
-
-
-@triton.jit
-def _combine_kernel(
-    SEG_ACC, SEG_MAX, SEG_SUM, OUT,
-    stride_ob, stride_oh, stride_od,
-    HQ: tl.constexpr, HKV: tl.constexpr, GQA: tl.constexpr, D: tl.constexpr,
-    NSEG: tl.constexpr,
-):
-    pid_s = tl.program_id(0)
-    pid_h = tl.program_id(1)
-    offs_g = tl.arange(0, GQA)
-    offs_d = tl.arange(0, D)
-    offs_n = tl.arange(0, NSEG)
-
-    base = (pid_s * HKV + pid_h) * NSEG
-    mx = tl.load(SEG_MAX + (base + offs_n)[None, :] * GQA + offs_g[:, None])
-    sm = tl.load(SEG_SUM + (base + offs_n)[None, :] * GQA + offs_g[:, None])
-    m = tl.max(mx, 1)
-    w = tl.exp2(mx - m[:, None])
-    denom = tl.sum(w * sm, 1)
-    accs = tl.load(SEG_ACC + ((base + offs_n)[None, :, None] * GQA + offs_g[:, None, None]) * D
-                   + offs_d[None, None, :])
-    out = tl.sum(accs * w[:, :, None], 1) / denom[:, None]
-    tl.store(OUT + pid_s * stride_ob + (pid_h * GQA + offs_g)[:, None] * stride_oh
-             + offs_d[None, :] * stride_od, out.to(OUT.dtype.element_ty))
+try:  # the operator itself lives in FlagGems
+    from flag_gems.fused import paged_decode_attention as _fg_paged_decode_attention
+except Exception as _exc:  # pragma: no cover
+    _fg_paged_decode_attention = None
+    _FG_IMPORT_ERROR = _exc
+else:
+    _FG_IMPORT_ERROR = None
 
 
 def _make_slab(dev):
@@ -209,26 +109,11 @@ def _get_slab(dev):
 def decode_attention(q, k, v, out, block_table, seq_lens, scale, slab,
                      nseg=_NSEG, block_n=_BLOCK_N, num_warps=_NUM_WARPS,
                      num_stages=_NUM_STAGES):
-    B, HQ, D = q.shape
-    HKV = k.shape[2]
-    GQA = HQ // HKV
-    BS = k.shape[1]
-    seg_acc, seg_max, seg_sum = slab
-    _segment_kernel[(nseg, HKV, B)](
-        q, k, v, seg_acc, seg_max, seg_sum, block_table, seq_lens,
-        q.stride(0), q.stride(1), q.stride(2),
-        k.stride(0), k.stride(1), k.stride(2), k.stride(3),
-        v.stride(0), v.stride(1), v.stride(2), v.stride(3),
-        block_table.stride(0), block_table.stride(1),
-        HQ=HQ, HKV=HKV, D=D, BS=BS, GQA=GQA,
-        BLOCK_N=block_n, NSEG=nseg, scale=scale * LOG2E,
-        num_warps=num_warps, num_stages=num_stages,
-    )
-    _combine_kernel[(B, HKV)](
-        seg_acc, seg_max, seg_sum, out,
-        out.stride(0), out.stride(1), out.stride(2),
-        HQ=HQ, HKV=HKV, GQA=GQA, D=D, NSEG=nseg,
-        num_warps=4,
+    """Thin wrapper: the operator itself lives in FlagGems."""
+    return _fg_paged_decode_attention(
+        q, k, v, out, block_table, seq_lens, scale,
+        num_segments=nseg, block_n=block_n, num_warps=num_warps,
+        num_stages=num_stages, seg_buffers=slab,
     )
 
 
@@ -240,6 +125,8 @@ def _reject(reason):
 
 
 def _eligible(impl, query, kv_cache, md, output_scale):
+    if _fg_paged_decode_attention is None:
+        return _reject(f"flag_gems op unavailable: {_FG_IMPORT_ERROR}")
     if output_scale is not None:
         return _reject("output_scale")
     if impl.alibi_slopes is not None or impl.sinks is not None:

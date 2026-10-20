@@ -26,6 +26,11 @@
 
 ### A20：自研 paged decode attention 内核（本轮新增，收益最大）
 
+**算子本体在 FlagGems**：`FlagGems/src/flag_gems/fused/paged_decode_attention.py`
+（`paged_decode_attention(...)`，Triton 实现，已在 `fused/__init__.py` 注册）。
+按赛事口径"算子优化走 Triton 路线并提交到 flaggems 仓库"，提交包内含该 FlagGems 改动。
+
+插件侧只有薄封装与派发：
 `vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py`（新增文件）
 `vendor_flash_attn.py` / `iluvatar.py`（两处 hook）
 
@@ -42,6 +47,9 @@
 | 4k `[4096,1024,64,256]` | 2329.1 | 2538.2 | **+9.0%**，TPOT 110.6→98.8 ms |
 | 16k `[16384,1024,64,128]` | 2986.0 | 3445.3 | **+15.4%**，TTFT 154.6→133.8 s |
 | MATH-500 Level 3 | 96.2% | **97.1%** | 达标（≥95%） |
+
+同日的 4k/16k 交错配对（2026-10-20，新实例、从干净树 + 一条 `apply_a20.py` 重建）：
+4k 2258.60 → 2487.14（+10.1%），16k 2955.98 → 3434.66（+16.2%）。
 
 （以上为同日交错 A/B，A×2 / B×3–4，取中位数。）
 

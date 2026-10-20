@@ -15,6 +15,10 @@ import sys
 
 REPO = sys.argv[1] if len(sys.argv) > 1 else "/workspace/vllm-plugin-FL"
 SITE = "/usr/local/lib/python3.12/site-packages/vllm_fl"
+# The decode-attention operator itself lives in FlagGems (contest guidance:
+# Triton route, submitted to the flaggems repository).
+FG_REPO = os.environ.get("FG_REPO", "/workspace/FlagGems/src/flag_gems")
+FG_SITE = "/usr/local/lib/python3.12/site-packages/flag_gems"
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 REL_IMPL = "dispatch/backends/vendor/iluvatar/impl"
@@ -105,6 +109,29 @@ def patch_tree(root: str) -> None:
     print(f"patched {root}")
 
 
+def patch_flag_gems(root: str) -> None:
+    fused = os.path.join(root, "fused")
+    if not os.path.isdir(fused):
+        print(f"skip {root}: not a flag_gems tree")
+        return
+    src = os.path.join(HERE, "flag_gems", "paged_decode_attention.py")
+    shutil.copyfile(src, os.path.join(fused, "paged_decode_attention.py"))
+    init = os.path.join(fused, "__init__.py")
+    with open(init, encoding="utf-8") as f:
+        text = f.read()
+    if "paged_decode_attention" not in text:
+        line = ("from flag_gems.fused.paged_decode_attention import "
+                "paged_decode_attention\n")
+        anchor = "from flag_gems.fused.paged_mqa_logits import"
+        text = (text.replace(anchor, line + anchor, 1) if anchor in text
+                else text.rstrip() + "\n" + line)
+        with open(init, "w", encoding="utf-8") as f:
+            f.write(text)
+    print(f"patched flag_gems at {root}")
+
+
+patch_flag_gems(FG_REPO)
+patch_flag_gems(FG_SITE)
 patch_tree(REPO)
 patch_tree(SITE)
 print("A20 applied; rebuild the serve (plugin is imported at process start)")
