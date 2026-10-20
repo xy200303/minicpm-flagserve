@@ -445,3 +445,15 @@ flaggems 仓库**；插件内改 `scheduler_config.max_num_batched_tokens` / `cu
 
 **16k 同日配对（FlagGems 版）**：A7 2955.98（stock）→ **B18 3434.66**，
 TTFT 155.6→133.9 s、TPOT 153.3→129.9 ms，**+16.2%**。
+
+### A20 最终精度复核（2026-10-20，交付树 = FlagGems 版内核）
+
+MATH-500 Level 3（105 题，与基线同参 temperature 1.0 / top_p 0.95 / max_tokens 32768）：
+**98.1%**。serve 日志确认 `decode-attention fast kernel enabled (segments=32 block=16
+warps=1 stages=1 bmax=64)`，即走的是 FlagGems 内的 `paged_decode_attention`。
+
+| 复核 | 代码 | MATH-500 L3 |
+|---|---|---|
+| 2026-10-18 | A20（内核在插件内） | 97.1% |
+| **2026-10-20** | A20（内核在 FlagGems） | **98.1%** |
+| 基线（赛道给定） | — | 96.2% |
