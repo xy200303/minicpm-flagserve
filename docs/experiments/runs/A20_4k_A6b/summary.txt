@@ -1,0 +1,7 @@
+== A20_4k_A6b
+case=[[4096,1024,64,256]] runs=1
+VLLM_FL_DISABLE_DECODE_FAST=1
+Output token throughput (tok/s):         447.89    
+Total token throughput (tok/s):          2239.43   
+Mean TTFT (ms):                          5605.71   
+Mean TPOT (ms):                          113.56    
