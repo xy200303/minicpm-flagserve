@@ -1,0 +1,129 @@
+diff --git a/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py b/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
+index 0a7b7c5..4c11603 100644
+--- a/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
++++ b/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py
+@@ -112,52 +112,79 @@ def _pool(name, rows, hkv, d, dtype, dev):
+ def _build_split(m, cu_l, seq_l):
+     """Compute the decode/prefill request split from CPU lists, attach GPU
+     tensors for the decode subset.  Runs once per step in the builder.
+-
+-    Host-cost notes (real-serve CoreX profile): aten::index (GPU tensor
+-    indexed by a python list) blocks ~96ms per call, and per-request
+-    torch.arange + cat costs one slow launch apiece.  Everything here is
+-    built on CPU and moved with a few small HtoD copies instead.
+     """
++    if os.environ.get("VLLM_FL_BUILD_DBG") == "1":
++        _mk = []
++        _mk.append(("enter", _time.perf_counter()))
++    else:
++        _mk = None
++
+     pre_idx, dec_idx = [], []
+     for i in range(len(seq_l)):
+         (dec_idx if cu_l[i + 1] - cu_l[i] == 1 else pre_idx).append(i)
++    if _mk is not None:
++        _mk.append(("py_split", _time.perf_counter()))
++
+     dev = m.query_start_loc.device
+     if dec_idx:
+         n = len(dec_idx)
+         idx_t = torch.tensor(dec_idx, dtype=torch.int64).to(dev, non_blocking=True)
++        if _mk is not None:
++            _mk.append(("h2d_idx_t", _time.perf_counter()))
+         dec_rows = torch.tensor(
+             [cu_l[i] for i in dec_idx], dtype=torch.int64).to(
+                 dev, non_blocking=True)
++        if _mk is not None:
++            _mk.append(("h2d_dec_rows", _time.perf_counter()))
+         seq_dec = torch.tensor(
+             [seq_l[i] for i in dec_idx], dtype=m.seq_lens.dtype).to(
+                 dev, non_blocking=True)
++        if _mk is not None:
++            _mk.append(("h2d_seq_dec", _time.perf_counter()))
++        _ar = torch.arange(
++            0, n + 1, device=dev, dtype=m.query_start_loc.dtype)
++        if _mk is not None:
++            _mk.append(("arange", _time.perf_counter()))
++        _bt = torch.index_select(m.block_table, 0, idx_t)
++        if _mk is not None:
++            _mk.append(("block_table_sel", _time.perf_counter()))
+         dec_meta = dataclasses.replace(
+             m,
+             num_actual_tokens=n,
+             max_query_len=1,
+-            query_start_loc=torch.arange(
+-                0, n + 1, device=dev, dtype=m.query_start_loc.dtype),
++            query_start_loc=_ar,
+             seq_lens=seq_dec,
+-            block_table=torch.index_select(m.block_table, 0, idx_t),
++            block_table=_bt,
+         )
++        if _mk is not None:
++            _mk.append(("dec_meta", _time.perf_counter()))
+     else:
+         dec_rows = None
+         dec_meta = None
+     m._fl_split = (cu_l, seq_l, pre_idx, dec_rows, dec_meta)
+-    # per-step memo for prefill page lists: the .long() cast of a block_table
+-    # row is one slow to_copy launch; without sharing, all 42 layers would
+-    # each redo it for the same request.
+     m._fl_pages = {}
+-    # per-request varlen cu_seqlens ([n_pre, 2] int32 each, rebased to 0):
+-    # two tiny HtoD per step, shared by all layers.
+     if pre_idx:
+-        dev32 = dict(dtype=torch.int32, device=dev)
++        # A25: torch.tensor(list, device=cuda) costs ~40 ms per call on this
++        # backend (it stages element-wise); building on CPU then .to(dev) is
++        # 0.1 ms for the same bytes.
+         m._fl_cu_q = torch.tensor(
+-            [[0, cu_l[i + 1] - cu_l[i]] for i in pre_idx], **dev32)
+-        m._fl_cu_k = torch.tensor([[0, seq_l[i]] for i in pre_idx], **dev32)
++            [[0, cu_l[i + 1] - cu_l[i]] for i in pre_idx],
++            dtype=torch.int32).to(dev, non_blocking=True)
++        m._fl_cu_k = torch.tensor(
++            [[0, seq_l[i]] for i in pre_idx],
++            dtype=torch.int32).to(dev, non_blocking=True)
+     else:
+         m._fl_cu_q = None
+         m._fl_cu_k = None
++    if _mk is not None:
++        _mk.append(("cu_qk", _time.perf_counter()))
++        _tot = (_mk[-1][1] - _mk[0][1]) * 1e3
++        if _tot > 20:
++            parts = " ".join(
++                "%s=%.1f" % (_mk[i][0], (_mk[i][1] - _mk[i - 1][1]) * 1e3)
++                for i in range(1, len(_mk)))
++            logger.info("[SPLIT] total=%.1f | %s | npre=%d ndec=%d",
++                        _tot, parts, len(pre_idx), len(dec_idx))
+ 
+ 
+ _STEP = {"t0": 0.0, "n": 0}
+@@ -173,12 +200,27 @@ def _build_patched(self, common_prefix_len, common_attn_metadata,
+     _STEP["t0"] = _t
+     m = _orig_build(self, common_prefix_len, common_attn_metadata,
+                     fast_build, **kwargs)
++    _t1 = _time.perf_counter()
+     try:
+         cu_cpu = common_attn_metadata.query_start_loc_cpu
+         seq_cpu = common_attn_metadata.seq_lens_cpu_upper_bound
+         if (cu_cpu is not None and seq_cpu is not None
+                 and common_attn_metadata.max_query_len > 1):
+-            _build_split(m, cu_cpu.tolist(), seq_cpu.tolist())
++            _cu_l = cu_cpu.tolist()
++            _t2 = _time.perf_counter()
++            _seq_l = seq_cpu.tolist()
++            _t3 = _time.perf_counter()
++            _build_split(m, _cu_l, _seq_l)
++            _t4 = _time.perf_counter()
++            if os.environ.get("VLLM_FL_BUILD_DBG") == "1":
++                logger.info(
++                    "[BUILD] orig=%.1f cu_tolist=%.1f seq_tolist=%.1f split=%.1f"
++                    " | nreq=%d maxq=%s cu=%s/%s seq=%s/%s",
++                    (_t1 - _t) * 1e3, (_t2 - _t1) * 1e3,
++                    (_t3 - _t2) * 1e3, (_t4 - _t3) * 1e3,
++                    len(_seq_l), common_attn_metadata.max_query_len,
++                    type(cu_cpu).__name__, getattr(cu_cpu, "device", "?"),
++                    type(seq_cpu).__name__, getattr(seq_cpu, "device", "?"))
+     except Exception as e:
+         logger.warning("fl iluvatar: split build failed (stock path): %s", e)
+     return m
