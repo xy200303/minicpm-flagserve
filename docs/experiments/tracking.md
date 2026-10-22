@@ -535,6 +535,11 @@ vLLM 0.24 的 `ir_op_priority` 里 `rms_norm`/`fused_add_rms_norm` 都是 `nativ
 - 救不回来：要藏掉量化开销只能把"量化+int8 GEMM+反量化+SwiGLU"融成一个核，而本卡
   Triton matmul 比厂商 BLAS 慢约 6 倍；厂商的 `bnb_qgemm` 是 6 GB/s 的参考实现。
 - 结论：M=64 的 decode 形态下 W8 净亏；已删除原型，脚本留档 `docs/experiments/w8-probe/`。
+  **更正（2026-10-22，见 A27）**：本条的两处对比不公平——(a) "激活量化 40 µs"其实是
+  `x.abs()`/`.max()`/`.float()` + 量化核共 4 个 launch，合成一个 Triton 核后只有 21.8 µs；
+  (b) 基线用了"裸 GEMM 120.9 µs"，而真实路径是 GEMM+SwiGLU 137.4 µs。
+  修正后隔离测量为 **75.4 µs = 1.82x**。但接进引擎后端到端 **−19%**（4k 2080 vs 2571，
+  TTFT 恶化 4.4x），已回退。**否决结论维持，理由改为"隔离收益不可外推"**。
 
 ### A23/A24（否决）：投机混合步的真凶是隐式同步的 `aten::index`
 
