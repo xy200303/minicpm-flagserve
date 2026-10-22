@@ -535,3 +535,68 @@ vLLM 0.24 的 `ir_op_priority` 里 `rms_norm`/`fused_add_rms_norm` 都是 `nativ
 - 救不回来：要藏掉量化开销只能把"量化+int8 GEMM+反量化+SwiGLU"融成一个核，而本卡
   Triton matmul 比厂商 BLAS 慢约 6 倍；厂商的 `bnb_qgemm` 是 6 GB/s 的参考实现。
 - 结论：M=64 的 decode 形态下 W8 净亏；已删除原型，脚本留档 `docs/experiments/w8-probe/`。
+
+### A23/A24（否决）：投机混合步的真凶是隐式同步的 `aten::index`
+
+A10–A13 曾判定"投机在官方 c64 口径不可用"，但归因停在"混合批 eager 前向 + 采样器第二条慢路径"，
+并卡在拿不到设备级 profiler。今天用 CUDA event 把 `RejectionSampler.forward` 切成 8 段，
+直接钉死：
+
+- 慢步 99.7% 落在 `logits[bonus_logits_indices]` 这一行（4.0 s/步）；
+- 同一 forward、同一张量、同一流上紧挨着换成 `torch.index_select`：**0.2–0.3 ms**（差 13000 倍）；
+- 微基准里同形状花式索引只有 0.06 ms，且"慢 kernel 后接 `x[idx]`"不阻塞 → 它是**隐式同步点**，
+  不是算力退化。A12 当年记的"GPU 高级索引 O(max index)"是误判，它只是绕开了同步。
+
+修两处（RS 的 bonus/target gather + `_prepare_input_ids` 的两处高级索引）后：
+RS 4100→122 ms、`_prepare_input_ids` 2458→1 ms、纯 decode 步 1094→8 ms、probe 端到端 67.3→35.5 s。
+
+但官方 `[4096,1024,64,256]` 仍不可用：decode 454 tok/s（基线 364，+25%）、
+prefill 2867–3686 tok/s（已回到基线），**5 分钟只完成 3/256 个请求**。
+`fl_timing3` 显示混合步 `_model_forward` 100–950 ms（单步 7.6 s）——padonly 让每个 decode 请求
+恒定带 6 个 token，混合批里 decode 膨胀 6 倍、prefill 拿不到 token 预算而饥饿。
+这一环必须动调度，而组委会对"插件内部改 `max_num_batched_tokens` 一类默认值"判负面。
+**结论与 A10–A13 相同（仍不采用），但理由从"索引退化"澄清为"投机 token 记账 × 调度预算"。**
+
+文档 `docs/experiments/a23-spec-gather-iluvatar.md`，证据 `docs/experiments/a23/`，commit `85005c3`。
+
+### A25（否决）：`_build_split` 每步 81 ms 是等待，不是浪费
+
+A13 把这 74–82 ms 记成"`query_start_loc_cpu.tolist()` 的 D2H"，实测**两处 `.tolist()` 都是 0.0 ms**
+（本来就是 CPU tensor）。真凶是同一函数末尾：
+
+```python
+torch.tensor(python_list, dtype=torch.int32, device=dev)   # ~40 ms/次 × 2
+```
+
+这份后端实现需要同步（逐元素搬到显存），把 GPU 上未完成的前向一并等掉。
+改成"CPU 建 + `.to(dev, non_blocking=True)`"后 `cu_qk` 81.4 → 0.3 ms。
+
+但官方 4k 只从 2571.12 → 2592.87 tok/s（**+0.85%**，噪声内），因为它等的是真实 GPU 工作。
+**未进提交栈**，补丁留档 `docs/experiments/a25/a25.patch`，文档 `a25-build-split-sync.md`，commit `d9d986e`。
+
+### A26（评估后放弃）：decode attention 形状扫描
+
+`paged_decode_attention` 在 (B, kv) × NSEG 上逐点测。官方 c64 形状下：
+
+- kv=16384：最优点**就是当前的 NSEG=32**（2.084 ms/层，**515 GB/s = 卡带宽的 88%**）
+- kv=4096：换 NSEG=16 只快 **1.4%**
+- NSEG=128 在所有形状慢 30–90%；小 batch（B≤16）确实有 3–7.4%，但官方用例是 c64
+
+**shape-aware dispatch 因此不实现**：收益上限 1.4%，低于 3% 准入，而"按 B 查表 + slab 按最大
+NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类做法允许，但允许不等于值得做；
+这一条按"已评估并放弃"写进报告。文档 `a26-decode-kernel-sweep.md`，commit `6ecf7ee`。
+
+### 2026-10-22 当日基线（A20 交付态，供后续 A/B 对照）
+
+| 用例 | 总吞吐 | TTFT | TPOT |
+|---|---|---|---|
+| 4k `[4096,1024,64,256]` | 2571.12 tok/s | 5529.69 ms | 96.58 ms |
+| 16k `[16384,1024,64,128]` | 3515.89 tok/s | 130772.51 ms | 126.49 ms |
+
+16k 历史 3541.34（TTFT 155.5 s），当日 −0.7%，属机器波动。
+
+### 运维教训（写进复现说明）
+
+今天为快速迭代频繁 `pkill -9`，残留的 CUDA 上下文让 28.5 GB 显存变成"幽灵占用"
+（`ixsmi` 进程表为空但 `memory.used` 不降），容器内 `ixsmi -r` 无法复位（缺 `/dev/corex*`），
+只能重启实例。**后续统一用 SIGTERM + 等待优雅退出**，本次收尾已按此方式执行并确认回落到 210 MiB。
