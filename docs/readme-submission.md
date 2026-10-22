@@ -51,6 +51,9 @@
 同日的 4k/16k 交错配对（2026-10-20，新实例、从干净树 + 一条 `apply_a20.py` 重建）：
 4k 2239.43 → 2606.56（+16.4%），16k 2956.59 → 3541.34（+19.8%）。
 
+测试：`FlagGems/tests/test_paged_decode_attention.py`（8 个精度用例对照 fp32 参考 +
+1 个**批量不变性**用例：单条/两条/半批/全批/逆序全批逐位相等），BI-V150 上 `9 passed`。
+
 内核关键点（可在 `FlagGems/src/flag_gems/fused/paged_decode_attention.py` 顶部注释里看到完整推导）：
 单 warp/段、`BLOCK_N=16`、base-2 在线 softmax、主循环无 mask、**段边界按整页对齐**
 （`block_n == block_size` 时 `page` 变成标量、去掉逐 token 除模与向量页 gather，再快 7–10%），
