@@ -311,6 +311,10 @@ PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–63
   **事后用 CUDA 事件更正了收益判断**：gather 每次仅 0.03–0.05 ms，而 vendor FA
   每次 1.7–3.3 ms，gather 只占 prefill GPU 时间的 **~1.5%**——即便打通也只有
   1–2% 收益。16k 的 prefill 是 FA 计算受限（有效算力 ~115 TFLOPS，接近本卡上限）。
+- **A21-IR-RMSNorm**：把 RMSNorm 从 vLLM 的 IR "native"（纯 torch 链）换成自研 Triton 融合核，
+  隔离里逐位一致且 2.5–7.2x（N=64: 132.8→54.0 µs；N=8192: 2039→281 µs），但引擎内 **−5.9%**、
+  TTFT 翻倍。原因：IR op 在编译期被 inline，核只能包成 opaque `torch.library.custom_op`，
+  inductor 因此失去对相邻算子的融合（prefill 最敏感）。已回退。
 - **量化**评估（权重侧）：decode 权重带宽 ~5.3 GB/步已贴带宽墙，理论上
   W8/W4 可省 5–7 ms/步；但本卡 Triton matmul 比厂商慢 6 倍（FlagGems
   matmul 0.42 vs vendor 0.069 ms），且 1 字节加载吞吐已被 int8-KV 实验

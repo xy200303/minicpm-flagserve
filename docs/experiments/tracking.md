@@ -500,3 +500,17 @@ combine 本身 0.057 ms/层（≈2.4 ms/步，占步长 5%），但把归并塞�
   与 B19（2606.56 / 95.54）同档，确认切换开关没有改变默认行为。
 - 注：实验室网关当晚出现 66% 丢包，SFTP 实测掉到 ~4 KB/s，15 MB 包未能拉回本地；
   重建议只需在实例上跑 `bash /workspace/pack_submission.sh`。
+
+### A21（否决）：RMSNorm 走 IR op 级融合核
+
+vLLM 0.24 的 `ir_op_priority` 里 `rms_norm`/`fused_add_rms_norm` 都是 `native`（纯 torch 链，eager 下每次 8–10 个核）。
+自写 Triton 融合核（fp32 方差，且按 native 的"先转 bf16 再乘 weight"路径实现）在隔离里**逐位一致**且 2.5–7.2x：
+
+| 形状 | native | 融合核 |
+|---|---|---|
+| N=64（decode） | 132.8 µs | 54.0 µs（2.46x） |
+| N=8192（prefill） | 2039.4 µs | 281.5 µs（7.24x） |
+
+但引擎（官方 4k，同日）：off 2538.69 / off2 2534.52（TPOT 97.7/97.8）→ **on 2388.44（−5.9%）、TPOT 100.0、TTFT 5499→9968 ms**。
+归因：IR op 在编译期被 inline，Triton 核只能包成 opaque 的 `torch.library.custom_op`，于是 inductor 失去对
+相邻算子的融合（prefill 最敏感，TTFT 翻倍）。**已全部回退**，源码留在 `docs/experiments/a21/`。
