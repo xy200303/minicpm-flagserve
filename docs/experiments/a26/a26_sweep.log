@@ -1,0 +1,37 @@
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:728: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+B	KV	NSEG	BLOCK	ms	GB/s
+8	4096	16	16	0.168	200
+8	4096	32	16	0.173	194
+8	4096	64	16	0.190	177
+8	4096	128	16	0.325	103
+8	16384	16	16	0.363	370
+8	16384	32	16	0.392	343
+8	16384	64	16	0.390	344
+8	16384	128	16	0.509	263
+16	4096	16	16	0.248	271
+16	4096	32	16	0.242	277
+16	4096	64	16	0.258	260
+16	4096	128	16	0.438	153
+16	16384	16	16	0.679	395
+16	16384	32	16	0.651	412
+16	16384	64	16	0.632	425
+16	16384	128	16	0.800	336
+32	4096	16	16	0.377	356
+32	4096	32	16	0.368	364
+32	4096	64	16	0.403	333
+32	4096	128	16	0.639	210
+32	16384	16	16	1.194	450
+32	16384	32	16	1.121	479
+32	16384	64	16	1.124	478
+32	16384	128	16	1.347	399
+64	4096	16	16	0.620	433
+64	4096	32	16	0.629	427
+64	4096	64	16	0.703	382
+64	4096	128	16	1.168	230
+64	16384	16	16	2.131	504
+64	16384	32	16	2.084	515
+64	16384	64	16	2.121	506
+64	16384	128	16	2.566	418
