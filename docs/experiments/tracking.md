@@ -523,3 +523,15 @@ vLLM 0.24 的 `ir_op_priority` 里 `rms_norm`/`fused_add_rms_norm` 都是 `nativ
 
 该性质来自内核结构：每 (seq, kv_head, segment) 只依赖自己的 q/KV/seq_lens，段长只由该序列长度决定。
 写进报告作为可复现性卖点，也让后续 A/B 对拍不受批组成影响。
+
+### A22（否决）：W8 权重量化 + 厂商 int8 GEMM
+
+- 动机：decode 的 11.7 ms 非 attention 时间全由权重读取解释（5.3 GB/步）。
+- 上界很诱人：`torch._int_mm` 在 K=2048/N=6144 上 56.8→26.1 µs（2.2x）；gate_up+SwiGLU
+  在"激活已量化 + 融合 epilogue"的假设下 137.5→73.8 µs（1.86x）。
+- **真实集成路径（含 per-call 激活量化 + 独立反量化）：120.9 → 157.5 µs（0.77x）**。
+  两个额外小核约 80 µs，与 gate_up 的 bf16 GEMM（115–121 µs）同量级。
+- 数值侧干净：纯 torch 参考 maxdiff 0.054、`_int_mm` 逐位精确、反量化核 0.0。
+- 救不回来：要藏掉量化开销只能把"量化+int8 GEMM+反量化+SwiGLU"融成一个核，而本卡
+  Triton matmul 比厂商 BLAS 慢约 6 倍；厂商的 `bnb_qgemm` 是 6 GB/s 的参考实现。
+- 结论：M=64 的 decode 形态下 W8 净亏；已删除原型，脚本留档 `docs/experiments/w8-probe/`。

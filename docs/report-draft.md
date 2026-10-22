@@ -320,6 +320,10 @@ PV 的 MMA 转换路径上：当前 372 GB/s 已是可达负载带宽（505–63
   隔离里逐位一致且 2.5–7.2x（N=64: 132.8→54.0 µs；N=8192: 2039→281 µs），但引擎内 **−5.9%**、
   TTFT 翻倍。原因：IR op 在编译期被 inline，核只能包成 opaque `torch.library.custom_op`，
   inductor 因此失去对相邻算子的融合（prefill 最敏感）。已回退。
+- **A22-W8 权重**：int8 权重量化 + 厂商 `torch._int_mm`。上界可观（gate_up+SwiGLU 在"激活已量化 +
+  融合 epilogue"的假设下 137.5→73.8 µs，1.86x），但真实集成必须每步付"激活量化 + 反量化"两个小核
+  （合计约 80 µs），而 gate_up 的 bf16 GEMM 只有 115–121 µs → **实测 0.77x（净亏）**。
+  要藏掉这笔开销只能自写融合 int8 GEMM，而本卡 Triton matmul 比厂商慢约 6 倍。否决。
 - **量化**评估（权重侧）：decode 权重带宽 ~5.3 GB/步已贴带宽墙，理论上
   W8/W4 可省 5–7 ms/步；但本卡 Triton matmul 比厂商慢 6 倍（FlagGems
   matmul 0.42 vs vendor 0.069 ms），且 1 字节加载吞吐已被 int8-KV 实验
