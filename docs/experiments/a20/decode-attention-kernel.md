@@ -343,3 +343,23 @@ argmax 时会翻一个 token。这和此前 stock↔A20 的对拍分叉是同一
 
 四次都 ≥ 95%（基线 96.2%）；页对齐两次 96.2 / 97.1，说明第一次落在采样噪声下沿。
 采样参数 temperature 1.0 / top_p 0.95 且请求未固定 seed，±2 题（±1.9%）的跑间波动在噪声内。
+
+## 17. 批量不变性（batch invariance）：性质 + 测试
+
+A20 内核的数学是**逐序列独立**的：每个 (seq, kv_head, segment) 只读自己的 q、自己的 KV 页和
+自己的 `seq_lens`，段长 `units = ceil(kvlen / (NSEG*BS))` 也只由该序列的长度决定。因此
+**同一个序列的输出与该批里还有哪些序列无关**——这正是可复现性需要的性质，也让 A/B 的对拍不受
+批组成影响。
+
+上、下游行为对照：vLLM 的 IR/native 路径里有若干按整批做归约的算子（例如 RMSNorm 的方差、
+采样），批组成变化会改变它们的求和顺序；我们的 decode attention 不会。
+
+测试落在 FlagGems：`tests/test_paged_decode_attention.py`
+
+- `test_paged_decode_attention_accuracy`：8 个用例（bf16/fp16 × 等长/ragged × kv=1024/4096），
+  与 fp32 参考实现（逐页 gather + GQA softmax）比对，`atol=2e-2`；
+- `test_paged_decode_attention_batch_invariant`：同一组 12 条 ragged 序列，分别以
+  「单条 / 两条中批 / 一半批 / 全批 / 逆序全批」调用，断言**逐位相等**，并重复同一种批组成
+  验证确定性。
+
+实测（BI-V150）：`9 passed`。pytest marker `paged_decode_attention` 已注册进 `pytest.ini`。

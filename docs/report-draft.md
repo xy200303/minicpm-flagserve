@@ -246,6 +246,11 @@ A 操作数布局，每个 KV block 都要过一次共享内存往返；带宽�
 均 ≥95%；跑间差异来自采样（temperature 1.0 未固定 seed）与段内 fp32 求和顺序的等价扰动
 （页对齐与通用分段的 greedy 对拍 4/5 完全一致，第 5 条从 ~30 token 起换措辞）。
 
+**批量不变性（可复现性）**：内核每个 (seq, kv_head, segment) 只依赖自己的 q / KV 页 /
+`seq_lens`，段长只由该序列长度决定，因此**同一序列的输出与批组成无关**。FlagGems 侧已配测试
+（`tests/test_paged_decode_attention.py`）：8 个精度用例对照 fp32 参考，外加一个批量不变性用例
+（单条 / 两条 / 半批 / 全批 / 逆序全批，逐位相等 + 重复同组成验证确定性），BI-V150 上 `9 passed`。
+
 **可审计性**：混合步的 decode 切片每 4000 次调用打一行
 `decode_attn_fast slice: used=X skipped=Y`。16k 两次实测均为
 `used=44000, skipped=0`，即 decode 切片 100% 命中自研内核，不存在"偶尔退回 stock"。

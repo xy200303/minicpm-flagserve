@@ -514,3 +514,12 @@ vLLM 0.24 的 `ir_op_priority` 里 `rms_norm`/`fused_add_rms_norm` 都是 `nativ
 但引擎（官方 4k，同日）：off 2538.69 / off2 2534.52（TPOT 97.7/97.8）→ **on 2388.44（−5.9%）、TPOT 100.0、TTFT 5499→9968 ms**。
 归因：IR op 在编译期被 inline，Triton 核只能包成 opaque 的 `torch.library.custom_op`，于是 inductor 失去对
 相邻算子的融合（prefill 最敏感，TTFT 翻倍）。**已全部回退**，源码留在 `docs/experiments/a21/`。
+
+### A20 追加：批量不变性测试（不是性能项，是可复现性）
+
+`FlagGems/tests/test_paged_decode_attention.py`：8 个精度用例（bf16/fp16 × 等长/ragged × kv=1024/4096，
+对照 fp32 参考，atol=2e-2）+ 1 个批量不变性用例（同一组 12 条 ragged 序列，单条/两条/半批/全批/逆序全批，
+断言逐位相等，并重复同组成验证确定性）。BI-V150 上 **9 passed**。
+
+该性质来自内核结构：每 (seq, kv_head, segment) 只依赖自己的 q/KV/seq_lens，段长只由该序列长度决定。
+写进报告作为可复现性卖点，也让后续 A/B 对拍不受批组成影响。
