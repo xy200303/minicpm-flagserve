@@ -1,0 +1,17 @@
+fl timing3: wrapped ['_update_states', '_prepare_input_ids', '_calc_spec_decode_metadata', '_model_forward', '_sample', 'propose_draft_token_ids', '_preprocess', '_build_attention_metadata', 'sample_tokens', '_bookkeeping_sync']
+fl timing3 (5 steps): step_wall=1094 ms (gap 551) | sample_tokens=550/528 _sample=474/452 propose_draft_token_ids=76/72 _model_forward=58/160 _update_states=31/13 _build_attention_metadata=28/89
+fl timing3 (5 steps): step_wall=2604 ms (gap 71) | _prepare_input_ids=2458/2459 sample_tokens=69/49 _model_forward=67/175 _sample=35/13 propose_draft_token_ids=34/32 _update_states=2/2
+fl timing3 (5 steps): step_wall=1777 ms (gap 98) | _prepare_input_ids=1639/1640 _model_forward=108/187 sample_tokens=75/27 _sample=57/8 propose_draft_token_ids=18/15 _update_states=2/2
+fl timing3 (5 steps): step_wall=3328 ms (gap 58) | _prepare_input_ids=828/829 sample_tokens=44/30 _model_forward=44/69 _sample=26/10 propose_draft_token_ids=17/15 _update_states=1/4
+fl timing3 (5 steps): step_wall=8 ms (gap 29) | sample_tokens=25/19 _sample=17/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/18 _sample=16/8 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 29) | sample_tokens=26/19 _sample=17/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/18 _sample=16/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/19 _sample=16/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/18 _sample=17/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/1
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/19 _sample=16/10 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/19 _sample=17/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=8 ms (gap 28) | sample_tokens=25/18 _sample=17/9 propose_draft_token_ids=8/6 _prepare_input_ids=1/2 _build_attention_metadata=1/1 _update_states=1/0
+fl timing3 (5 steps): step_wall=2112 ms (gap 25) | sample_tokens=22/17 _update_states=15/16 _sample=12/8 propose_draft_token_ids=9/6 _prepare_input_ids=7/8 _build_attention_metadata=1/1
+fl timing3 (5 steps): step_wall=18 ms (gap 23) | sample_tokens=20/15 _sample=11/6 propose_draft_token_ids=9/6 _prepare_input_ids=3/5 _update_states=1/2 _build_attention_metadata=1/1
+fl timing3 (5 steps): step_wall=61 ms (gap 26) | sample_tokens=24/26 propose_draft_token_ids=13/11 _sample=11/7 _prepare_input_ids=2/3 _build_attention_metadata=1/1 _update_states=1/0
