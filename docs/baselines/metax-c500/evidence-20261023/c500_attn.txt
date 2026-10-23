@@ -1,0 +1,4 @@
+kvcache kv=4096   0.209 ms/layer  1284 GB/s  (42 layers -> 8.8 ms/step)
+kvcache kv=16384  0.732 ms/layer  1466 GB/s  (42 layers -> 30.8 ms/step)
+varlen(prefill) kv=4096 1.454 ms/layer 185 GB/s
+varlen(prefill) kv=16384 5.704 ms/layer 188 GB/s
