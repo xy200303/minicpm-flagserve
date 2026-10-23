@@ -1,0 +1,6 @@
+qkv      0.021 ms  494 GB/s   (nt 0.018 ms, 591 GB/s)
+o        0.019 ms  437 GB/s   (nt 0.017 ms, 496 GB/s)
+gate_up  0.046 ms 1104 GB/s   (nt 0.044 ms, 1134 GB/s)
+down     0.043 ms  592 GB/s   (nt 0.044 ms, 567 GB/s)
+lm_head  0.378 ms 1415 GB/s   (nt 0.661 ms, 809 GB/s)
+sum: 0.50 ms per layer-set, 1260 GB/s effective

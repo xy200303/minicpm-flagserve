@@ -1,0 +1,3 @@
+# --enforce-eager, 64 concurrency, C500_TIMING=1
+4k : attn=0.39/2799 fwd=72.48/67 logits=0.49/67 sample=0.37/67   (attn 16.4ms, non-attn 56ms)
+16k: attn=1.70/2799 fwd=126.0/67 logits=0.48/67 sample=0.27/67   (attn 71.4ms, non-attn 54.6ms)

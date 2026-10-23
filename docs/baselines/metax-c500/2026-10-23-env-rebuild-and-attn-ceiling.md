@@ -76,3 +76,59 @@ decode attention 是带宽地板）。剩下的 ~47 ms 必须去别处找，而�
 
 `/workspace/c500_attn_probe.py`、`c500_attn_probe2.py`、`c500_4k_warm2.log`、
 `c500_16k_warm2.log`、`opt11_serve4.log`（含 warmup 367.4s 与完整启动）。
+
+## 7. 步时间账本（eager 逐项 + 微基准交叉验证）
+
+用 `c500_timing.py`（CUDA event，挂 `FlashAttentionImpl.forward` / `compute_logits` /
+`_model_forward` / `_sample`）在 `--enforce-eager` 下拿到的逐项（64 并发，短负载）：
+
+| 场景 | attention | `_model_forward` | 其中非 attention | logits(lm_head) | sample |
+|---|---|---|---|---|---|
+| 4k | 0.39 ms/层 × 42 = 16.4 ms | 72.5 ms | **56 ms** | 0.49 ms | 0.37 ms |
+| 16k | 1.70 ms/层 × 42 = 71.4 ms | 126.0 ms | **54.6 ms** | 0.48 ms | 0.27 ms |
+
+关键：**非 attention 部分与 KV 长度无关（55 ms 左右）**，所以 16k 的 TPOT 增长
+完全来自 attention。lm_head 与采样各不到 0.5 ms，可以排除。
+
+## 8. 微基准交叉验证：GEMM 与 attention 各自的天花板
+
+**decode GEMM（M=64, bf16, nn 布局）**：
+
+| 算子 | 耗时 | 带宽 |
+|---|---|---|
+| qkv (K2048/N2560) | 0.021 ms | 494 GB/s |
+| o (K2048/N2048) | 0.019 ms | 437 GB/s |
+| gate_up (K2048/N12288) | 0.046 ms | 1104 GB/s |
+| down (K6144/N2048) | 0.043 ms | 592 GB/s |
+| lm_head (K2048/N130560) | 0.378 ms | 1415 GB/s |
+| **单层合计** | **0.50 ms** | **1260 GB/s 有效** |
+
+42 层 ≈ **5.4 ms** + lm_head 0.4 ms。**GEMM 不是瓶颈**。
+
+**attention 的 num_splits 敏感性（16k, 64 并发, 2.4 GB KV 池）**：
+
+| num_splits | ms/层 | GB/s | 42 层/步 |
+|---|---|---|---|
+| None（FA 启发式） | 0.796 | 1349 | 33.4 ms |
+| 1 | 2.372 | 453 | 99.6 ms |
+| 2 | 1.438 | 747 | 60.4 ms |
+| 4 | 0.934 | 1150 | 39.2 ms |
+| 8 | 0.928 | 1157 | 39.0 ms |
+| 16 | 0.803 | 1338 | 33.7 ms |
+
+**num_splits 从 1 到 16 有 3 倍的差距。** 但当前栈并没有强制 1：
+`_batch_invariant_MODE` 默认 False，`flash_attn_max_num_splits_for_cuda_graph` 默认 32，
+所以 `max_num_splits` 走 `0`（FA 启发式）。这一点已排除。
+
+## 9. 尚未闭合的一环
+
+图模式（TPOT 77.94 ms）按微基准应为 attention 33.4 + GEMM 5.4 + lm_head 0.4 ≈ **39 ms**，
+但实测 78 ms，**约 39 ms 无法归因**。
+
+在 cudagraph 下 Python hook 拿不到这个数：`_model_forward` 与 `FlashAttentionImpl.forward`
+在捕获时各执行一次，replay 时整段是图节点，Python 不参与。eager 下的 1.70 ms/层 混合了
+kernel launch 间隙，不能直接当作图内的 device 时间。
+
+**下一步（明确）**：在捕获期把 attention 的 CUDA event 对**保留下来**（不清空 pending），
+让 `execute_model` 每步读这些 event 的 `elapsed_time`。图节点持有 event 引用，replay 时时间戳会更新，
+这是唯一能在图内拿到真实 layer 时间而不引入 profiler 的办法。

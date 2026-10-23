@@ -1,0 +1,7 @@
+pool=160000 blocks 2.4 GB
+num_splits=None  0.796 ms/layer  1349 GB/s  33.4 ms/step(42L)
+num_splits=1     2.372 ms/layer   453 GB/s  99.6 ms/step(42L)
+num_splits=2     1.438 ms/layer   747 GB/s  60.4 ms/step(42L)
+num_splits=4     0.934 ms/layer  1150 GB/s  39.2 ms/step(42L)
+num_splits=8     0.928 ms/layer  1157 GB/s  39.0 ms/step(42L)
+num_splits=16    0.803 ms/layer  1338 GB/s  33.7 ms/step(42L)
