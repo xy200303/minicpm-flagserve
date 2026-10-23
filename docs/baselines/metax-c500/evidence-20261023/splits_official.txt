@@ -1,0 +1,8 @@
+# official 16k [16384,1024,64,128], cold cache unless noted
+baseline (no num_splits)   11104.26 tok/s  TTFT 18051.91  TPOT 77.94
+num_splits=16 (CONTAMINATED by prefix cache, discarded)  14779.03
+num_splits=16 (cold)       10894.59 tok/s  TTFT 18708.74  TPOT 78.90
+num_splits=32 (cold)       10953.44 tok/s  TTFT 18529.06  TPOT 78.68
+# official 4k [4096,1024,64,256]
+baseline                    12403.21 tok/s  TTFT 1766.08   TPOT 23.87
+num_splits=16               12739.83 tok/s  TTFT 1601.13   TPOT 23.40  (+2.7%, below 3% gate)

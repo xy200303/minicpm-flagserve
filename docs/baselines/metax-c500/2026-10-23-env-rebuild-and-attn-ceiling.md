@@ -132,3 +132,34 @@ kernel launch 间隙，不能直接当作图内的 device 时间。
 **下一步（明确）**：在捕获期把 attention 的 CUDA event 对**保留下来**（不清空 pending），
 让 `execute_model` 每步读这些 event 的 `elapsed_time`。图节点持有 event 引用，replay 时时间戳会更新，
 这是唯一能在图内拿到真实 layer 时间而不引入 profiler 的办法。
+
+## 10. num_splits 实测结论：真实服务无收益（2026-10-24）
+
+在 `flash_attn_with_kvcache` 的 decode 调用上显式指定 `num_splits` 并跑官方用例：
+
+| 配置 | 前置同长度负载 | 16k 吞吐 | 备注 |
+|---|---|---|---|
+| 默认（不传 num_splits） | 无 | 11104.26 | 基线 |
+| `num_splits=16` | **有**（先跑了 `[16384,128,64,64]`） | 14779.03 | **被 prefix cache 污染，作废** |
+| `num_splits=16` | 无 | 10894.59 | 冷缓存 |
+| `num_splits=32` | 无 | 10953.44 | 冷缓存 |
+
+**16k 上 num_splits 无收益（±2% 噪声内）**。微基准里 `num_splits=1` 比 16 慢 3 倍，
+但真实路径用的是 FA 启发式，显式传值并不能带来端到端收益。
+
+4k 上 `num_splits=16` 测到 12739.83（基线 12403.21，+2.7%），
+**未达 3% 准入，且 16k 无收益，已整体回滚**（`flash_attn.py` 恢复原文件）。
+
+### 方法论：prefix cache 会静默污染 A/B
+
+benchmark 用 `seed=0`，**同一个 serve 上跑两次相同 `input_len` 的负载，prompt 完全一致**。
+第二次会大量命中 prefix cache（本次日志中出现过 35.9% 的命中率），
+prefill 近乎免费，总吞吐虚高 30% 以上。
+
+**任何"先跑短负载预热、再跑正式用例"的流程都是错的。**
+正确做法：
+1. 每个数据点都在**新启动的 serve** 上跑，且只跑**一种** `input_len`；
+2. 若必须连跑，先跑长 `input_len` 再跑短的（不同长度不会互相命中），
+   或者用 `--no-enable-prefix-caching`（注意：那是 serve 参数，提交时不能改，
+   只能用于本地诊断）；
+3. 交错 A/B 时，A 与 B 都必须从冷缓存开始。
