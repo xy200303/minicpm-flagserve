@@ -226,6 +226,18 @@ try:
 except Exception as _e:
     logger.warning("decode_attn_pin patch failed: %s", _e)
 
+# fl opt-A20: self-developed paged decode-attention kernel.
+# One warp per (seq, kv_head, 256-token segment); base-2 softmax; unmasked
+# main loop + masked tail. 0.72 ms/layer vs 1.04 ms stock at the official
+# 4k shape (max|diff| 2e-4). A/B switch: VLLM_FL_DISABLE_DECODE_FAST=1.
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_fast import (
+        apply as _apply_decode_attn_fast,
+    )
+    _apply_decode_attn_fast()
+except Exception as _e:
+    logger.warning("decode_attn_fast patch failed: %s", _e)
+
 # fl opt-A5: fused sampler tail (port of the MetaX opt7 patch).
 # Routes plain-sampling batches to FlagGems fused kernels:
 # bf16-direct Gumbel-Max + histogram-zoom top-p (no full-vocab sort).

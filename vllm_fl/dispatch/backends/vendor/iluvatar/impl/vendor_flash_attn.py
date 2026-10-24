@@ -60,6 +60,13 @@ except Exception:
 
 logger = init_logger(__name__)
 
+try:  # A20: self-developed decode-attention kernel for the decode slice
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl import (
+        decode_attn_fast as _decode_fast,
+    )
+except Exception:  # pragma: no cover
+    _decode_fast = None
+
 _CMT_BOTTOM_RIGHT = 2  # xFormers CausalFromBottomRight (FA2 chunked semantics)
 _applied = False
 _orig_forward = None
@@ -222,8 +229,13 @@ def _vendor_forward(self, layer, query, key, value, kv_cache,
     if dec_meta is not None:
         q_dec = q.index_select(0, dec_rows)
         out_dec = torch.empty_like(q_dec)
-        _orig_forward(self, layer, q_dec, key[:n_tok], value[:n_tok], kv_cache,
-                      dec_meta, out_dec)
+        # A20: decode rows of a mixed step go through the self-developed
+        # kernel when the shape qualifies; otherwise stock unified attention.
+        if not (_decode_fast is not None
+                and _decode_fast.try_fast_decode(self, q_dec, kv_cache,
+                                                 dec_meta, out_dec)):
+            _orig_forward(self, layer, q_dec, key[:n_tok], value[:n_tok],
+                          kv_cache, dec_meta, out_dec)
         out.index_copy_(0, dec_rows, out_dec)
     _T["dec"] += _time.perf_counter() - _t1
     _t2 = _time.perf_counter()
