@@ -20,20 +20,49 @@
 \setstretch{1.5}
 \raggedbottom
 \usepackage{listings}
-\lstset{
-  basicstyle=\ttfamily\small,
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc}
+\definecolor{codeblue}{HTML}{0F4D92}
+\definecolor{codeteal}{HTML}{0F766E}
+\definecolor{codepurple}{HTML}{762A83}
+\definecolor{codegray}{HTML}{6B7280}
+\definecolor{codebg}{HTML}{F5F8FC}
+\lstdefinestyle{reportcode}{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\color{codeblue}\bfseries,
+  stringstyle=\color{codeteal},
+  commentstyle=\color{codegray}\itshape,
+  numberstyle=\tiny\color{codegray},
+  numbers=left,
+  numbersep=6pt,
+  stepnumber=1,
+  frame=single,
+  framerule=0.35pt,
+  rulecolor=\color{lightgrey},
+  backgroundcolor=\color{codebg},
+  xleftmargin=1.6em,
+  xrightmargin=0.5em,
+  aboveskip=0.9em,
+  belowskip=0.9em,
   breaklines=true,
   breakatwhitespace=false,
   columns=fullflexible,
   keepspaces=true,
-  frame=single,
-  framerule=0.4pt,
-  rulecolor=\color{lightgrey},
-  backgroundcolor=\color{gray!4},
-  xleftmargin=0.6em,
-  xrightmargin=0.6em,
-  aboveskip=0.7em,
-  belowskip=0.7em,
+  showstringspaces=false,
+  tabsize=4,
+  captionpos=b,
+  emph={torch,triton,tl,mcblasGemmEx,flash_attn_varlen_func},
+  emphstyle=\color{codepurple},
+}
+\lstset{style=reportcode}
+\newcommand{\PluginCode}{../pkg_build/XLANG2026/vllm-plugin-FL}
+\newcommand{\GemsCode}{../pkg_build/XLANG2026/FlagGems}
+\tikzset{
+  flowbox/.style={draw=mainblue, fill=mainblue!5, rounded corners=2pt,
+    align=center, font=\small, inner sep=5pt, minimum height=0.82cm},
+  flowsmall/.style={flowbox, font=\scriptsize, inner sep=4pt},
+  flowarrow/.style={-{Latex[length=2mm]}, thick, draw=mainblue},
+  flownote/.style={font=\scriptsize\itshape\color{codegray}},
 }
 \graphicspath{{../submission/}}
 \definecolor{mainblue}{HTML}{1F4E79}
@@ -124,6 +153,25 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \section{总体成绩}
 沐曦 C500 的结果在两台不同实例上各复测一次，取区间报告；天数 BI-V150 的结果以同日交错 A/B 的相对收益表述（该开发实例跨时段漂移较大，跨日绝对值不可比）。
 
+\subsection{交付版本与启动验证}
+本报告对应两个独立上游 fork 的固定提交，而不是工作区里未登记的散文件。插件与算子各自保留完整 Git 历史，官方可以在提交包内直接执行 \texttt{git log}、\texttt{git show} 和 \texttt{git diff}。
+
+\begin{table}[!htbp]
+\centering
+\caption{代码版本与证据入口}
+\begin{tabularx}{\linewidth}{@{}p{2.0cm}p{4.0cm}Y@{}}
+\toprule
+组件 & 仓库 / 分支 & 固定提交与内容 \\
+\midrule
+插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{0207b7e1}；C500 opt1–opt11、BI-V150 A1–A7、A20 框架 hook \\
+算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{dd574fdd}；采样、GEMM、paged decode attention 等算子 \\
+文档 & \path{xy200303/minicpm-flagserve}\newline \texttt{main} & 报告、实验台账、复现脚本；不承担运行时代码 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+2026-10-24 在 C500（64GB 显存、128GB CPU 内存）上，从上述 commit 全新 clone，分别执行可编辑安装，再按官方命令启动。服务成功监听 9031 端口，\texttt{/v1/models} 返回 \texttt{minicpm}，实际 chat 请求正常返回；日志同时出现 \texttt{mcblas\_mm} 注册、采样融合启用和 A20 内核启用记录。验证结束后停止服务，未占用 GPU。这个结果只证明合并提交可运行，性能数字仍全部来自前文记录的分平台官方 benchmark。
+
 \begin{table}[!htbp]
 \centering
 \caption{总体性能与精度结果}
@@ -142,12 +190,12 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 精度方面，C500 的 MATH-500 Level 3 为 97.14\%–98.1\%，天数 BI-V150 为 96.2\%–98.1\%，均高于 95\% 的要求。C500 的 4k TTFT 为 2965 ms（基线 3199 ms），16k TTFT 为 17902 ms（基线 27197 ms）；天数 A20 的 16k TTFT 由 155.5 s 降至 130.1 s。
 
 \subsection{四项硬约束的达标裕度}
-把“是否达标”当作一次带门槛的分类，可以更直接地看出收益是靠优化换来的还是靠松动约束换来的。图 2 把四条门槛归一成“相对门槛的裕度”：吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的相对提升（95\% 门槛与 96.2\% 实测之差为 +1.3\%）。八个格全部为正：C500 侧为 +144\%／+58.9\%／+2.3\%／+34.2\%，BI-V150 侧为 +28.5\%／+287\%／+1.3\%／+16.3\%。最小裕度出现在 BI-V150 的精度（1.3\%），最大裕度在 BI-V150 的 16k 吞吐（+287\%）。换言之，本提交在两个平台、四个约束上都没有“贴着线过”，精度与延迟没有被当作换取吞吐的筹码。
+把“是否达标”当作一次带门槛的分类，可以更直接地看出收益是靠优化换来的还是靠松动约束换来的。图~\ref{fig:compliance} 把四条门槛归一成“相对门槛的裕度”：吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的相对提升（95\% 门槛与 96.2\% 实测之差为 +1.3\%）。八个格全部为正：C500 侧为 +144\%／+58.9\%／+2.3\%／+34.2\%，BI-V150 侧为 +28.5\%／+287\%／+1.3\%／+16.3\%。最小裕度出现在 BI-V150 的精度（1.3\%），最大裕度在 BI-V150 的 16k 吞吐（+287\%）。换言之，本提交在两个平台、四个约束上都没有“贴着线过”，精度与延迟没有被当作换取吞吐的筹码。
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.495\linewidth]{fig15_compliance.pdf}
-\caption{四项硬约束的达标裕度（相对各自门槛的百分比，颜色取 $\log_{10}$）}
+\caption{四项硬约束的达标裕度（相对各自门槛的百分比，颜色取 $\log_{10}$）\label{fig:compliance}}
 \end{figure}
 
 \begin{figure}[!htbp]
@@ -174,6 +222,27 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \section{优化方法论}
 两张芯片共用同一套闭环，每一步都保留可复核的工件（探针脚本、profile 数据、单测、官方 benchmark 原始 CSV）。
 
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[font=\small]
+  \node[flowbox, minimum width=3.1cm] (serve) at (0,0) {\texttt{vllm serve}\\官方启动参数};
+  \node[flowbox, minimum width=3.1cm] (dispatch) at (4.0,0) {vllm-plugin-FL\\dispatch / hook};
+  \node[flowbox, minimum width=3.1cm] (kernels) at (8.0,0) {FlagGems / vendor\\Triton · mcBLAS · ixAttnBkd};
+  \node[flowbox, minimum width=3.1cm] (gpu) at (12.0,0) {BI-V150 / C500\\GPU 执行};
+  \node[flowsmall, minimum width=3.1cm] (fallback) at (4.0,-1.8) {stock 路径\\异常自动回退};
+  \node[flowsmall, minimum width=3.1cm] (evidence) at (8.0,-1.8) {profile · A/B · 精度\\CSV · 日志 · 单测};
+  \draw[flowarrow] (serve) -- (dispatch);
+  \draw[flowarrow] (dispatch) -- (kernels);
+  \draw[flowarrow] (kernels) -- (gpu);
+  \draw[flowarrow, dashed] (dispatch) -- (fallback);
+  \draw[flowarrow, dashed] (dispatch) -- (evidence);
+  \node[flownote] at (6.0,-2.65) {异常回退 stock；候选方案必须留下证据};
+\end{tikzpicture}
+\caption{双平台统一的优化数据流：插件负责路由与 hook，内核和 vendor 实现可独立替换；异常时保留 stock 回退，所有候选都留下测量证据}
+\end{figure}
+
+代码与证据的对应关系也随之固定：算子本体在 FlagGems，框架接入在 vllm-plugin-FL，性能数据来自官方脚本，精度来自 evalscope 与探针。这样既能逐行审查实现，又能避免“报告写了策略、提交里却没有代码”的问题。
+
 （1）Profile 定位：先用 serve 时序日志（PagedAttention 式分页 KV 管理见文献\cite{vllm}）、设备侧计时与 host 打点区分时间究竟花在 GPU 内核、host 发射还是隐式同步；（2）探针先行：任何替换或新内核，先在独立脚本里做全形状 bit-exact 或统计等价验证，再上 serve；（3）Shape-aware dispatch：同一算子保留多个等价实现或执行配置，按输入 shape 在派发层选择（赛题组 2026-10-10 已确认合规）；（4）官方口径验收：只用官方 benchmark 与 evalscope，serve 参数一字未改。
 
 正确性按强度分三档：能 bit-exact 的（A6 双 gather、A7 发射配置）一律 bit-exact；只能统计等价的（采样融合、GEMM 路由）用分布对比加 MATH-500 复核；所有进入提交的改动都必须通过官方精度门槛，未通过的一律回退并留档，不进入提交代码。
@@ -182,16 +251,43 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \subsection{瓶颈画像}
 初始 profile 显示，C500 的 decode 阶段存在三类互相独立的开销：采样尾部是纯 eager PyTorch（bf16$\rightarrow$fp32 cast、除温度、对 130560 词表排序取 top-p、gumbel-argmax），每步约 12 ms 且全在 host 串行；GEMM 存在布局与路由失配，vendor 高性能实现从 Python 侧不可达；prefill 每层还有隐式 DtoH 同步，造成 GPU 空闲。
 
-这些话在算子层面才有说服力。图 3 把同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）：采样族占内核时间的 38.8\%（14.61 s），是最大的单项，其内部由全词表排序、全局直方图与 argmax 三个大 kernel 构成；融合后降到 5.1\%（1.24 s，净省 13.37 s）。与之对照，GEMM 与 attention 的绝对时间几乎不动（13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s），占比却分别升到 56.9\% 与 29.8\%——不是因为它们变慢了，而是总量被砍掉了三分之一。这张图同时解释了后续优化的顺序：opt2／opt8 去吃 GEMM，opt9／A20 去吃 attention，而不是继续在采样上打转。
+这些话在算子层面才有说服力。图~\ref{fig:hotpath} 把同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）：采样族占内核时间的 38.8\%（14.61 s），是最大的单项，其内部由全词表排序、全局直方图与 argmax 三个大 kernel 构成；融合后降到 5.1\%（1.24 s，净省 13.37 s）。与之对照，GEMM 与 attention 的绝对时间几乎不动（13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s），占比却分别升到 56.9\% 与 29.8\%——不是因为它们变慢了，而是总量被砍掉了三分之一。这张图同时解释了后续优化的顺序：opt2／opt8 去吃 GEMM，opt9／A20 去吃 attention，而不是继续在采样上打转。
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig14_op_hotpath.pdf}
-\caption{C500 热路径的算子族构成：融合采样链前后，按内核时间占比（右列为绝对时间变化）}
+\caption{C500 热路径的算子族构成：融合采样链前后，按内核时间占比（右列为绝对时间变化）\label{fig:hotpath}}
 \end{figure}
 
 \subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
 自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，保留集质量恒不小于 $p\cdot Z$，完全替代全词表排序；其三，词表维 split-parallel（32 splits $\times$ BLOCK 4096），使小 batch 也能打满芯片。采样全链由约 12.4 ms 降至 0.31 ms/步。
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+  \draw[fill=mainblue!8, draw=mainblue] (0,0) rectangle (10,0.62);
+  \foreach \x in {1,...,9} \draw[mainblue!45] (\x,0) -- (\x,0.62);
+  \draw[fill=mainblue!25] (6.4,0) rectangle (10,0.62);
+  \draw[accentred, thick] (6.4,-0.25) -- (6.4,0.94);
+  \node[accentred, above] at (6.4,0.94) {$\tau$：跨界 bin 的下沿};
+  \node[codegray, below] at (2.7,-0.10) {1024-bin 质量直方图};
+  \node[mainblue, below] at (8.2,-0.10) {保留集质量 $\geq pZ$};
+  \node[flowsmall] (stats) at (0,-1.55) {bf16 直读\\$x/T$ 与 $Z$};
+  \node[flowsmall] (hist) at (3.3,-1.55) {反向 cumsum\\定位跨界 bin};
+  \node[flowsmall] (tau) at (6.6,-1.55) {保守取下沿 $\tau$\\不过度裁剪};
+  \node[flowsmall] (sample) at (9.9,-1.55) {mask + Gumbel-Max\\一趟产出 token};
+  \draw[flowarrow] (stats) -- (hist);
+  \draw[flowarrow] (hist) -- (tau);
+  \draw[flowarrow] (tau) -- (sample);
+\end{tikzpicture}
+\caption{免排序 top-p 采样链示意图（流程与阈值规则为代码语义，非另造的分布数据）\label{fig:topp}}
+\end{figure}
+
+图~\ref{fig:topp} 对应两个关键不变量：阈值取\textbf{所在 bin 的下沿}，所以不会把刚好满足 $p$ 的 token 错裁掉；采样分数写成 $x+Tg$，与先算 $x/T$ 再加 $g$ 的 argmax 等价。下面的代码就是这两条规则的实现，而不是报告另行概括的伪代码。
+
+\lstinputlisting[language=Python,caption={\texttt{top\_p\_sample.py:180--198}：反向 cumsum 定位阈值并保守取下沿},firstline=180,lastline=198]{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+
+\lstinputlisting[language=Python,caption={\texttt{top\_p\_sample.py:241--249}：温度折叠的 Gumbel-Max 与 top-p mask},firstline=241,lastline=249]{\GemsCode/src/flag_gems/fused/top_p_sample.py}
 
 正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在核集内（含直方图粒度 slack），与原实现的 TV 距离处于纯采样噪声区间。
 
@@ -204,8 +300,20 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \subsection{GEMM 布局与路由（opt2／opt4／opt6／opt8／opt11）}
 MACA Triton 的 \texttt{mm\_kernel} 只支持 nn 布局，且在 prefill 大 M 下比 vendor mcBLAS 慢 1.35–1.67 倍（126 组配置全扫仍不敌，vendor 约 197 TFLOPS 逼近峰值）；而 FlagGems 进程级接管 \texttt{aten::mm} 之后，vendor GEMM 从 Python 完全不可达。为此，prefill 大 M 改走 ctypes 直绑 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 保证 compiled 区域安全；decode 细瘦 M 保留自研 Triton nn\_db 单布局内核，权重只留一份，不额外占用显存。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑死原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 从未进入优化路由的问题，lm\_head 由 603 $\mu$s 降至 379 $\mu$s。
 
+这里的路由不是“看到 vendor 就全切过去”：只有已经生成 nn 副本、且形状满足条件的线性层才进入新路径；小 M 或没有副本时仍走原 \texttt{F.linear}。lm\_head 则由独立的 \texttt{\_fl\_always\_nn} 标志强制走 nn 副本，避免被通用 N 上限误排除。
+
+\lstinputlisting[language=Python,caption={\texttt{linear\_nn\_repack.py:112--129}：按形状在 vendor、Triton 与 stock 之间路由},firstline=112,lastline=129]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
+
+ctypes 绑定把行主序的 $C=A B$ 转写成列主序的 $C^T=B^T A^T$，因此不需要改变模型的数学结果；\texttt{register\_fake} 让编译器在 fake tensor 阶段仍能推导输出形状。
+
+\lstinputlisting[language=Python,caption={\texttt{mcblas\_mm.py:85--103}：直接调用 mcBLAS，保持原 GEMM 语义},firstline=85,lastline=103]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
+
 \subsection{消除 prefill 每层 DtoH 同步（opt10）}
 prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层每步执行 \path{prefill_seq_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
+
+\lstinputlisting[language=Python,caption={\texttt{flash\_attn.py:790--810}：把每层一次的 DtoH + cumsum 改成当步缓存},firstline=790,lastline=810]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py}
+
+这段代码只改变 metadata 的生产方式，不改变请求组成、调度顺序或 \texttt{vllm serve} 参数；缓存对象仍然属于当前 \texttt{attn\_metadata}，不会跨请求复用旧长度。
 
 \begin{figure}[!htbp]
 \centering
@@ -217,8 +325,14 @@ prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层�
 \subsection{prefill attention 接入 vendor ixAttnBkd（A1／A6）}
 iluvatar 后端缺少 flash\_attn 包时，attention 落到 vLLM 通用 Triton 参考实现，16k prefill 每层每 2048-chunk 需 36.8 ms，占 GPU busy 91.8\%。接入 vendor ixAttnBkd 内核并确认其 causal 语义为 bottom-right（cmt=2）与 vLLM 的 chunk prefill 对齐后，内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
+\lstinputlisting[language=Python,caption={\texttt{vendor\_flash\_attn.py:46--58}：同一 Triton program 收集一页 K 与 V},firstline=46,lastline=58]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
+
+这里的 \texttt{E=bs*hkv*d} 正好是一页 K 的元素数，V 的源地址就是 K 之后的连续区域；所以它不是“两次 index\_select 的包装”，而是利用页内布局把两次遍历合并成一次，且已用 bit-exact 探针验证。
+
 \subsection{decode unified-attention 发射配置重构（A7）}
 stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据中心的甜点配置，在 BI-V150 上系统性失配：软件流水线在每个 warp 档上都是负收益，warps 越少越好。离线扫描 3D 主内核与 reduce\_segments 全链路后，仅对 3D flash-decoding 路径固定为 w1 s1（TILE=16／SEG=16 经扫描本已最优），输出与 stock bit-exact（max\_diff=0.0）。这一项同时说明，配置维度是独立于算法维度的优化空间。
+
+\lstinputlisting[language=Python,caption={\texttt{decode\_attn\_pin.py:35--47}：只包住 3D 内核的发射配置，2D 路径不变},firstline=35,lastline=47]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py}
 
 \begin{figure}[!htbp]
 \centering
@@ -230,6 +344,27 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 在 A7 之后，decode attention 仍是整步中最大且唯一未压到带宽下限的一项。把 stock kernel 逐段拆开（同一 harness，B=64／kv=4096／16q-2kv／d=128／block=16／bf16）可见：loads+QK 已跑到 509 GB/s，softmax 几乎免费，而 PV 的 \texttt{tl.dot} 独占 0.36 ms——它必须把 p 从 MMA 累加器布局转换为 A 操作数布局，每个 KV block 都要过一次共享内存往返。瓶颈是布局搬运，不是带宽。
 
 据此重写内核（算子位于 \texttt{FlagGems/fused/paged\_decode\_attention.py}，插件侧为薄封装与派发）：一个 CTA＝1 warp＝一个（seq, kv\_head, 段），使布局转换留在 warp 内；BLOCK\_N=16，p tile 不超过一个 MMA 形状；base-2 在线 softmax，scale 预折 $\log_2(e)$ 走 MUFU；主循环不加 mask，仅 ragged 尾部单独一个带 mask 的 block；段数固定、段长由 device 端 seq\_lens 现算（CUDA-graph 安全），段缓存 slab 在 \texttt{apply()} 即捕获前一次性预分配；段边界按整页对齐，进一步消去逐 token 除模与向量页 gather。混合步中的 decode 行也通过 \texttt{try\_fast\_decode} 进入同一内核。
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+  \node[flowsmall] (input) at (0,0) {q / K / V\\block\_table + seq\_lens};
+  \node[flowsmall] (split) at (4.0,0) {固定 NSEG=32\\按整页分段};
+  \node[flowsmall] (warp) at (8.0,0) {每段 1 warp\\base-2 在线 softmax};
+  \node[flowsmall] (combine) at (12.0,0) {combine 归并\\输出 attention};
+  \draw[flowarrow] (input) -- (split);
+  \draw[flowarrow] (split) -- (warp);
+  \draw[flowarrow] (warp) -- (combine);
+  \node[flownote] at (6.0,-1.15) {主循环无 mask；仅 ragged 尾块 mask；段长 device 端计算，slab 在图捕获前预分配};
+\end{tikzpicture}
+\caption{A20 paged decode attention 的分段执行与归并流程}
+\end{figure}
+
+下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 按 $\exp2(m_i-m)$ 加权归并。
+
+\lstinputlisting[language=Python,caption={\texttt{paged\_decode\_attention.py:169--193}：页对齐主循环与 base-2 在线 softmax},firstline=169,lastline=193]{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+
+\lstinputlisting[language=Python,caption={\texttt{paged\_decode\_attention.py:207--223}：分段结果的在线归并},firstline=207,lastline=223]{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
 
 \begin{figure}[!htbp]
 \centering
@@ -254,8 +389,35 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 \subsection{可复现性与可审计性}
 内核每个（seq, kv\_head, segment）只依赖自己的 q／KV 页与 seq\_lens，段长只由该序列长度决定，因此同一序列的输出与批组成无关。FlagGems 侧配有 \path{tests/test_paged_decode_attention.py}：8 个精度用例对照 fp32 参考，外加一个批量不变性用例（单条／两条／半批／全批／逆序全批逐位相等，并重复同组成验证确定性），BI-V150 上 9 passed。混合步的 decode 切片每 4000 次调用输出一行 used/skipped 计数，16k 两次实测均为 used=44000、skipped=0，即 100\% 命中自研内核，不存在隐式退回 stock 的情况。
 
+\lstinputlisting[language=Python,caption={\texttt{decode\_attn\_fast.py:186--205}：混合步 decode 切片的资格检查、计数与异常回退},firstline=186,lastline=205]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py}
+
+因此“自研内核命中”和“ stock 回退存在”是可同时审计的：满足条件才进入快路径，任何不支持的特征或异常都回到原实现；日志里的 used/skipped 不是装饰性计数，而是验证优化是否真正落到官方混合批上的依据。
+
+\section{正确性与精度证据}
+赛题精度口径是 MATH-500 Level 3 的题目级二分类（答对／答错），但当前 evalscope 汇总文件只保存 105 题的总分，没有逐题 prediction、gold 和 correctness，因此本报告不虚构混淆矩阵。精度证据分为四层：内核数值等价、批量与调度不变性、采样分布等价、端到端官方评测。这样既回答“模型是否仍然答对”，也回答“优化是否真的按预期执行”。
+
+\begin{table}[!htbp]
+\centering\small
+\caption{正确性验证矩阵：从单个 kernel 到完整服务}
+\begin{tabularx}{\linewidth}{@{}p{3.0cm}p{4.3cm}Y@{}}
+\toprule
+验证层 & 对象与方法 & 实测结论 \\
+\midrule
+bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select} 逐位一致；A7 与 stock 的 \texttt{max\_diff}=0.0 \\
+数值误差 & A20 vs stock，含 ragged 形状 & 4k 最大 $2.4\times10^{-4}$，ragged 最大 $9.8\times10^{-4}$ \\
+批量不变性 & 单条／两条／半批／全批／逆序全批，对照 fp32 & 9 个用例通过；同组成重复执行也确定 \\
+采样等价 & greedy、top-p、Gumbel 与 TV 距离 & greedy 与 \texttt{torch.argmax} 完全一致；保留集 IoU $\geq 0.999$；TV 与参考实现同档 \\
+端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 97.14\%–98.1\%；BI-V150 96.2\%–98.1\%，均超过 95\% \\
+真实路径命中 & 混合步 decode 切片 used/skipped & 两次 16k 均为 used=44000、skipped=0，无隐式回退 \\
+交付可运行 & 全新 clone + 独立 venv + 官方启动 & C500 启动、\texttt{/v1/models} 与实际 chat 请求均通过 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+如果后续需要严格的 $2\times2$ 混淆矩阵，应在 evalscope 阶段额外保存每题的 correctness，再按“基线答对／答错”与“本提交答对／答错”交叉计数；它不能由 97.14\% 或 98.1\% 这样的汇总准确率反推出来。本报告选择保留这个边界，不把不存在的逐题数据包装成分析结果。
+
 \section{主要创新点}
-（1）跨双平台的 shape-aware dispatch 统一框架。同一套“离线全空间扫描＋派发层按 shape 选择实现/配置”的方法论落在两种国产芯片上，覆盖 GEMM、attention、采样三类算子，且有赛题组明确的合规口径；本报告同时给出该框架的适用边界（见第 7 节 A26）。
+（1）跨双平台的 shape-aware dispatch 统一框架。同一套“离线全空间扫描＋派发层按 shape 选择实现/配置”的方法论落在两种国产芯片上，覆盖 GEMM、attention、采样三类算子，且有赛题组明确的合规口径；本报告同时给出该框架的适用边界（见第~\ref{sec:negative}~节 A26）。
 
 （2）免排序 top-p 采样。1024-bin 质量直方图 zoom 替代全词表排序，保留集质量恒不小于 $p\cdot Z$，是有下界保证的确定性构造而非近似猜阈值；双平台复用，采样链约 40 倍提速。
 
@@ -267,7 +429,7 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 
 （6）零精度妥协与可复核闭环。所有性能改动要么 bit-exact，要么统计等价且通过 MATH-500 Level 3 实测；每个候选都有当日交错 A/B、原始 CSV、机器状态与回退开关，未通过 3\% 准入或精度门槛的一律不进入提交。
 
-\section{阴性结果与探索覆盖度}
+\section{阴性结果与探索覆盖度}\label{sec:negative}
 下列方案均经过实测后被否决，未进入提交代码。保留它们是为了说明探索的边界，也便于评审复核“为什么停在这里”。
 
 \begin{table}[!htbp]
@@ -318,9 +480,14 @@ TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 1
 \end{table}
 
 \subsection{复现步骤}
-两个源码目录分别以可编辑模式安装：
+先取得两个集成分支（保留完整历史），再分别以可编辑模式安装：
 
-\begin{lstlisting}
+\begin{lstlisting}[language=bash]
+git clone --single-branch --branch integration/vllm-plugin-fl \
+  https://github.com/xy200303/vllm-plugin-FL.git vllm-plugin-FL
+git clone --single-branch --branch integration/flaggems \
+  https://github.com/xy200303/FlagGems.git FlagGems
+
 cd vllm-plugin-FL && pip install -e . --no-build-isolation
 cd ../FlagGems   && pip install -e . --no-build-isolation
 \end{lstlisting}
@@ -379,6 +546,8 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 后续工作可从三个方向展开：一是把 shape-aware 分派扩展到 prefill 侧的分块策略；二是探索编译器层面的算子融合（本文的 IR 级 RMSNorm 尝试因 inductor 失去相邻融合而失败，但换一种插入位置可能成立）；三是在更多国产芯片上复现同一套测量闭环，检验其可迁移性。
 
+另外，当前上游有两项值得独立验证的参考实现：\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/71f6148}{common attention metadata graph（\#442）}与\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/6182281}{图捕获前 prewarm CachedOps（\#552）}。它们分别对应本文的 metadata 同步与算子路由预热问题，后续将各自新建实验分支，先验证设备兼容性，再做官方 A/B；本报告的性能数字不包含这两项工作，也不直接 merge 上游主分支。
+
 \begin{thebibliography}{9}
 \bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.
 \bibitem{vllm} KWON W, LI Z, ZHUANG S, et al. Efficient memory management for large language model serving with PagedAttention[C]//Proceedings of the 29th ACM Symposium on Operating Systems Principles (SOSP). 2023: 611-626.
@@ -392,6 +561,27 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \appendix
 \section{代码与实验记录索引}
 代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（C500 opt1–opt11、天数 A1–A7 与 A20，至 0207b7e1）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（采样融合内核、GEMM、paged\_decode\_attention，至 dd574fdd）。两者均为对应上游项目的正式 fork；历史开发线归档于 \texttt{archive/*}，官方基线保留于 \texttt{baseline/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
+
+\begin{table}[!htbp]
+\centering\small
+\caption{关键代码文件与报告章节的对应关系}
+\begin{tabularx}{\linewidth}{@{}p{6.1cm}Y@{}}
+\toprule
+文件（相对各自源码根目录） & 作用与对应章节 \\
+\midrule
+\path{vllm_fl/dispatch/backends/vendor/metax/patches/sampler_tail_fusion.py} & C500 采样链接入，§4.2 \\
+\path{vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py} & nn 权重复本与形状路由，§4.3 \\
+\path{vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py} & ctypes 直调 vendor mcBLAS，§4.3 \\
+\path{vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py} & prefill metadata 的当步 cumsum 缓存，§4.4 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py} & vendor prefill、混合步拆分、双 gather，§5.1 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py} & 3D decode 发射配置，§5.2 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py} & A20 资格检查、slab、混合步回退，§5.3–5.4 \\
+\path{src/flag_gems/fused/top_p_sample.py} & 直方图 top-p 与 Gumbel-Max，§4.2 \\
+\path{src/flag_gems/fused/paged_decode_attention.py} & A20 分段内核与 combine，§5.3 \\
+\path{tests/test_paged_decode_attention.py} & 精度与批量不变性测试，§5.4、§6 \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录、2026-10-23/24 复核与验证）、\path{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（A10–A27 的探针、台账 \texttt{tracking.md}、\texttt{runs/} 原始数据与证据）。所有候选方案的配置、serve 日志、benchmark CSV、机器状态与结论均可按目录复核。
 
@@ -419,7 +609,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \caption{4k 场景下 NSEG $\times$ 并发度的单层耗时分布（kv=4096，ms/层）}
 \end{figure}
 
-三张热力图显示：在官方 c64 形状下，NSEG=32 恰为带宽最优点（515 GB/s，约为该卡理论带宽的 88\%），继续增大 NSEG 反而因归并开销退化；小 batch 虽可通过调整 NSEG 获得 3\%–7.4\% 的收益，但官方两个用例均为 c64，因此未实现 shape-aware 分派（对应第 7 节 A26）。
+三张热力图显示：在官方 c64 形状下，NSEG=32 恰为带宽最优点（515 GB/s，约为该卡理论带宽的 88\%），继续增大 NSEG 反而因归并开销退化；小 batch 虽可通过调整 NSEG 获得 3\%–7.4\% 的收益，但官方两个用例均为 c64，因此未实现 shape-aware 分派（对应第~\ref{sec:negative}~节 A26）。
 
 \begin{figure}[!htbp]
 \centering
