@@ -1,5 +1,6 @@
 % MiniCPM5-2B 双国产芯片推理吞吐优化技术报告
 % 引擎：XeLaTeX（tectonic），ctex 中文支持
+% 编译：xelatex -shell-escape main.tex（连续两遍；minted 需要 Pygments）
 \documentclass[11pt,a4paper]{ctexart}
 \usepackage[margin=2.5cm]{geometry}
 \usepackage{microtype}
@@ -20,6 +21,8 @@
 \setstretch{1.5}
 \raggedbottom
 \usepackage{listings}
+\usepackage{minted}
+\usepackage[most]{tcolorbox}
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta,positioning,calc}
 \definecolor{codeblue}{HTML}{0F4D92}
@@ -55,6 +58,22 @@
   emphstyle=\color{codepurple},
 }
 \lstset{style=reportcode}
+\newtcolorbox{reportcode}[1]{
+  colback=codebg,
+  colframe=mainblue!35,
+  colbacktitle=mainblue!10,
+  coltitle=mainblue,
+  title={#1},
+  fonttitle=\small\heiti,
+  arc=1.2pt,
+  boxrule=0.35pt,
+  left=0.8mm,
+  right=0.8mm,
+  top=0.5mm,
+  bottom=0.5mm,
+  before skip=0.9em,
+  after skip=0.9em,
+}
 \newcommand{\PluginCode}{../pkg_build/XLANG2026/vllm-plugin-FL}
 \newcommand{\GemsCode}{../pkg_build/XLANG2026/FlagGems}
 \tikzset{
@@ -285,9 +304,13 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 图~\ref{fig:topp} 对应两个关键不变量：阈值取\textbf{所在 bin 的下沿}，所以不会把刚好满足 $p$ 的 token 错裁掉；采样分数写成 $x+Tg$，与先算 $x/T$ 再加 $g$ 的 argmax 等价。下面的代码就是这两条规则的实现，而不是报告另行概括的伪代码。
 
-\lstinputlisting[language=Python,caption={\texttt{top\_p\_sample.py:180--198}：反向 cumsum 定位阈值并保守取下沿},firstline=180,lastline=198]{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\begin{reportcode}{\texttt{top\_p\_sample.py:180--198}：反向 cumsum 定位阈值并保守取下沿}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=180,lastline=198]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\end{reportcode}
 
-\lstinputlisting[language=Python,caption={\texttt{top\_p\_sample.py:241--249}：温度折叠的 Gumbel-Max 与 top-p mask},firstline=241,lastline=249]{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\begin{reportcode}{\texttt{top\_p\_sample.py:241--249}：温度折叠的 Gumbel-Max 与 top-p mask}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=241,lastline=249]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\end{reportcode}
 
 正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在核集内（含直方图粒度 slack），与原实现的 TV 距离处于纯采样噪声区间。
 
@@ -302,16 +325,22 @@ MACA Triton 的 \texttt{mm\_kernel} 只支持 nn 布局，且在 prefill 大 M �
 
 这里的路由不是“看到 vendor 就全切过去”：只有已经生成 nn 副本、且形状满足条件的线性层才进入新路径；小 M 或没有副本时仍走原 \texttt{F.linear}。lm\_head 则由独立的 \texttt{\_fl\_always\_nn} 标志强制走 nn 副本，避免被通用 N 上限误排除。
 
-\lstinputlisting[language=Python,caption={\texttt{linear\_nn\_repack.py:112--129}：按形状在 vendor、Triton 与 stock 之间路由},firstline=112,lastline=129]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
+\begin{reportcode}{\texttt{linear\_nn\_repack.py:112--129}：按形状在 vendor、Triton 与 stock 之间路由}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=112,lastline=129]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
+\end{reportcode}
 
 ctypes 绑定把行主序的 $C=A B$ 转写成列主序的 $C^T=B^T A^T$，因此不需要改变模型的数学结果；\texttt{register\_fake} 让编译器在 fake tensor 阶段仍能推导输出形状。
 
-\lstinputlisting[language=Python,caption={\texttt{mcblas\_mm.py:85--103}：直接调用 mcBLAS，保持原 GEMM 语义},firstline=85,lastline=103]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
+\begin{reportcode}{\texttt{mcblas\_mm.py:85--103}：直接调用 mcBLAS，保持原 GEMM 语义}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=85,lastline=103]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
+\end{reportcode}
 
 \subsection{消除 prefill 每层 DtoH 同步（opt10）}
 prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层每步执行 \path{prefill_seq_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
 
-\lstinputlisting[language=Python,caption={\texttt{flash\_attn.py:790--810}：把每层一次的 DtoH + cumsum 改成当步缓存},firstline=790,lastline=810]{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py}
+\begin{reportcode}{\texttt{flash\_attn.py:790--810}：把每层一次的 DtoH + cumsum 改成当步缓存}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=790,lastline=810]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py}
+\end{reportcode}
 
 这段代码只改变 metadata 的生产方式，不改变请求组成、调度顺序或 \texttt{vllm serve} 参数；缓存对象仍然属于当前 \texttt{attn\_metadata}，不会跨请求复用旧长度。
 
@@ -325,14 +354,18 @@ prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层�
 \subsection{prefill attention 接入 vendor ixAttnBkd（A1／A6）}
 iluvatar 后端缺少 flash\_attn 包时，attention 落到 vLLM 通用 Triton 参考实现，16k prefill 每层每 2048-chunk 需 36.8 ms，占 GPU busy 91.8\%。接入 vendor ixAttnBkd 内核并确认其 causal 语义为 bottom-right（cmt=2）与 vLLM 的 chunk prefill 对齐后，内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
-\lstinputlisting[language=Python,caption={\texttt{vendor\_flash\_attn.py:46--58}：同一 Triton program 收集一页 K 与 V},firstline=46,lastline=58]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
+\begin{reportcode}{\texttt{vendor\_flash\_attn.py:46--58}：同一 Triton program 收集一页 K 与 V}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=46,lastline=58]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
+\end{reportcode}
 
 这里的 \texttt{E=bs*hkv*d} 正好是一页 K 的元素数，V 的源地址就是 K 之后的连续区域；所以它不是“两次 index\_select 的包装”，而是利用页内布局把两次遍历合并成一次，且已用 bit-exact 探针验证。
 
 \subsection{decode unified-attention 发射配置重构（A7）}
 stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据中心的甜点配置，在 BI-V150 上系统性失配：软件流水线在每个 warp 档上都是负收益，warps 越少越好。离线扫描 3D 主内核与 reduce\_segments 全链路后，仅对 3D flash-decoding 路径固定为 w1 s1（TILE=16／SEG=16 经扫描本已最优），输出与 stock bit-exact（max\_diff=0.0）。这一项同时说明，配置维度是独立于算法维度的优化空间。
 
-\lstinputlisting[language=Python,caption={\texttt{decode\_attn\_pin.py:35--47}：只包住 3D 内核的发射配置，2D 路径不变},firstline=35,lastline=47]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py}
+\begin{reportcode}{\texttt{decode\_attn\_pin.py:35--47}：只包住 3D 内核的发射配置，2D 路径不变}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=35,lastline=47]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py}
+\end{reportcode}
 
 \begin{figure}[!htbp]
 \centering
@@ -362,9 +395,13 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 
 下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 按 $\exp2(m_i-m)$ 加权归并。
 
-\lstinputlisting[language=Python,caption={\texttt{paged\_decode\_attention.py:169--193}：页对齐主循环与 base-2 在线 softmax},firstline=169,lastline=193]{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+\begin{reportcode}{\texttt{paged\_decode\_attention.py:169--193}：页对齐主循环与 base-2 在线 softmax}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=169,lastline=193]{python}{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+\end{reportcode}
 
-\lstinputlisting[language=Python,caption={\texttt{paged\_decode\_attention.py:207--223}：分段结果的在线归并},firstline=207,lastline=223]{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+\begin{reportcode}{\texttt{paged\_decode\_attention.py:207--223}：分段结果的在线归并}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=207,lastline=223]{python}{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+\end{reportcode}
 
 \begin{figure}[!htbp]
 \centering
@@ -389,7 +426,9 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 \subsection{可复现性与可审计性}
 内核每个（seq, kv\_head, segment）只依赖自己的 q／KV 页与 seq\_lens，段长只由该序列长度决定，因此同一序列的输出与批组成无关。FlagGems 侧配有 \path{tests/test_paged_decode_attention.py}：8 个精度用例对照 fp32 参考，外加一个批量不变性用例（单条／两条／半批／全批／逆序全批逐位相等，并重复同组成验证确定性），BI-V150 上 9 passed。混合步的 decode 切片每 4000 次调用输出一行 used/skipped 计数，16k 两次实测均为 used=44000、skipped=0，即 100\% 命中自研内核，不存在隐式退回 stock 的情况。
 
-\lstinputlisting[language=Python,caption={\texttt{decode\_attn\_fast.py:186--205}：混合步 decode 切片的资格检查、计数与异常回退},firstline=186,lastline=205]{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py}
+\begin{reportcode}{\texttt{decode\_attn\_fast.py:186--205}：混合步 decode 切片的资格检查、计数与异常回退}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=186,lastline=205]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py}
+\end{reportcode}
 
 因此“自研内核命中”和“ stock 回退存在”是可同时审计的：满足条件才进入快路径，任何不支持的特征或异常都回到原实现；日志里的 used/skipped 不是装饰性计数，而是验证优化是否真正落到官方混合批上的依据。
 
@@ -482,7 +521,8 @@ TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 1
 \subsection{复现步骤}
 先取得两个集成分支（保留完整历史），再分别以可编辑模式安装：
 
-\begin{lstlisting}[language=bash]
+\begin{reportcode}{源码获取与安装}
+\begin{minted}{bash}
 git clone --single-branch --branch integration/vllm-plugin-fl \
   https://github.com/xy200303/vllm-plugin-FL.git vllm-plugin-FL
 git clone --single-branch --branch integration/flaggems \
@@ -490,21 +530,25 @@ git clone --single-branch --branch integration/flaggems \
 
 cd vllm-plugin-FL && pip install -e . --no-build-isolation
 cd ../FlagGems   && pip install -e . --no-build-isolation
-\end{lstlisting}
+\end{minted}
+\end{reportcode}
 
 沐曦 C500 还需设置以下环境变量（天数无需）：
 
-\begin{lstlisting}
+\begin{reportcode}{C500 环境变量（天数无需额外设置）}
+\begin{minted}{bash}
 export PATH=/opt/conda/bin:$PATH
 export MACA_PATH=/opt/maca
 export MACA_HOME=/opt/maca
 export LD_LIBRARY_PATH=/opt/maca/lib:/opt/maca/lib64
 export VLLM_PLUGINS=fl
-\end{lstlisting}
+\end{minted}
+\end{reportcode}
 
 启动命令与官网完全一致，天数在官方命令后追加编译配置，C500 不追加：
 
-\begin{lstlisting}
+\begin{reportcode}{官方启动命令（与基线一致）}
+\begin{minted}{bash}
 # 天数 BI-V150
 vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072 \
@@ -513,15 +557,18 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
 # 沐曦 C500（不添加 --compilation-config）
 vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072
-\end{lstlisting}
+\end{minted}
+\end{reportcode}
 
 性能评测执行官方脚本并传入两个官方用例：
 
-\begin{lstlisting}
+\begin{reportcode}{官方性能评测命令}
+\begin{minted}{bash}
 python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
   --model /workspace/MiniCPM5-2B --served-model-name minicpm --port 9031 \
   --test-cases '[[4096,1024,64,256],[16384,1024,64,128]]'
-\end{lstlisting}
+\end{minted}
+\end{reportcode}
 
 精度评测执行官网给出的 evalscope 命令，结果见
 \texttt{reports/minicpm/math\_500.json} 的 score 字段。
