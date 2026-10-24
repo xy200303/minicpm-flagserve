@@ -2,7 +2,9 @@
 % 引擎：XeLaTeX（tectonic），ctex 中文支持
 \documentclass[11pt,a4paper]{ctexart}
 \usepackage[margin=2.5cm]{geometry}
+\usepackage{microtype}
 \usepackage{booktabs}
+\usepackage{colortbl}
 \usepackage{graphicx}
 \usepackage{xcolor}
 \usepackage{fancyhdr}
@@ -12,7 +14,7 @@
 \usepackage{enumitem}
 \usepackage{url}
 \usepackage{setspace}
-\setstretch{1.35}
+\setstretch{1.5}
 \usepackage{listings}
 \lstset{
   basicstyle=\ttfamily\small,
@@ -40,8 +42,18 @@
 \fancyfoot[C]{\small \thepage}
 \setlength{\headheight}{14pt}
 \DeclareCaptionFont{hei}{\small\heiti}
-\captionsetup{font=hei,labelfont={bf,color=mainblue},labelsep=quad}
+\captionsetup{font=hei,labelfont={bf,color=mainblue},labelsep=quad,format=hang,justification=centering}
 \setlist{itemsep=2pt,topsep=3pt}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  linkcolor=mainblue,
+  urlcolor=mainblue,
+  citecolor=mainblue,
+  bookmarksnumbered=true,
+  pdftitle={MiniCPM5-2B 双国产芯片推理吞吐优化技术报告},
+  pdfauthor={XLANG2026 / 邓乾},
+}
 \title{\vspace{-1.2cm}\bfseries\LARGE MiniCPM5-2B 双国产芯片推理吞吐优化技术报告\\[4pt]
 \large ——面向天数 BI-V150 与沐曦曦云 C500 的算子、内核与调度优化}
 \author{赛道：FlagOS 开放计算全球大赛（赛季二）赛道二\\[2pt]
