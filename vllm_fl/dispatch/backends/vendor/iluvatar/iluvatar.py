@@ -206,6 +206,37 @@ patch_triton_chained_or_for_iluvatar()
 patch_triton_language_for_iluvatar()
 patch_triton_perf_model_for_iluvatar()
 
+# fl opt-A1: route prefill attention to the vendor ixAttnBkd flash kernel
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl.vendor_flash_attn import (
+        apply as _apply_vendor_flash_attn,
+    )
+    _apply_vendor_flash_attn()
+except Exception as _e:
+    logger.warning("vendor_flash_attn patch failed: %s", _e)
+
+# fl opt-A7: pin decode unified-attention launch config (w1 s1, 3D path
+# only). Sweep-verified ~1.8x on BI-V150, bit-exact vs stock.
+# A/B switch: VLLM_FL_DISABLE_DECODE_PIN=1 keeps stock launch config.
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl.decode_attn_pin import (
+        apply as _apply_decode_attn_pin,
+    )
+    _apply_decode_attn_pin()
+except Exception as _e:
+    logger.warning("decode_attn_pin patch failed: %s", _e)
+
+# fl opt-A5: fused sampler tail (port of the MetaX opt7 patch).
+# Routes plain-sampling batches to FlagGems fused kernels:
+# bf16-direct Gumbel-Max + histogram-zoom top-p (no full-vocab sort).
+# A/B switch: VLLM_FL_DISABLE_SAMPLER_FUSION=1 keeps the stock path.
+try:
+    from vllm_fl.dispatch.backends.vendor.iluvatar.impl import (
+        sampler_tail_fusion as _sampler_tail_fusion,
+    )
+except Exception as _e:
+    logger.warning("sampler_tail_fusion patch failed: %s", _e)
+
 
 def patch_sampler_compile_for_iluvatar() -> None:
     # Disable torch.compile on vllm sampler ops for Iluvatar.
