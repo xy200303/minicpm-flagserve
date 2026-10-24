@@ -1,0 +1,539 @@
+"""Report figures built through the nature-figure workflow.
+
+Flow (SKILL.md → backend fragment → api reference):
+  1. style      : nature_api.apply_publication_style()
+  2. primitives : make_grouped_bar / make_heatmap / make_trend / is_dark
+  3. export     : finalize_figure() — tight_layout, panel-alignment gate,
+                  multi-format write (SVG + PDF)
+  4. QA         : audit_pdf_text.py and audit_figure_collisions.py on the PDFs
+
+Panels the API reference has no helper for (horizontal bars in the three
+"constraint" panels and the A7 gain panel) are drawn with plain Matplotlib but
+keep the same palette, tick and spine behaviour.
+
+Type: the skill mandate is Arial; this report's typographic standard is Times
+New Roman for Latin and SimHei for Chinese, so only the family is overridden
+(the rest of the rcParams stay as published).
+"""
+import shutil
+import sys
+from pathlib import Path
+
+import numpy as np
+
+HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE / "vendor" / "nature-figure" / "scripts"))
+
+import matplotlib as mpl  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
+from matplotlib.ticker import FixedLocator, MaxNLocator, NullLocator  # noqa: E402
+
+import nature_api as na  # noqa: E402
+from audit_panel_alignment import require_matplotlib_panel_alignment  # noqa: E402
+
+na.apply_publication_style(font_size=7.5, axes_linewidth=0.6)
+mpl.rcParams.update({
+    "svg.fonttype": "none",
+    "pdf.fonttype": 42,
+    "font.family": ["Times New Roman", "SimHei"],
+    "axes.labelsize": 8,
+    "xtick.labelsize": 7,
+    "ytick.labelsize": 7,
+    "legend.fontsize": 7,
+    "legend.handlelength": 0.8,
+    "legend.handletextpad": 0.5,
+    "legend.borderaxespad": 0.2,
+    "legend.labelspacing": 0.3,
+})
+
+BUILD = HERE / "figs_build"
+OUT = HERE / "submission"
+CM = 1 / 2.54
+
+P = na.PALETTE
+HERO = P["blue_main"]
+HERO_SOFT = P["blue_secondary"]
+ACCENT = P["red_strong"]
+BASE = P["neutral_light"]
+BASE_EDGE = "#9A9A9A"
+INK = P["neutral_black"]
+MID = P["neutral_mid"]
+FAINT = "#B8B8B8"
+
+CMAP_SEQ = LinearSegmentedColormap.from_list(
+    "nat_blue", ["#F6F8FC", "#D8E1EE", "#A9BDD7", "#7395BE", "#3D6BA3", "#0F4D92"]
+)
+
+
+def save(fig, name, pad=1.2):
+    stem = name.replace(".png", "")
+    require_matplotlib_panel_alignment(
+        fig,
+        json_out=str(BUILD / f"{stem}.alignment.json"),
+        overlay_svg=str(BUILD / f"{stem}.alignment.svg"),
+        strict=True,
+    )
+    na.finalize_figure(fig, BUILD / stem, formats=["svg", "pdf"], dpi=400, pad=pad)
+    pdf_path = BUILD / f"{stem}.pdf"
+    svg_path = BUILD / f"{stem}.svg"
+    shutil.copyfile(pdf_path, OUT / f"{stem}.pdf")
+    shutil.copyfile(svg_path, OUT / f"{stem}.svg")
+    print("saved", name)
+
+
+def label_above(ax, x, y, text, color, size=7, dy=None):
+    ax.text(x, y, text, ha="center", va="bottom", fontsize=size, color=color)
+
+
+# --------------------------------------------------------------------------- #
+# 1. C500 throughput
+# --------------------------------------------------------------------------- #
+def fig_c500_throughput():
+    labels = ["4k 场景", "16k 场景"]
+    base = np.array([5089.645, 7029.675])
+    ours = np.array([12403.21, 11167.87])
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [base, ours], ["官方基线", "本提交"],
+        ylabel="总吞吐（tokens/s）", colors=[BASE, HERO], bar_width=0.50,
+        edgecolor=BASE_EDGE, linewidth=0.4)
+    ax.legend(loc="upper left").set_zorder(5)
+    for i in range(2):
+        bar = cont[1][i]
+        cx = bar.get_x() + bar.get_width() / 2
+        label_above(ax, cx, ours[i] + 300, f"{ours[i]:,.0f}", HERO, 8)
+        bar0 = cont[0][i]
+        label_above(ax, bar0.get_x() + bar0.get_width() / 2,
+                    base[i] + 300, f"{base[i]:,.0f}", MID, 7)
+        ax.text(cx, 480, f"{ours[i] / base[i]:.2f}×", ha="center", va="bottom",
+                fontsize=8.5, color="white", fontweight="bold")
+    ax.set_ylim(0, 14300)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    save(fig, "fig1_c500_throughput")
+
+
+# --------------------------------------------------------------------------- #
+# 2. Sorted-free sampling chain
+# --------------------------------------------------------------------------- #
+def fig_sampler():
+    labels = ["优化前\neager PyTorch", "优化后\n融合 Triton 内核"]
+    vals = [12.4, 0.31]
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [np.array(vals)], ["采样链"], ylabel="采样全链单步耗时（ms，对数轴）",
+        colors=[BASE], bar_width=0.16, edgecolor=BASE_EDGE, linewidth=0.4)
+    ax.get_legend().remove()
+    cont[0][1].set_facecolor(HERO)
+    cont[0][1].set_edgecolor(HERO)
+    for bar, v in zip(cont[0], vals):
+        label_above(ax, bar.get_x() + bar.get_width() / 2, v * 1.35,
+                    f"{v:g} ms", HERO if v < 1 else MID, 8)
+    ax.annotate("", xy=(0.52, 0.40), xytext=(0.52, 11.2),
+                arrowprops=dict(arrowstyle="<|-|>", color=ACCENT, linewidth=0.7,
+                                shrinkA=0, shrinkB=0, mutation_scale=6))
+    ax.text(0.55, 2.0, "约 40×", color=ACCENT, fontsize=8.5, fontweight="bold",
+            va="center", ha="left")
+    ax.set_yscale("log")
+    ax.set_ylim(0.2, 26)
+    ax.set_xlim(-0.55, 1.55)
+    ax.yaxis.set_major_locator(FixedLocator([0.3, 1, 3, 10]))
+    ax.yaxis.set_minor_locator(NullLocator())
+    ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
+    save(fig, "fig2_sampler")
+
+
+# --------------------------------------------------------------------------- #
+# 3. C500 optimisation ladder
+# --------------------------------------------------------------------------- #
+def fig_ladder():
+    labels = ["官方基线", "opt1–6", "opt7", "opt8", "opt10", "opt11"]
+    vals = np.array([5089.645, 8135.29, 8273.58, 10946.86, 12145.31, 12529.39])
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.6 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [vals], ["累计吞吐"], ylabel="4k 场景总吞吐（tokens/s）",
+        colors=[HERO], bar_width=0.46, edgecolor=P["neutral_light"],
+        linewidth=0.5)
+    ax.get_legend().remove()
+    bars = cont[0]
+    bars[0].set_facecolor(BASE)
+    bars[0].set_edgecolor(BASE_EDGE)
+    for i, bar in enumerate(bars):
+        ax.text(bar.get_x() + bar.get_width() / 2, vals[i] + 210,
+                f"{vals[i]:,.0f}", ha="center", va="bottom", fontsize=7,
+                color=MID if i == 0 else INK)
+        if i:
+            gain = (vals[i] / vals[i - 1] - 1) * 100
+            if gain >= 1.0:
+                ax.text(bar.get_x() + bar.get_width() / 2, vals[i] + 900,
+                        f"+{gain:.0f}%", ha="center", va="bottom",
+                        fontsize=6.5, color=ACCENT)
+    ax.set_ylim(0, 15300)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.text(-0.45, 14300, f"整体 ×{vals[-1] / vals[0]:.2f}", ha="left",
+            va="center", fontsize=8.5, color=ACCENT, fontweight="bold")
+    save(fig, "fig3_c500_ladder")
+
+
+# --------------------------------------------------------------------------- #
+# 4. Decode attention bandwidth
+# --------------------------------------------------------------------------- #
+def fig_decode_bw():
+    labels = ["stock 3D", "A20 自研内核", "硬件带宽上限"]
+    vals = np.array([258, 372, 587])
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [vals], ["有效带宽"], ylabel="decode attention 有效带宽（GB/s）",
+        colors=[BASE], bar_width=0.28, edgecolor=BASE_EDGE, linewidth=0.5)
+    ax.get_legend().remove()
+    bars = cont[0]
+    bars[1].set_facecolor(HERO)
+    bars[1].set_edgecolor(HERO)
+    bars[2].set_facecolor("white")
+    bars[2].set_edgecolor(MID)
+    bars[2].set_hatch("///")
+    for bar, v, c in zip(bars, vals, [MID, HERO, MID]):
+        label_above(ax, bar.get_x() + bar.get_width() / 2, v + 9, f"{v}", c, 8)
+    ax.axhline(587, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
+    ax.text(0.0, 620, "可达带宽下限 587 GB/s", ha="left", va="bottom",
+            fontsize=7, color=ACCENT)
+    ax.set_ylim(0, 680)
+    ax.set_yticks([0, 150, 300, 450])
+    save(fig, "fig4_decode_bw")
+
+
+# --------------------------------------------------------------------------- #
+# 5. Iluvatar same-day A/B
+# --------------------------------------------------------------------------- #
+def fig_ab_same_day():
+    labels = ["4k 场景", "16k 场景"]
+    base = np.array([2239.43, 2956.59])
+    ours = np.array([2606.56, 3541.34])
+    gain = (ours / base - 1) * 100
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.6 * CM))
+    for i in range(2):
+        x0, x1 = i - 0.15, i + 0.15
+        ax.plot([x0, x1], [base[i], ours[i]], color=FAINT, linewidth=1.1,
+                zorder=1)
+        ax.scatter([x0], [base[i]], s=32, color=BASE_EDGE, zorder=3,
+                   edgecolors="white", linewidths=0.7)
+        ax.scatter([x1], [ours[i]], s=36, color=HERO, zorder=3,
+                   edgecolors="white", linewidths=0.7)
+        ax.text(x0, base[i] - 145, f"{base[i]:,.0f}", ha="center", va="top",
+                fontsize=7.5, color=MID)
+        ax.text(x1, ours[i] + 95, f"{ours[i]:,.0f}", ha="center", va="bottom",
+                fontsize=8, color=HERO)
+        ax.text(i + 0.30, ours[i] - 40, f"+{gain[i]:.1f}%", ha="left",
+                va="center", fontsize=8.5, color=ACCENT, fontweight="bold")
+    ax.set_xticks(range(2))
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("总吞吐（tokens/s）")
+    ax.set_xlim(-0.55, 1.55)
+    ax.set_ylim(1850, 3900)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.plot([], [], marker="o", color=BASE_EDGE, linewidth=0, markersize=4,
+            label="当日基线（stock）")
+    ax.plot([], [], marker="o", color=HERO, linewidth=0, markersize=4,
+            label="A20 自研内核")
+    ax.legend(loc="upper left", frameon=False)
+    save(fig, "fig5_iluvatar_ab")
+
+
+# --------------------------------------------------------------------------- #
+# 6. Stock decode kernel breakdown (horizontal bars)
+# --------------------------------------------------------------------------- #
+def fig_decode_breakdown():
+    labels = ["loads + QK", "PV 的 tl.dot\n（MMA 布局转换）", "softmax"]
+    vals = [0.54, 0.36, 0.02]
+    colors = [HERO_SOFT, ACCENT, BASE]
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.0 * CM))
+    y = np.arange(len(labels))[::-1]
+    ax.barh(y, vals, height=0.32, color=colors,
+            edgecolor=["white", "white", BASE_EDGE], linewidth=0.6)
+    for yi, v, c in zip(y, vals, colors):
+        inside = v > 0.3
+        ax.text(v - 0.012 if inside else v + 0.010, yi, f"{v:.2f} ms",
+                va="center", ha="right" if inside else "left", fontsize=7.5,
+                color="white" if inside and na.is_dark(c) else INK)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=7.5)
+    ax.set_xlabel("单步耗时（ms；stock 3D decode kernel，B=64 / kv=4096）")
+    ax.set_xlim(0, 0.62)
+    ax.set_ylim(-0.6, len(labels) - 0.4)
+    ax.xaxis.set_major_locator(MaxNLocator(4))
+    ax.text(0.618, 2.52, "合计 0.92 ms/层", ha="right", va="center",
+            fontsize=7, color=MID)
+    save(fig, "fig6_decode_breakdown")
+
+
+# --------------------------------------------------------------------------- #
+# 7. A7 launch configuration (horizontal bars)
+# --------------------------------------------------------------------------- #
+def fig_a7_config():
+    labels = ["4k 场景", "16k 场景"]
+    gains = [38.0, 39.4]
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 5.2 * CM))
+    y = np.arange(2)[::-1]
+    ax.barh(y, gains, height=0.20, color=HERO)
+    for yi, v in zip(y, gains):
+        ax.text(v + 0.8, yi, f"+{v:.1f}%", va="center", ha="left", fontsize=9,
+                color=HERO, fontweight="bold")
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=8)
+    ax.set_xlabel("相对 stock 的端到端吞吐提升（%）")
+    ax.set_xlim(0, 48)
+    ax.set_ylim(-0.5, 1.5)
+    ax.xaxis.set_major_locator(MaxNLocator(5))
+    save(fig, "fig7_a7_config")
+
+
+# --------------------------------------------------------------------------- #
+# 8/9. Constraint panels (half column, horizontal bars)
+# --------------------------------------------------------------------------- #
+def fig_accuracy():
+    labels = ["C500 复测 1", "C500 复测 2", "BI-V150 复核 1", "BI-V150 复核 2",
+              "BI-V150 复核 3", "BI-V150 复核 4"]
+    vals = [97.14, 98.1, 96.2, 97.1, 98.1, 97.1]
+    colors = [HERO, HERO, BASE, BASE, BASE, BASE]
+    fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
+    y = np.arange(len(vals))[::-1]
+    ax.barh(y, vals, height=0.40, color=colors,
+            edgecolor=["none", "none"] + [BASE_EDGE] * 4, linewidth=0.4)
+    for yi, v in zip(y, vals):
+        ax.text(v + 0.11, yi, f"{v:.2f}", va="center", ha="left", fontsize=7)
+    ax.axvline(95.0, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
+    ax.text(95.25, 5.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
+            va="center", bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=7)
+    ax.tick_params(axis="y", length=0)
+    ax.set_xlim(93, 99.6)
+    ax.set_ylim(-0.6, 5.9)
+    ax.set_xlabel("MATH-500 Level 3 准确率（%）", fontsize=7.5)
+    ax.xaxis.set_major_locator(MaxNLocator(4))
+    save(fig, "fig8_accuracy")
+
+
+def fig_ttft():
+    labels = ["C500 官方基线", "C500 本提交", "BI-V150 A20 前", "BI-V150 A20 后"]
+    secs = [27.2, 17.9, 155.5, 130.1]
+    colors = [BASE, HERO, BASE, HERO]
+    fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
+    y = np.arange(len(secs))[::-1]
+    ax.barh(y, secs, height=0.40, color=colors,
+            edgecolor=[BASE_EDGE, "none", BASE_EDGE, "none"], linewidth=0.4)
+    for yi, v, c in zip(y, secs, colors):
+        ax.text(v + 5.0, yi, f"{v:.1f} s", va="center", ha="left", fontsize=7,
+                color=HERO if c == HERO else MID)
+    ax.set_yticks(y)
+    ax.set_yticklabels(labels, fontsize=7)
+    ax.tick_params(axis="y", length=0)
+    ax.set_xlim(0, 196)
+    ax.set_xlabel("16k 场景 TTFT（s，越低越好）", fontsize=7.5)
+    ax.xaxis.set_major_locator(MaxNLocator(4))
+    save(fig, "fig9_ttft")
+
+
+# --------------------------------------------------------------------------- #
+# 10/11/12. NSEG heatmaps
+# --------------------------------------------------------------------------- #
+B = [8, 16, 32, 64]
+NSEG = [16, 32, 64, 128]
+MS_4K = np.array([
+    [0.168, 0.173, 0.190, 0.325],
+    [0.248, 0.242, 0.258, 0.438],
+    [0.377, 0.368, 0.403, 0.639],
+    [0.620, 0.629, 0.703, 1.168],
+])
+MS_16K = np.array([
+    [0.363, 0.392, 0.390, 0.509],
+    [0.679, 0.651, 0.632, 0.800],
+    [1.194, 1.121, 1.124, 1.347],
+    [2.131, 2.084, 2.121, 2.566],
+])
+GB_16K = np.array([
+    [370, 343, 344, 263],
+    [395, 412, 425, 336],
+    [450, 479, 478, 399],
+    [504, 515, 506, 418],
+])
+
+
+def heat(data, name, unit, best_is_min=True, figsize=(7.3 * CM, 6.0 * CM),
+         cellfs=7.4):
+    fig, ax = plt.subplots(figsize=figsize)
+    im = na.make_heatmap(ax, data, x_labels=NSEG, y_labels=B, cmap=CMAP_SEQ,
+                         cbar_label=unit, annotate=True,
+                         fmt="{:.3f}" if unit == "ms" else "{:.0f}",
+                         fontsize=cellfs)
+    plt.setp(ax.get_xticklabels(), rotation=0, ha="center")
+    ax.tick_params(axis="both", length=0)
+    ax.set_xlabel("NSEG（每序列的分段数）", fontsize=7.5)
+    ax.set_ylabel("并发批大小 B", fontsize=7.5)
+    idx = np.unravel_index(np.argmin(data) if best_is_min else np.argmax(data),
+                           data.shape)
+    ax.add_patch(plt.Rectangle((idx[1] - 0.5, idx[0] - 0.5), 1, 1, fill=False,
+                               edgecolor=ACCENT, linewidth=1.2))
+    cb = im.colorbar
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(length=1.8, width=0.5, labelsize=6.5)
+    cb.ax.yaxis.label.set_size(7)
+    save(fig, name)
+
+
+# --------------------------------------------------------------------------- #
+# 13. Decode bandwidth evolution
+# --------------------------------------------------------------------------- #
+def fig_decode_evolution():
+    labels = ["stock 2D", "stock 3D", "stock 3D\n+A7 pin", "A20\n自研内核",
+              "硬件 copy\n上限"]
+    vals = np.array([117, 153, 258, 372, 587])
+    fig, ax = plt.subplots(figsize=(14.5 * CM, 6.8 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [vals], ["有效带宽"], ylabel="decode attention 有效带宽（GB/s）",
+        colors=[BASE], bar_width=0.40, edgecolor=BASE_EDGE, linewidth=0.5)
+    ax.get_legend().remove()
+    bars = cont[0]
+    for bar, color in zip(bars, [None, None, HERO_SOFT, HERO, "white"]):
+        if color:
+            bar.set_facecolor(color)
+            bar.set_edgecolor("none" if color != "white" else MID)
+    bars[-1].set_hatch("///")
+    for bar, v, c in zip(bars, vals, [MID, MID, HERO, HERO, MID]):
+        label_above(ax, bar.get_x() + bar.get_width() / 2, v + 9, f"{v}", c, 7.5)
+    ax.axhline(587, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
+    ax.set_ylim(0, 680)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    save(fig, "fig12_decode_evolution")
+
+
+# --------------------------------------------------------------------------- #
+# 14. Benchmark run-to-run variance (2 panels)
+# --------------------------------------------------------------------------- #
+def fig_run_variance():
+    k4 = [5078.77, 4440.19, 4745.85, 5103.93]
+    k16 = [7024.44, 7049.04, 7038.42, 7042.59]
+    fig, axes = plt.subplots(1, 2, figsize=(15.0 * CM, 5.8 * CM))
+    x = np.arange(1, 5)
+    for ax, vals, title in zip(axes, [k4, k16], ["4k 场景", "16k 场景"]):
+        mean = float(np.mean(vals))
+        spread = (max(vals) - min(vals)) / mean * 100
+        na.make_trend(ax, x, [np.array(vals)], ["吞吐"], colors=[HERO],
+                      ylabel="total tokens/s", xlabel="run 序号",
+                      show_shadow=False, lw=1.0, markersize=4)
+        ax.get_legend().remove()
+        ax.axhline(mean, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)),
+                   alpha=0.9)
+        ax.text(0.97, 0.04, f"均值 {mean:.0f}", transform=ax.transAxes,
+                color=ACCENT, va="bottom", ha="right", fontsize=7)
+        ax.set_title(f"{title}（4 次连续 run，极差 {spread:.1f}%）", fontsize=8,
+                     pad=5)
+        ax.set_xticks(x)
+        ax.set_xlim(0.6, 4.4)
+        pad = (max(vals) - min(vals)) * 0.30
+        ax.set_ylim(min(vals) - pad, max(vals) + pad)
+        ax.yaxis.set_major_locator(MaxNLocator(4))
+    fig.subplots_adjust(wspace=0.30)
+    save(fig, "fig13_run_variance", pad=1.0)
+
+
+if __name__ == "__main__":
+    BUILD.mkdir(exist_ok=True)
+    fig_c500_throughput()
+    fig_sampler()
+    fig_ladder()
+    fig_decode_bw()
+    fig_ab_same_day()
+    fig_decode_breakdown()
+    fig_a7_config()
+    fig_accuracy()
+    fig_ttft()
+    heat(MS_16K, "fig10_nseg_heatmap_16k", "ms")
+    heat(GB_16K, "fig11_nseg_bw_16k", "GB/s", best_is_min=False)
+    heat(MS_4K, "fig10b_nseg_heatmap_4k", "ms",
+         figsize=(15.4 * CM, 7.0 * CM), cellfs=9)
+    fig_decode_evolution()
+    fig_run_variance()
+
+
+# --------------------------------------------------------------------------- #
+# 15. Per-operator hot-path composition (C500, from the two kernel profiles)
+#     source: docs/baselines/metax-c500/profile_baseline.txt / profile_post_opt1.txt
+# --------------------------------------------------------------------------- #
+def fig_op_hotpath():
+    fams = ["采样（排序/直方图/argmax）", "GEMM / Linear", "decode attention",
+            "归一化与逐元素", "host 搬运（Memcpy）"]
+    share = np.array([
+        [38.8, 5.1],      # 采样
+        [36.7, 56.9],     # GEMM
+        [19.1, 29.8],     # attention
+        [4.6, 6.9],       # 归一化
+        [0.8, 1.2],       # host
+    ])
+    secs = np.array([
+        [14.61, 1.24],
+        [13.82, 13.81],
+        [7.19, 7.22],
+        [1.72, 1.67],
+        [0.29, 0.29],
+    ])
+    delta = secs[:, 1] - secs[:, 0]
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.0 * CM))
+    im = ax.imshow(share, cmap=CMAP_SEQ, aspect="auto", vmin=0, vmax=60)
+    ax.set_xticks(range(2))
+    ax.set_xticklabels(["基线", "采样链融合后"], fontsize=8)
+    ax.set_yticks(range(len(fams)))
+    ax.set_yticklabels(fams, fontsize=7.5)
+    ax.tick_params(axis="both", length=0)
+    for i in range(len(fams)):
+        for j in range(2):
+            ax.text(j, i, f"{share[i, j]:.1f}%", ha="center", va="center",
+                    fontsize=8, color="white" if share[i, j] > 34 else INK)
+    for i in range(len(fams)):
+        ax.text(1.72, i, f"{delta[i]:+.2f} s", ha="left", va="center",
+                fontsize=7.5, color=ACCENT if delta[i] < -1 else MID)
+    ax.text(1.72, -0.62, "Δ 内核时间", ha="left", va="center", fontsize=7,
+            color=INK)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    cb = fig.colorbar(im, ax=ax, pad=0.34, fraction=0.030)
+    cb.set_label("占内核总时间（%）", fontsize=7)
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(length=1.8, width=0.5, labelsize=6.5)
+    save(fig, "fig14_op_hotpath")
+
+
+# --------------------------------------------------------------------------- #
+# 16. Constraint compliance margins (both platforms)
+# --------------------------------------------------------------------------- #
+def fig_compliance():
+    rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
+    cols = ["沐曦 C500", "天数 BI-V150"]
+    margin = np.array([
+        [(12403.21 / 5089.645 - 1) * 100, (2606.56 / 2028.01 - 1) * 100],
+        [(11167.87 / 7029.675 - 1) * 100, (3541.34 / 915.15 - 1) * 100],
+        [(97.14 / 95.0 - 1) * 100, (96.20 / 95.0 - 1) * 100],
+        [(1 - 17.902 / 27.197) * 100, (1 - 130.1 / 155.5) * 100],
+    ])
+    fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
+    im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
+                   vmin=0, vmax=2.6)
+    ax.set_xticks(range(2))
+    ax.set_xticklabels(cols, fontsize=7.5)
+    ax.set_yticks(range(len(rows)))
+    ax.set_yticklabels(rows, fontsize=7.5)
+    ax.tick_params(axis="both", length=0)
+    xpos = np.tile(np.arange(2), (4, 1))
+    for i in range(len(rows)):
+        for j in range(2):
+            v = margin[i, j]
+            ax.text(xpos[i, j], i, f"+{v:.1f}%" if v < 100 else f"+{v:.0f}%",
+                    ha="center", va="center", fontsize=7.5,
+                    color="white" if np.log10(v) > 1.55 else INK)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+    cb = fig.colorbar(im, ax=ax, pad=0.04, fraction=0.05)
+    cb.set_label("log₁₀（达标裕度 %）", fontsize=6.8)
+    cb.outline.set_visible(False)
+    cb.ax.tick_params(length=1.8, width=0.5, labelsize=6.5)
+    save(fig, "fig15_compliance")
