@@ -1,0 +1,37 @@
+startup_seconds=112
+benchmark_rc=0
+tip: install termplotlib and gnuplot to plot the metrics
+============ Serving Benchmark Result ============
+Successful requests:                     128       
+Failed requests:                         0         
+Maximum request concurrency:             64        
+Benchmark duration (s):                  199.66    
+Total input tokens:                      2097152   
+Total generated tokens:                  131072    
+Request throughput (req/s):              0.64      
+Output token throughput (tok/s):         656.47    
+Peak output token throughput (tok/s):    1664.00   
+Peak concurrent requests:                65.00     
+Total token throughput (tok/s):          11159.95  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          17985.33  
+Median TTFT (ms):                        3056.52   
+P99 TTFT (ms):                           66926.73  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          77.55     
+Median TPOT (ms):                        87.25     
+P99 TPOT (ms):                           93.43     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           77.55     
+Median ITL (ms):                         40.17     
+P99 ITL (ms):                            199.57    
+==================================================
+
+
+================================================================================
+Summary
+================================================================================
+Prefill=16384 Decode=1024 Conc=64 NumPrompts=128 Req/s=0.64 Total tok/s=11168.87 TTFT=17926.92ms
+
+Raw CSV: benchmark_results/raw_runs_20261024_222242.csv
+Summary CSV: benchmark_results/summary_20261024_222242.csv
