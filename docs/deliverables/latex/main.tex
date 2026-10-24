@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{array}
 \usepackage{enumitem}
+\usepackage{url}
 \graphicspath{{../submission/}}
 \definecolor{mainblue}{HTML}{1F4E79}
 \definecolor{accentred}{HTML}{A00000}
@@ -47,7 +48,11 @@
 \tableofcontents
 \clearpage
 
-\section{任务与约束}
+\section{引言}
+大语言模型规模化落地后，推理阶段的算力与显存开销成为主要成本项。在固定硬件、固定框架、固定模型的前提下提升端到端吞吐，需要在算子、内核与调度三个层面同时发力。本报告以 MiniCPM5-2B\cite{minicpm} 为对象，在国产 AI 芯片（天数 BI-V150 与沐曦曦云 C500）上，基于官方指定的 FlagOS 软件栈（vllm-plugin-FL\cite{vfl} 与 FlagGems\cite{fg}）开展有开发量的优化工作。
+
+与通用 GPU 生态不同，国产芯片在指令集、访存层次、运行时与算子库上的差异，使得许多在 NVIDIA 上默认成立的配置（如 Triton 的 \texttt{num\_warps=4, num\_stages=3}）在这些平台上系统性失配。本报告的一个核心观察是：**先用微基准把瓶颈定位到具体的内核或同步点，再决定改配置、改内核还是改调度**；任何改动都必须通过官方 benchmark 的当日交错 A/B 与 MATH-500 精度复核，未通过者一律回退留档。
+
 \subsection{任务定义}
 本赛题要求在不改变模型、不降低精度的前提下，提升 MiniCPM5-2B 在两指定国产芯片上的推理总吞吐（total tokens/s）。优化必须落在框架与算子内部，且需具备实际开发量：KV Cache 与动态批处理、算子融合、内核重写、自研量化策略等均在允许范围内；直接 merge 上游分支、修改 benchmark 脚本、或在缺乏算子优化的情况下切换算子均被禁止。
 
@@ -112,7 +117,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \section{优化方法论}
 两张芯片共用同一套闭环，每一步都保留可复核的工件（探针脚本、profile 数据、单测、官方 benchmark 原始 CSV）。
 
-（1）Profile 定位：先用 serve 时序日志、设备侧计时与 host 打点区分时间究竟花在 GPU 内核、host 发射还是隐式同步；（2）探针先行：任何替换或新内核，先在独立脚本里做全形状 bit-exact 或统计等价验证，再上 serve；（3）Shape-aware dispatch：同一算子保留多个等价实现或执行配置，按输入 shape 在派发层选择（赛题组 2026-10-10 已确认合规）；（4）官方口径验收：只用官方 benchmark 与 evalscope，serve 参数一字未改。
+（1）Profile 定位：先用 serve 时序日志（PagedAttention 式分页 KV 管理见文献\cite{vllm}）、设备侧计时与 host 打点区分时间究竟花在 GPU 内核、host 发射还是隐式同步；（2）探针先行：任何替换或新内核，先在独立脚本里做全形状 bit-exact 或统计等价验证，再上 serve；（3）Shape-aware dispatch：同一算子保留多个等价实现或执行配置，按输入 shape 在派发层选择（赛题组 2026-10-10 已确认合规）；（4）官方口径验收：只用官方 benchmark 与 evalscope，serve 参数一字未改。
 
 正确性按强度分三档：能 bit-exact 的（A6 双 gather、A7 发射配置）一律 bit-exact；只能统计等价的（采样融合、GEMM 路由）用分布对比加 MATH-500 复核；所有进入提交的改动都必须通过官方精度门槛，未通过的一律回退并留档，不进入提交代码。
 
@@ -121,7 +126,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 初始 profile 显示，C500 的 decode 阶段存在三类互相独立的开销：采样尾部是纯 eager PyTorch（bf16$\rightarrow$fp32 cast、除温度、对 130560 词表排序取 top-p、gumbel-argmax），每步约 12 ms 且全在 host 串行；GEMM 存在布局与路由失配，vendor 高性能实现从 Python 侧不可达；prefill 每层还有隐式 DtoH 同步，造成 GPU 空闲。
 
 \subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
-自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，保留集质量恒不小于 $p\cdot Z$，完全替代全词表排序；其三，词表维 split-parallel（32 splits $\times$ BLOCK 4096），使小 batch 也能打满芯片。采样全链由约 12.4 ms 降至 0.31 ms/步。
+自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，保留集质量恒不小于 $p\cdot Z$，完全替代全词表排序；其三，词表维 split-parallel（32 splits $\times$ BLOCK 4096），使小 batch 也能打满芯片。采样全链由约 12.4 ms 降至 0.31 ms/步。
 
 正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在核集内（含直方图粒度 slack），与原实现的 TV 距离处于纯采样噪声区间。
 
@@ -260,6 +265,27 @@ TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 1
 （3）首次启动耗时：C500 需执行 GEMM autotune 预热，实测两台实例分别为 367 秒与 973 秒；第二次启动（triton cache 已存在）约 1–3 分钟。此为正常现象，不是卡死；如确需跳过可设 \texttt{VLLM\_FL\_MM\_WARMUP=0}，但 4k 吞吐约 −6\%、TTFT 变差。
 
 （4）实例间差异：两台 C500 实例的 4k 吞吐相差 4\%、TTFT 相差 66\%，16k 几乎一致。报告因此以区间给数，不以单台最优值充当普遍成绩。
+
+\section{结论与建议}
+\subsection{结论}
+本报告在官方指定的 FlagOS 栈上，完成了 MiniCPM5-2B 在天数 BI-V150 与沐曦曦云 C500 两款国产芯片上的推理吞吐优化。在不修改 \texttt{vllm serve} 参数、不更换模型、不降低精度的约束下，C500 平台 4k 场景达到官方基线的 2.33–2.44 倍、16k 场景 1.58–1.59 倍；天数平台 4k 由 2028.01 提升至 2606.56 tok/s（+28.5\%）、16k 由 915.15 提升至 3541.34 tok/s（+287\%）；MATH-500 Level 3 精度保持在 96.2\%–98.1\%，高于 95\% 的门槛，TTFT 在各场景均未回退。
+
+从方法论上看，本工作验证了一条可复用的路径：先用微基准把时间归因到具体内核或同步点，再用最小改动验证，最后以官方口径做当日交错 A/B。这条路径既解释了为什么某些看似有利的方案（W8 量化、投机采样）在端到端上不可行，也解释了为什么某些微小改动（发射配置、双 gather）能带来数十个百分点的收益。
+
+\subsection{局限与后续工作}
+其一，本文的绝对值受开发实例状态影响较大，跨日不可比，因此天数侧一律以同日交错 A/B 的相对收益表述；其二，C500 侧在两台实例上的 4k 吞吐存在约 4\% 的差异，报告因此给区间而非单点；其三，decode attention 在内核层面已接近该卡的访存上限（C500 实测 1466 GB/s，天数 decode kernel 372 GB/s 对应其可达负载带宽的约 70\%），进一步提效需要脱离 Triton 或引入更低比特的 KV 表示，而后者在本文的实验中已因 gather 吞吐退化被否决。
+
+后续工作可从三个方向展开：一是把 shape-aware 分派扩展到 prefill 侧的分块策略；二是探索编译器层面的算子融合（本文的 IR 级 RMSNorm 尝试因 inductor 失去相邻融合而失败，但换一种插入位置可能成立）；三是在更多国产芯片上复现同一套测量闭环，检验其可迁移性。
+
+\begin{thebibliography}{9}
+\bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.
+\bibitem{vllm} KWON W, LI Z, ZHUANG S, et al. Efficient memory management for large language model serving with PagedAttention[C]//Proceedings of the 29th ACM Symposium on Operating Systems Principles (SOSP). 2023: 611-626.
+\bibitem{fa2} DAO T, FU D Y, ERMON S, et al. FlashAttention: fast and memory-efficient exact attention with IO-awareness[C]//Advances in Neural Information Processing Systems (NeurIPS). 2022.
+\bibitem{gumbel} MADDISON C J, MNIH A, TEH Y W. The concrete distribution: a continuous relaxation of discrete random variables[C]//International Conference on Learning Representations (ICLR). 2017.
+\bibitem{vfl} FlagOS Community. vllm-plugin-FL, branch flagos-2026-s2[EB/OL]. \url{https://github.com/flagos-ai/vllm-plugin-FL}.
+\bibitem{fg} FlagOS Community. FlagGems, tag v5.3.5[EB/OL]. \url{https://github.com/flagos-ai/FlagGems}.
+\bibitem{minicpm} OpenBMB. MiniCPM5-2B[EB/OL]. \url{https://modelscope.cn/models/OpenBMB/MiniCPM5-2B}.
+\end{thebibliography}
 
 \appendix
 \section{代码与实验记录索引}
