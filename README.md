@@ -10,20 +10,29 @@ FlagOS 开放计算全球大赛 S2 · 赛道二（MiniCPM5-2B 推理吞吐优化
 
 ## 分支布局
 
+官方上游是两个独立项目：`flagos-ai/vllm-plugin-FL` 与 `flagos-ai/FlagGems`。
+本仓库是它们的工作镜像与实验记录仓库，分支按“集成 / 基线 / 归档 / 文档”分层：
+
 | 分支 | 内容 |
 |---|---|
-| `vllm-plugin-FL/flagos-2026-s2` | 推理框架插件基线（origin: github.com/flagos-ai/vllm-plugin-FL @ flagos-2026-s2, 13eb9be） |
-| `FlagGems/v5.3.5` | 算子库基线（origin: github.com/flagos-ai/FlagGems @ v5.3.5, a7620cc） |
-| `vllm-plugin-FL/dev` | 插件侧开发分支（优化改动都在这里） |
-| `FlagGems/dev` | 算子侧开发分支 |
+| `integration/vllm-plugin-fl` | **当前插件集成分支**：C500 opt1–opt11、BI-V150 A1–A7、A20；后续实验从这里开 `exp/<编号>-<简述>` |
+| `integration/flaggems` | **当前算子集成分支**：采样、GEMM、A20 paged decode attention；与插件分支配套开发 |
+| `baseline/vllm-plugin-fl-flagos-2026-s2` | 推理框架插件官方基线（上游 `flagos-2026-s2`，13eb9be） |
+| `baseline/flaggems-v5.3.5` | 算子库官方基线（上游 `v5.3.5`，a7620cc） |
+| `archive/vllm-plugin-fl-c500-dev` | 历史 C500 插件开发线，不再继续写入 |
+| `archive/vllm-plugin-fl-iluvatar-a1-a7` | 历史天数 A1–A7 开发线，不再继续写入 |
+| `archive/flaggems-c500-dev` | 历史算子开发线，不再继续写入 |
+| `main` | 报告、实验台账与复现文档，不承担运行时代码 |
 
 ## 评测机上恢复环境
 
 ```bash
 cd /workspace
-git clone -b vllm-plugin-FL/flagos-2026-s2 https://github.com/xy200303/minicpm-flagserve.git vllm-plugin-FL
-git clone -b FlagGems/v5.3.5       https://github.com/xy200303/minicpm-flagserve.git FlagGems
-# 各自的 dev 分支同理；pip install --no-build-isolation -e .
+git clone --single-branch --branch integration/vllm-plugin-fl \
+  https://github.com/xy200303/minicpm-flagserve.git vllm-plugin-FL
+git clone --single-branch --branch integration/flaggems \
+  https://github.com/xy200303/minicpm-flagserve.git FlagGems
+# 基线分支用于 A/B；安装：pip install --no-build-isolation -e .
 ```
 
 ## 关键约束（官网口径 + 赛题组答疑）

@@ -4,7 +4,30 @@
 `flagos-ai/vllm-plugin-FL` 分支 `flagos-2026-s2` 与 `FlagGems` tag `v5.3.5`。
 **所有改动均在框架/算子内完成，`vllm serve` 启动参数与官方基线完全一致。**
 
-## 0. 环境要求与启动耗时
+## 0. 交付版本与打包方式
+
+本包不是手工拼接的文件集合，而是从以下两个固定 Git 分支完整 clone 得到的源码树，**两个目录均保留 `.git` 和提交历史**，便于官方执行 `git log`、`git show`、`git diff` 核对开发过程：
+
+| 目录 | 仓库分支 | 固定 commit | 内容 |
+|---|---|---|---|
+| `vllm-plugin-FL/` | `xy200303/minicpm-flagserve` 的 `integration/vllm-plugin-fl` | `0207b7e1` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
+| `FlagGems/` | 同仓库的 `integration/flaggems` | `dd574fdd` | C500 采样/GEMM 算子与 BI-V150 A20 paged decode attention |
+
+这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`main` 只保存报告、实验台账与复现文档，不承担运行时代码。
+
+复核或重新打包可使用（完整历史，不使用 `--depth 1`）：
+
+```bash
+git clone --single-branch --branch integration/vllm-plugin-fl \
+  https://github.com/xy200303/minicpm-flagserve.git vllm-plugin-FL
+git clone --single-branch --branch integration/flaggems \
+  https://github.com/xy200303/minicpm-flagserve.git FlagGems
+# 打包时保留两个目录下的 .git；只剔除本机 build、__pycache__ 和虚拟环境
+```
+
+**真实验证记录（2026-10-24，C500 64GB / RAM 128GB）**：在全新 clone、独立 `venv --system-site-packages` 中分别执行两个目录的 `pip install -e . --no-build-isolation`，随后按第 4.3 节的官方命令启动。启动成功，`/v1/models` 返回 `minicpm`，实际 `/v1/chat/completions` 请求返回正常；日志确认 `mcblas_mm`、采样融合和 A20 hook 均已加载。验证后已停止服务，不占用 GPU。
+
+## 0.1 环境要求与启动耗时
 
 | 项目 | 天数 BI-V150 | 沐曦 C500 |
 |---|---|---|
