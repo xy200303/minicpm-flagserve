@@ -11,6 +11,24 @@
 \usepackage{array}
 \usepackage{enumitem}
 \usepackage{url}
+\usepackage{setspace}
+\setstretch{1.35}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  frame=single,
+  framerule=0.4pt,
+  rulecolor=\color{lightgrey},
+  backgroundcolor=\color{gray!4},
+  xleftmargin=0.6em,
+  xrightmargin=0.6em,
+  aboveskip=0.7em,
+  belowskip=0.7em,
+}
 \graphicspath{{../submission/}}
 \definecolor{mainblue}{HTML}{1F4E79}
 \definecolor{accentred}{HTML}{A00000}
@@ -30,6 +48,7 @@
 队伍：XLANG2026　队员：邓乾（GitHub：xy200303，单人组队）}
 \date{2026 年 10 月 24 日}
 
+\setlength{\emergencystretch}{2em}
 \begin{document}
 \maketitle
 \thispagestyle{empty}
@@ -140,7 +159,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 MACA Triton 的 \texttt{mm\_kernel} 只支持 nn 布局，且在 prefill 大 M 下比 vendor mcBLAS 慢 1.35–1.67 倍（126 组配置全扫仍不敌，vendor 约 197 TFLOPS 逼近峰值）；而 FlagGems 进程级接管 \texttt{aten::mm} 之后，vendor GEMM 从 Python 完全不可达。为此，prefill 大 M 改走 ctypes 直绑 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 保证 compiled 区域安全；decode 细瘦 M 保留自研 Triton nn\_db 单布局内核，权重只留一份，不额外占用显存。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑死原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 从未进入优化路由的问题，lm\_head 由 603 $\mu$s 降至 379 $\mu$s。
 
 \subsection{消除 prefill 每层 DtoH 同步（opt10）}
-prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层每步执行 \texttt{prefill\_seq\_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
+prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层每步执行 \path{prefill_seq_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
 
 \begin{figure}[h]
 \centering
@@ -187,7 +206,7 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 \end{figure}
 
 \subsection{可复现性与可审计性}
-内核每个（seq, kv\_head, segment）只依赖自己的 q／KV 页与 seq\_lens，段长只由该序列长度决定，因此同一序列的输出与批组成无关。FlagGems 侧配有 \texttt{tests/test\_paged\_decode\_attention.py}：8 个精度用例对照 fp32 参考，外加一个批量不变性用例（单条／两条／半批／全批／逆序全批逐位相等，并重复同组成验证确定性），BI-V150 上 9 passed。混合步的 decode 切片每 4000 次调用输出一行 used/skipped 计数，16k 两次实测均为 used=44000、skipped=0，即 100\% 命中自研内核，不存在隐式退回 stock 的情况。
+内核每个（seq, kv\_head, segment）只依赖自己的 q／KV 页与 seq\_lens，段长只由该序列长度决定，因此同一序列的输出与批组成无关。FlagGems 侧配有 \path{tests/test_paged_decode_attention.py}：8 个精度用例对照 fp32 参考，外加一个批量不变性用例（单条／两条／半批／全批／逆序全批逐位相等，并重复同组成验证确定性），BI-V150 上 9 passed。混合步的 decode 切片每 4000 次调用输出一行 used/skipped 计数，16k 两次实测均为 used=44000、skipped=0，即 100\% 命中自研内核，不存在隐式退回 stock 的情况。
 
 \section{主要创新点}
 （1）跨双平台的 shape-aware dispatch 统一框架。同一套“离线全空间扫描＋派发层按 shape 选择实现/配置”的方法论落在两种国产芯片上，覆盖 GEMM、attention、采样三类算子，且有赛题组明确的合规口径；本报告同时给出该框架的适用边界（见第 7 节 A26）。
@@ -253,9 +272,46 @@ TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 1
 \end{table}
 
 \subsection{复现步骤}
-安装：在两个源码目录分别执行 \texttt{pip install -e . --no-build-isolation}。C500 还需 \texttt{export PATH=/opt/conda/bin:\$PATH}、\texttt{MACA\_PATH=/opt/maca}、\texttt{MACA\_HOME=/opt/maca}、\texttt{LD\_LIBRARY\_PATH=/opt/maca/lib:/opt/maca/lib64}，并设 \texttt{VLLM\_PLUGINS=fl}。
+两个源码目录分别以可编辑模式安装：
 
-启动：天数在官方命令后加 \texttt{--compilation-config '\{"cudagraph\_mode": "FULL\_DECODE\_ONLY"\}'}；C500 仅使用官方命令，不添加该项。性能评测执行 \texttt{benchmarks/benchmark\_throughput\_serve.py} 并传 \texttt{--test-cases '[[4096,1024,64,256],[16384,1024,64,128]]'}；精度评测执行官网给出的 evalscope 命令，结果见 \texttt{reports/minicpm/math\_500.json} 的 score 字段。
+\begin{lstlisting}
+cd vllm-plugin-FL && pip install -e . --no-build-isolation
+cd ../FlagGems   && pip install -e . --no-build-isolation
+\end{lstlisting}
+
+沐曦 C500 还需设置以下环境变量（天数无需）：
+
+\begin{lstlisting}
+export PATH=/opt/conda/bin:$PATH
+export MACA_PATH=/opt/maca
+export MACA_HOME=/opt/maca
+export LD_LIBRARY_PATH=/opt/maca/lib:/opt/maca/lib64
+export VLLM_PLUGINS=fl
+\end{lstlisting}
+
+启动命令与官网完全一致，天数在官方命令后追加编译配置，C500 不追加：
+
+\begin{lstlisting}
+# 天数 BI-V150
+vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
+  --gpu-memory-utilization 0.85 --max-model-len 131072 \
+  --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
+
+# 沐曦 C500（不添加 --compilation-config）
+vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
+  --gpu-memory-utilization 0.85 --max-model-len 131072
+\end{lstlisting}
+
+性能评测执行官方脚本并传入两个官方用例：
+
+\begin{lstlisting}
+python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
+  --model /workspace/MiniCPM5-2B --served-model-name minicpm --port 9031 \
+  --test-cases '[[4096,1024,64,256],[16384,1024,64,128]]'
+\end{lstlisting}
+
+精度评测执行官网给出的 evalscope 命令，结果见
+\texttt{reports/minicpm/math\_500.json} 的 score 字段。
 
 \subsection{复现注意事项}
 （1）防止 prefix cache 污染：benchmark 使用 seed=0，同一 serve 上连跑两次相同 input\_len 的负载会产生完全相同的 prompt，第二次会大量命中 prefix cache（本队日志出现过 35.9\% 命中率），使 prefill 近乎免费、总吞吐虚高 30\% 以上。每个数据点都应在新启动的 serve 上获取，A/B 两侧均从冷缓存开始。
@@ -289,9 +345,9 @@ TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 1
 
 \appendix
 \section{代码与实验记录索引}
-代码分支：\texttt{vllm-plugin-FL/dev}（C500 opt1–opt11，至 f4971e7e）；\texttt{vllm-plugin-FL/iluvatar-vendor-fa}（天数 A1–A7）与 A20 自研 decode 内核及混合步 hook；\texttt{FlagGems/dev}（采样融合内核、GEMM pin、paged\_decode\_attention，至 5eac6b39）。以上分支均推送至 \texttt{github.com/xy200303/minicpm-flagserve}。
+代码分支：\texttt{vllm-plugin-FL/dev}（C500 opt1–opt11，至 f4971e7e）；\path{vllm-plugin-FL/iluvatar-vendor-fa}（天数 A1–A7）与 A20 自研 decode 内核及混合步 hook；\texttt{FlagGems/dev}（采样融合内核、GEMM pin、paged\_decode\_attention，至 5eac6b39）。以上分支均推送至 \path{github.com/xy200303/minicpm-flagserve}。
 
-实验记录：\texttt{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录、2026-10-23/24 复核与验证）、\texttt{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（A10–A27 的探针、台账 \texttt{tracking.md}、\texttt{runs/} 原始数据与证据）。所有候选方案的配置、serve 日志、benchmark CSV、机器状态与结论均可按目录复核。
+实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录、2026-10-23/24 复核与验证）、\path{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（A10–A27 的探针、台账 \texttt{tracking.md}、\texttt{runs/} 原始数据与证据）。所有候选方案的配置、serve 日志、benchmark CSV、机器状态与结论均可按目录复核。
 
 \section{内核形状扫描与测量可靠性}
 本附录给出两类支撑材料：其一为 paged decode attention 内核在 NSEG $\times$ 并发度上的实测分布（来源：\texttt{docs/experiments/a26/a26\_sweep.log}，20 次重复取均值）；其二为官方 benchmark 连续 4 次 run 的吞吐波动（来源：\texttt{docs/baselines/metax-c500/raw\_runs\_baseline.csv}）。前者说明当前配置为何是甜点，后者说明测量口径的离散程度。
