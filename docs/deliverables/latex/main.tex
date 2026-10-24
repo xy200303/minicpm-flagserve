@@ -490,6 +490,8 @@ A22／A27：W8 权重量化 & 修正实现后隔离 1.82$\times$ & 引擎内 −
 A23／A24：aten::index 退化 & 同形状 index\_select 快 13000 倍 & 属隐式同步点；修复后投机混合步仍饥饿，不采用\\
 A25：\_build\_split 的 81 ms/步 & 该项 81.4 → 0.3 ms & 官方 4k 仅 +0.85\%，属等待而非浪费\\
 A26：shape-aware NSEG 分派 & 小 batch 有 3–7.4\% & 官方 c64 下 NSEG=32 已最优、带宽 88\%，收益上限 1.4\%\\
+A28：上游 \#552 CachedOp 预热 & 可运行，5 个单测通过 & 官方 4k 中位数 −0.08\%，启动无收益，未采用\\
+A29：上游 \#442 metadata graph & 修复指针类型后 7 个图测通过 & 官方 4k −3.85\%，TTFT +32.09\%，未采用\\
 C500 num\_splits 调优 & 微基准 3 倍差异 & 冷缓存实测 10894／10953 vs 基线 11104，无收益\\
 图内 CUDA event 计时 & — & invalid resource handle，本栈不支持\\
 \bottomrule
@@ -593,7 +595,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 后续工作可从三个方向展开：一是把 shape-aware 分派扩展到 prefill 侧的分块策略；二是探索编译器层面的算子融合（本文的 IR 级 RMSNorm 尝试因 inductor 失去相邻融合而失败，但换一种插入位置可能成立）；三是在更多国产芯片上复现同一套测量闭环，检验其可迁移性。
 
-另外，当前上游有两项值得独立验证的参考实现：\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/71f6148}{common attention metadata graph（\#442）}与\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/6182281}{图捕获前 prewarm CachedOps（\#552）}。它们分别对应本文的 metadata 同步与算子路由预热问题，后续将各自新建实验分支，先验证设备兼容性，再做官方 A/B；本报告的性能数字不包含这两项工作，也不直接 merge 上游主分支。
+另外，当前上游有两项参考实现已按独立实验分支完成验证：\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/71f6148}{common attention metadata graph（\#442）}与\href{https://github.com/flagos-ai/vllm-plugin-FL/commit/6182281}{图捕获前 prewarm CachedOps（\#552）}。前者修复 MetaX 指针类型后通过图测试，但官方 4k 负收益；后者通过 5 个单测，但稳态和启动均无收益。因此本报告的性能数字不包含这两项工作，也不直接 merge 上游主分支；详细原始日志见 \path{docs/experiments/a28-cachedop-prewarm.md} 与 \path{docs/experiments/a29-common-attention-metadata.md}。
 
 \begin{thebibliography}{9}
 \bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.
