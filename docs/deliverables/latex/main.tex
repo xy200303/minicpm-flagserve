@@ -11,10 +11,14 @@
 \usepackage{caption}
 \usepackage{amsmath}
 \usepackage{array}
+\usepackage{tabularx}
+\usepackage{subcaption}
+\usepackage{float}
 \usepackage{enumitem}
 \usepackage{url}
 \usepackage{setspace}
 \setstretch{1.5}
+\raggedbottom
 \usepackage{listings}
 \lstset{
   basicstyle=\ttfamily\small,
@@ -43,6 +47,8 @@
 \setlength{\headheight}{14pt}
 \DeclareCaptionFont{hei}{\small\heiti}
 \captionsetup{font=hei,labelfont={bf,color=mainblue},labelsep=quad,format=hang,justification=centering}
+\captionsetup[sub]{font=hei,labelfont=bf,labelformat=parens,labelsep=quad,justification=centering,skip=4pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \setlist{itemsep=2pt,topsep=3pt}
 \usepackage{hyperref}
 \hypersetup{
@@ -96,10 +102,10 @@
 本赛题要求在不改变模型、不降低精度的前提下，提升 MiniCPM5-2B 在两指定国产芯片上的推理总吞吐（total tokens/s）。优化必须落在框架与算子内部，且需具备实际开发量：KV Cache 与动态批处理、算子融合、内核重写、自研量化策略等均在允许范围内；直接 merge 上游分支、修改 benchmark 脚本、或在缺乏算子优化的情况下切换算子均被禁止。
 
 \subsection{评测口径}
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{官方性能评测场景与约束}
-\begin{tabular}{@{}p{3.2cm}p{11.5cm}@{}}
+\begin{tabularx}{\linewidth}{@{}p{2.6cm}Y@{}}
 \toprule
 项目 & 内容 \\
 \midrule
@@ -110,7 +116,7 @@
 TTFT 要求 & 不得超过基线的 $+1\%$\\
 启动参数 & \texttt{vllm serve} 参数必须与基线完全一致\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 本报告所有性能数字均来自官方 benchmark 脚本（\texttt{vllm bench serve}）与官方聚合口径，且在无计时埋点、冷缓存条件下测得；精度数字来自 evalscope 官方原命令的 MATH-500 Level 3 子集（105 题）。
@@ -118,10 +124,10 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \section{总体成绩}
 沐曦 C500 的结果在两台不同实例上各复测一次，取区间报告；天数 BI-V150 的结果以同日交错 A/B 的相对收益表述（该开发实例跨时段漂移较大，跨日绝对值不可比）。
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering
 \caption{总体性能与精度结果}
-\begin{tabular}{@{}lllll@{}}
+\begin{tabularx}{\linewidth}{@{}l l r r Y@{}}
 \toprule
 平台 & 场景 & 官方基线（tok/s） & 本提交（tok/s） & 提升 \\
 \midrule
@@ -130,26 +136,29 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 天数 BI-V150 & 4k & 2028.01（官网基线） & 2606.56 & +28.5\%\\
 天数 BI-V150 & 16k & 915.15（官网基线） & 3541.34 & +287\%\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 精度方面，C500 的 MATH-500 Level 3 为 97.14\%–98.1\%，天数 BI-V150 为 96.2\%–98.1\%，均高于 95\% 的要求。C500 的 4k TTFT 为 2965 ms（基线 3199 ms），16k TTFT 为 17902 ms（基线 27197 ms）；天数 A20 的 16k TTFT 由 155.5 s 降至 130.1 s。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig8_accuracy.pdf}
-\caption{MATH-500 Level 3 精度复测结果与赛题门槛}
+\begin{minipage}[b]{0.495\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{fig8_accuracy.pdf}
+  \subcaption{MATH-500 Level 3 精度与合格线}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.495\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{fig9_ttft.pdf}
+  \subcaption{16k 场景 TTFT（越低越好）}
+\end{minipage}
+\caption{精度与延迟两项约束的对照：四个平台／场景组合均达标}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig9_ttft.pdf}
-\caption{16k 场景 TTFT 对比（越低越好）}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.86\textwidth]{fig1_c500_throughput.pdf}
+\includegraphics[width=\linewidth]{fig1_c500_throughput.pdf}
 \caption{沐曦 C500：官方基线与优化后总吞吐对比}
 \end{figure}
 
@@ -169,9 +178,9 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在核集内（含直方图粒度 slack），与原实现的 TV 距离处于纯采样噪声区间。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.80\textwidth]{fig2_sampler.pdf}
+\includegraphics[width=\linewidth]{fig2_sampler.pdf}
 \caption{采样全链单步耗时（对数坐标）}
 \end{figure}
 
@@ -181,9 +190,9 @@ MACA Triton 的 \texttt{mm\_kernel} 只支持 nn 布局，且在 prefill 大 M �
 \subsection{消除 prefill 每层 DtoH 同步（opt10）}
 prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层每步执行 \path{prefill_seq_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.90\textwidth]{fig3_c500_ladder.pdf}
+\includegraphics[width=\linewidth]{fig3_c500_ladder.pdf}
 \caption{C500 4k 场景优化阶梯（total tokens/s）}
 \end{figure}
 
@@ -194,9 +203,9 @@ iluvatar 后端缺少 flash\_attn 包时，attention 落到 vLLM 通用 Triton �
 \subsection{decode unified-attention 发射配置重构（A7）}
 stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据中心的甜点配置，在 BI-V150 上系统性失配：软件流水线在每个 warp 档上都是负收益，warps 越少越好。离线扫描 3D 主内核与 reduce\_segments 全链路后，仅对 3D flash-decoding 路径固定为 w1 s1（TILE=16／SEG=16 经扫描本已最优），输出与 stock bit-exact（max\_diff=0.0）。这一项同时说明，配置维度是独立于算法维度的优化空间。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.80\textwidth]{fig7_a7_config.pdf}
+\includegraphics[width=\linewidth]{fig7_a7_config.pdf}
 \caption{A7 发射配置重构带来的端到端吞吐提升}
 \end{figure}
 
@@ -205,23 +214,23 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 
 据此重写内核（算子位于 \texttt{FlagGems/fused/paged\_decode\_attention.py}，插件侧为薄封装与派发）：一个 CTA＝1 warp＝一个（seq, kv\_head, 段），使布局转换留在 warp 内；BLOCK\_N=16，p tile 不超过一个 MMA 形状；base-2 在线 softmax，scale 预折 $\log_2(e)$ 走 MUFU；主循环不加 mask，仅 ragged 尾部单独一个带 mask 的 block；段数固定、段长由 device 端 seq\_lens 现算（CUDA-graph 安全），段缓存 slab 在 \texttt{apply()} 即捕获前一次性预分配；段边界按整页对齐，进一步消去逐 token 除模与向量页 gather。混合步中的 decode 行也通过 \texttt{try\_fast\_decode} 进入同一内核。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig6_decode_breakdown.pdf}
+\includegraphics[width=\linewidth]{fig6_decode_breakdown.pdf}
 \caption{stock 3D decode 内核的耗时分解：瓶颈在 PV 的 MMA 布局转换}
 \end{figure}
 
 内核级结果为 1.04 $\rightarrow$ 0.72 ms/层（ragged 长度下 0.90 $\rightarrow$ 0.66 ms），输出与 stock 的 max$|$diff$|$ 为 $2.4\times10^{-4}$（ragged 为 $9.8\times10^{-4}$）。同日交错 A/B：4k 由 2239.43 提升至 2606.56 tok/s（+16.4\%），16k 由 2956.59 提升至 3541.34 tok/s（+19.8\%）。精度 MATH-500 Level 3 四次复核为 96.2\%／97.1\%／98.1\%／97.1\%，均达标。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.80\textwidth]{fig4_decode_bw.pdf}
+\includegraphics[width=\linewidth]{fig4_decode_bw.pdf}
 \caption{decode attention 有效带宽对比（kv=4096，B=64）}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig5_iluvatar_ab.pdf}
+\includegraphics[width=\linewidth]{fig5_iluvatar_ab.pdf}
 \caption{天数 BI-V150：A20 同日交错 A/B 结果}
 \end{figure}
 
@@ -244,10 +253,10 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3} 是面向 NVIDIA 数据
 \section{阴性结果与探索覆盖度}
 下列方案均经过实测后被否决，未进入提交代码。保留它们是为了说明探索的边界，也便于评审复核“为什么停在这里”。
 
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering\small
 \caption{主要被否决方案及其证据}
-\begin{tabular}{@{}p{4.3cm}p{3.4cm}p{6.4cm}@{}}
+\begin{tabularx}{\linewidth}{@{}p{5.2cm}p{3.2cm}Y@{}}
 \toprule
 方案 & 隔离/理论收益 & 端到端结果与结论 \\
 \midrule
@@ -266,17 +275,17 @@ A26：shape-aware NSEG 分派 & 小 batch 有 3–7.4\% & 官方 c64 下 NSEG=32
 C500 num\_splits 调优 & 微基准 3 倍差异 & 冷缓存实测 10894／10953 vs 基线 11104，无收益\\
 图内 CUDA event 计时 & — & invalid resource handle，本栈不支持\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 其中 A22／A27 值得单独说明：最初以 0.77$\times$ 否决 W8，是因为量化被拆成 abs／max／float／quant 四个 launch，且基线误用了不含 SwiGLU 的裸 GEMM。修正为单核 per-token 量化加融合 dequant-silu 后，隔离测量确为 1.82$\times$；但接入真实引擎后端到端 −19\%。这说明在本卡上，微基准只能用于筛掉明显更差的设计，不能用于预测端到端收益——同一层连调百次的“热权重”与 42 层轮转的“冷权重”是两种工况。
 
 \section{合规对照与复现指南}
 \subsection{合规对照}
-\begin{table}[h]
+\begin{table}[!htbp]
 \centering\small
 \caption{赛题约束与本提交做法}
-\begin{tabular}{@{}p{4.2cm}p{10cm}@{}}
+\begin{tabularx}{\linewidth}{@{}p{4.0cm}Y@{}}
 \toprule
 约束 & 本提交做法 \\
 \midrule
@@ -288,7 +297,7 @@ C500 num\_splits 调优 & 微基准 3 倍差异 & 冷缓存实测 10894／10953 
 精度 $\geq 0.95$ & MATH-500 Level 3：C500 97.14\%–98.1\%，BI-V150 96.2\%–98.1\%\\
 TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 17902 ms\\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{复现步骤}
@@ -372,36 +381,41 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \section{内核形状扫描与测量可靠性}
 本附录给出两类支撑材料：其一为 paged decode attention 内核在 NSEG $\times$ 并发度上的实测分布（来源：\texttt{docs/experiments/a26/a26\_sweep.log}，20 次重复取均值）；其二为官方 benchmark 连续 4 次 run 的吞吐波动（来源：\texttt{docs/baselines/metax-c500/raw\_runs\_baseline.csv}）。前者说明当前配置为何是甜点，后者说明测量口径的离散程度。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig10_nseg_heatmap_16k.pdf}
-\caption{NSEG $\times$ 并发度的耗时分布（kv=16384，ms/层）}
+\begin{minipage}[b]{0.495\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{fig10_nseg_heatmap_16k.pdf}
+  \subcaption{单层耗时（ms/层）}
+\end{minipage}\hfill
+\begin{minipage}[b]{0.495\linewidth}
+  \centering
+  \includegraphics[width=\linewidth]{fig11_nseg_bw_16k.pdf}
+  \subcaption{有效带宽（GB/s）}
+\end{minipage}
+\caption{NSEG $\times$ 并发度的实测分布（kv=16384）：红框为各自最优格}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.86\textwidth]{fig11_nseg_bw_16k.pdf}
-\caption{NSEG $\times$ 并发度的有效带宽分布（kv=16384，GB/s）}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.86\textwidth]{fig10b_nseg_heatmap_4k.pdf}
-\caption{NSEG $\times$ 并发度的耗时分布（kv=4096，ms/层）}
+\includegraphics[width=\linewidth]{fig10b_nseg_heatmap_4k.pdf}
+\caption{4k 场景下 NSEG $\times$ 并发度的单层耗时分布（kv=4096，ms/层）}
 \end{figure}
 
 三张热力图显示：在官方 c64 形状下，NSEG=32 恰为带宽最优点（515 GB/s，约为该卡理论带宽的 88\%），继续增大 NSEG 反而因归并开销退化；小 batch 虽可通过调整 NSEG 获得 3\%–7.4\% 的收益，但官方两个用例均为 c64，因此未实现 shape-aware 分派（对应第 7 节 A26）。
 
-\begin{figure}[h]
+\begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.90\textwidth]{fig12_decode_evolution.pdf}
+\includegraphics[width=\linewidth]{fig12_decode_evolution.pdf}
 \caption{decode attention 从 stock 到自研内核的带宽演进}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 \centering
-\includegraphics[width=0.90\textwidth]{fig13_run_variance.pdf}
+\includegraphics[width=\linewidth]{fig13_run_variance.pdf}
 \caption{官方 benchmark 连续 4 次 run 的吞吐波动：4k 需取均值，16k 极稳}
 \end{figure}
+
+由此确定报告口径：4k 场景取 4 次 run 的均值，16k 场景因极差仅 0.3\% 采用单次测量；所有优化项的收益一律以同日交错 A/B 给出，不用跨日绝对值，从而把时段漂移从结论中剔除。
 
 \end{document}
