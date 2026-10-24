@@ -57,3 +57,9 @@
 ## 最终取舍
 
 A29 不进入交付分支。若未来继续研究，应先用生产形状下的 host 侧分段计时定位 `unified_attention_with_output` 附近的额外开销，而不是直接采用上游实现。完整汇总见 `a29-kernel-summary.txt`、`a29-profile-decode.log`、`profiler_out_0.txt`；大体积 trace 文件保留在实验实例上，未复制进文档仓库。
+
+## host 函数级补充
+
+对相同 8 请求的 `python_function` trace 进一步核对：`_run_common_attention_metadata` 在 A29 中总计约 **65.9 µs**，`_build_attention_metadata` 由 226.77 ms 增至 230.76 ms（+1.76%），`execute_model` 由 4.929 s 增至 5.017 s（+1.77%）。主要 `flash_fwd_splitkv` 与 GEMM kernel 总时长则几乎不变。`synchronize_input_prep` 的等待时间有所增加，但它不是 metadata kernel 本身，且现有数据不足以支持一个无风险的局部修复。
+
+因此，A29 的最终判断是：**功能已验证，端到端负收益已确认，但没有证据支持把 replay 或某个公共 metadata kernel 当成唯一根因，也不支持为了上游形式而强行合入。** 实验分支和指针类型修复保留作后续定位用。

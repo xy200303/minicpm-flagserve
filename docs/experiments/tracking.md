@@ -618,4 +618,5 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 官方 4k 对照：关闭新路径 **12505.67**，开启新路径 **12024.01 tok/s**（−3.85%）；TTFT 1745.80→2305.95 ms（+32.09%），启动 114→119 s。
 - 结论：功能兼容但端到端负收益，**不并入 integration**。文档 `a29-common-attention-metadata.md`，原始工件 `runs/a29-common-attention-metadata/`。
 - 补充开销分解：decode 微基准原始/eager/replay 中位数为 **0.0870/0.0655/0.0449 ms**；强制 no-replay 后 4k 为 **12028.50 tok/s**，与 replay 的 12024.01 同档。8 请求 trace 的 kernel 总时长基线/A29 为 **3312.37/3310.99 ms**，未见 metadata kernel 级瓶颈，故 replay 不是根因，最终仍不采用。
+- host 函数级 trace：`_run_common_attention_metadata` 仅 **65.9 µs**；`_build_attention_metadata` +1.76%，`execute_model` +1.77%，主要 kernel 总时长几乎不变。未发现可安全修复的单点，A29 仍不进入交付分支。
 
