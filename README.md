@@ -6,32 +6,26 @@
 
 FlagOS 开放计算全球大赛 S2 · 赛道二（MiniCPM5-2B 推理吞吐优化）· 队伍 XLANG2026（邓乾 @xy200303）
 
-容器可能随时销毁，本仓库是代码的唯一持久备份。**所有在评测机上产生的改动必须当天推上来。**
+容器可能随时销毁，代码和实验记录必须当天推送持久化。源码现在维护在两个独立的上游 fork 中；本仓库只负责报告、实验台账和复现工具。
 
-## 分支布局
+## 仓库与分支布局
 
-官方上游是两个独立项目：`flagos-ai/vllm-plugin-FL` 与 `flagos-ai/FlagGems`。
-本仓库是它们的工作镜像与实验记录仓库，分支按“集成 / 基线 / 归档 / 文档”分层：
+| 仓库 | 用途 | 主要分支 |
+|---|---|---|
+| [xy200303/vllm-plugin-FL](https://github.com/xy200303/vllm-plugin-FL) | `flagos-ai/vllm-plugin-FL` 的正式 fork，插件与双平台集成开发 | `integration/vllm-plugin-fl`（当前交付）；`baseline/vllm-plugin-fl-flagos-2026-s2`（官方基线）；`archive/*`（历史开发线） |
+| [xy200303/FlagGems](https://github.com/xy200303/FlagGems) | `flagos-ai/FlagGems` 的正式 fork，采样、GEMM、A20 等算子开发 | `integration/flaggems`（当前交付）；`baseline/flaggems-v5.3.5`（官方基线）；`archive/*`（历史开发线） |
+| [xy200303/minicpm-flagserve](https://github.com/xy200303/minicpm-flagserve) | 报告、实验台账、复现文档和工具 | `main` |
 
-| 分支 | 内容 |
-|---|---|
-| `integration/vllm-plugin-fl` | **当前插件集成分支**：C500 opt1–opt11、BI-V150 A1–A7、A20；后续实验从这里开 `exp/<编号>-<简述>` |
-| `integration/flaggems` | **当前算子集成分支**：采样、GEMM、A20 paged decode attention；与插件分支配套开发 |
-| `baseline/vllm-plugin-fl-flagos-2026-s2` | 推理框架插件官方基线（上游 `flagos-2026-s2`，13eb9be） |
-| `baseline/flaggems-v5.3.5` | 算子库官方基线（上游 `v5.3.5`，a7620cc） |
-| `archive/vllm-plugin-fl-c500-dev` | 历史 C500 插件开发线，不再继续写入 |
-| `archive/vllm-plugin-fl-iluvatar-a1-a7` | 历史天数 A1–A7 开发线，不再继续写入 |
-| `archive/flaggems-c500-dev` | 历史算子开发线，不再继续写入 |
-| `main` | 报告、实验台账与复现文档，不承担运行时代码 |
+后续实验从两个 `integration/*` 分支分别创建 `exp/<编号>-<简述>`，验证通过后回合；基线分支只用于 A/B，归档分支不再继续写入。两个 fork 均可直接向上游提交 PR。
 
 ## 评测机上恢复环境
 
 ```bash
 cd /workspace
 git clone --single-branch --branch integration/vllm-plugin-fl \
-  https://github.com/xy200303/minicpm-flagserve.git vllm-plugin-FL
+  https://github.com/xy200303/vllm-plugin-FL.git vllm-plugin-FL
 git clone --single-branch --branch integration/flaggems \
-  https://github.com/xy200303/minicpm-flagserve.git FlagGems
+  https://github.com/xy200303/FlagGems.git FlagGems
 # 基线分支用于 A/B；安装：pip install --no-build-isolation -e .
 ```
 

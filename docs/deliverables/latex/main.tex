@@ -77,7 +77,7 @@
 
 性能方面，沐曦 C500 平台 4k 场景总吞吐达到 11868.79–12403.21 tok/s，为官方基线的 2.33–2.44 倍；16k 场景达到 11098.02–11167.87 tok/s，为基线的 1.58–1.59 倍。天数 BI-V150 平台 4k 场景由官网基线 2028.01 提升至 2606.56 tok/s（+28.5\%），16k 场景由 915.15 提升至 3541.34 tok/s（+287\%）；其中 A20 自研内核在同日交错 A/B 下，相对当日 stock 再提升 16.4\% 与 19.8\%。精度方面，MATH-500 Level 3 保持在 96.2\%–98.1\%，高于 95\% 的赛题要求；TTFT 在各场景均未回退。
 
-主要技术贡献包括：（1）面向国产芯片的 shape-aware 分派方法论；（2）免排序的 top-p 采样链，用 1024-bin 质量直方图替代全词表排序，保留集质量有下界保证；（3）自研 paged decode attention 内核，从 PV 矩阵乘的累加器布局转换这一具体瓶颈出发，使 decode attention 带宽由 258 GB/s 提升到 372 GB/s；（4）一套可复核的“微基准—当日交错 A/B—官方口径验收”测量闭环，并给出全部被否决方案的实证与原因。
+主要技术贡献包括：（1）面向国产芯片的 shape-aware 分派方法论；（2）免排序的 top-p 采样链，用 1024-bin 质量直方图替代全词表排序，保留集质量有下界保证；（3）自研 paged decode attention 内核，从 PV 矩阵乘的累加器布局转换这一具体瓶颈出发，使 decode attention 带宽由 258 GB/s 提升到 372 GB/s；（4）一套可复核的“微基准—当日交错 A/B—官方口径验收”测量闭环，并给出全部被否决方案的实证与原因；（5）算子族级的热路径构成剖析与四项硬约束的达标裕度矩阵，把“快了”与“没有偷工减料”放在同一组图里交代清楚。
 
 \noindent\textbf{关键词：}国产芯片；推理吞吐；算子融合；paged decode attention；shape-aware dispatch；vLLM
 \end{abstract}
@@ -141,6 +141,15 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 精度方面，C500 的 MATH-500 Level 3 为 97.14\%–98.1\%，天数 BI-V150 为 96.2\%–98.1\%，均高于 95\% 的要求。C500 的 4k TTFT 为 2965 ms（基线 3199 ms），16k TTFT 为 17902 ms（基线 27197 ms）；天数 A20 的 16k TTFT 由 155.5 s 降至 130.1 s。
 
+\subsection{四项硬约束的达标裕度}
+把“是否达标”当作一次带门槛的分类，可以更直接地看出收益是靠优化换来的还是靠松动约束换来的。图 2 把四条门槛归一成“相对门槛的裕度”：吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的相对提升（95\% 门槛与 96.2\% 实测之差为 +1.3\%）。八个格全部为正：C500 侧为 +144\%／+58.9\%／+2.3\%／+34.2\%，BI-V150 侧为 +28.5\%／+287\%／+1.3\%／+16.3\%。最小裕度出现在 BI-V150 的精度（1.3\%），最大裕度在 BI-V150 的 16k 吞吐（+287\%）。换言之，本提交在两个平台、四个约束上都没有“贴着线过”，精度与延迟没有被当作换取吞吐的筹码。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.495\linewidth]{fig15_compliance.pdf}
+\caption{四项硬约束的达标裕度（相对各自门槛的百分比，颜色取 $\log_{10}$）}
+\end{figure}
+
 \begin{figure}[!htbp]
 \centering
 \begin{minipage}[b]{0.495\linewidth}
@@ -172,6 +181,14 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \section{沐曦 C500：采样链、GEMM 路由与 host 同步消除}
 \subsection{瓶颈画像}
 初始 profile 显示，C500 的 decode 阶段存在三类互相独立的开销：采样尾部是纯 eager PyTorch（bf16$\rightarrow$fp32 cast、除温度、对 130560 词表排序取 top-p、gumbel-argmax），每步约 12 ms 且全在 host 串行；GEMM 存在布局与路由失配，vendor 高性能实现从 Python 侧不可达；prefill 每层还有隐式 DtoH 同步，造成 GPU 空闲。
+
+这些话在算子层面才有说服力。图 3 把同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）：采样族占内核时间的 38.8\%（14.61 s），是最大的单项，其内部由全词表排序、全局直方图与 argmax 三个大 kernel 构成；融合后降到 5.1\%（1.24 s，净省 13.37 s）。与之对照，GEMM 与 attention 的绝对时间几乎不动（13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s），占比却分别升到 56.9\% 与 29.8\%——不是因为它们变慢了，而是总量被砍掉了三分之一。这张图同时解释了后续优化的顺序：opt2／opt8 去吃 GEMM，opt9／A20 去吃 attention，而不是继续在采样上打转。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig14_op_hotpath.pdf}
+\caption{C500 热路径的算子族构成：融合采样链前后，按内核时间占比（右列为绝对时间变化）}
+\end{figure}
 
 \subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
 自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，保留集质量恒不小于 $p\cdot Z$，完全替代全词表排序；其三，词表维 split-parallel（32 splits $\times$ BLOCK 4096），使小 batch 也能打满芯片。采样全链由约 12.4 ms 降至 0.31 ms/步。
@@ -374,7 +391,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 \appendix
 \section{代码与实验记录索引}
-代码分支：\texttt{vllm-plugin-FL/dev}（C500 opt1–opt11，至 f4971e7e）；\path{vllm-plugin-FL/iluvatar-vendor-fa}（天数 A1–A7）与 A20 自研 decode 内核及混合步 hook；\texttt{FlagGems/dev}（采样融合内核、GEMM pin、paged\_decode\_attention，至 5eac6b39）。以上分支均推送至 \path{github.com/xy200303/minicpm-flagserve}。
+代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（C500 opt1–opt11、天数 A1–A7 与 A20，至 0207b7e1）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（采样融合内核、GEMM、paged\_decode\_attention，至 dd574fdd）。两者均为对应上游项目的正式 fork；历史开发线归档于 \texttt{archive/*}，官方基线保留于 \texttt{baseline/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
 
 实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录、2026-10-23/24 复核与验证）、\path{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（A10–A27 的探针、台账 \texttt{tracking.md}、\texttt{runs/} 原始数据与证据）。所有候选方案的配置、serve 日志、benchmark CSV、机器状态与结论均可按目录复核。
 

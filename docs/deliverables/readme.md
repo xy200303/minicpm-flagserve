@@ -10,18 +10,18 @@
 
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
-| `vllm-plugin-FL/` | `xy200303/minicpm-flagserve` 的 `integration/vllm-plugin-fl` | `0207b7e1` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
-| `FlagGems/` | 同仓库的 `integration/flaggems` | `dd574fdd` | C500 采样/GEMM 算子与 BI-V150 A20 paged decode attention |
+| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `0207b7e1` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
+| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `dd574fdd` | C500 采样/GEMM 算子与 BI-V150 A20 paged decode attention |
 
-这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`main` 只保存报告、实验台账与复现文档，不承担运行时代码。
+这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`xy200303/minicpm-flagserve` 的 `main` 只保存报告、实验台账与复现文档，不承担运行时代码。两个源码仓库均为对应上游项目的正式 fork，后续可直接向上游提交 PR。
 
 复核或重新打包可使用（完整历史，不使用 `--depth 1`）：
 
 ```bash
 git clone --single-branch --branch integration/vllm-plugin-fl \
-  https://github.com/xy200303/minicpm-flagserve.git vllm-plugin-FL
+  https://github.com/xy200303/vllm-plugin-FL.git vllm-plugin-FL
 git clone --single-branch --branch integration/flaggems \
-  https://github.com/xy200303/minicpm-flagserve.git FlagGems
+  https://github.com/xy200303/FlagGems.git FlagGems
 # 打包时保留两个目录下的 .git；只剔除本机 build、__pycache__ 和虚拟环境
 ```
 

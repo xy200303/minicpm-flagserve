@@ -1,19 +1,35 @@
 #!/bin/bash
-# Build the submission package: XLANG2026.zip
-#   XLANG2026/vllm-plugin-FL/   (repo@84abed0 + A20, committed)
-#   XLANG2026/FlagGems/         (v5.3.5 + fused/paged_decode_attention.py, committed)
+# Build XLANG2026.zip from two already-cloned, verified repositories.
+#   XLANG2026/vllm-plugin-FL/  (integration/vllm-plugin-fl, with .git history)
+#   XLANG2026/FlagGems/         (integration/flaggems, with .git history)
 #   XLANG2026/readme.md
 #   XLANG2026/report.pdf
 #
-# Run on the dev instance:  bash tools/pack_submission.sh
+# Usage on the dev instance: bash tools/pack_submission.sh [/workspace] [/tmp/pkg]
 set -eu
 ROOT=${1:-/workspace}
 OUT=${2:-/tmp/pkg}
 
+for repo in vllm-plugin-FL FlagGems; do
+    test -d "$ROOT/$repo/.git"
+    printf '%s: ' "$repo"
+    git -C "$ROOT/$repo" log -1 --oneline
+done
+for required in \
+    vllm-plugin-FL/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py \
+    vllm-plugin-FL/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py \
+    FlagGems/src/flag_gems/fused/paged_decode_attention.py \
+    FlagGems/src/flag_gems/fused/top_p_sample.py; do
+    test -f "$ROOT/$required"
+done
+
+test -f "$ROOT/pkg_readme.md"
+test -f "$ROOT/pkg_report.pdf"
 rm -rf "$OUT"
 mkdir -p "$OUT/XLANG2026"
+# Keep .git: reviewers can inspect the development history inside the zip.
 tar -C "$ROOT" -cf - \
-    --exclude=.git --exclude=build --exclude='*.egg-info' \
+    --exclude=build --exclude='*.egg-info' \
     --exclude=__pycache__ --exclude='*.pyc' \
     vllm-plugin-FL FlagGems | tar -C "$OUT/XLANG2026" -xf -
 cp "$ROOT/pkg_readme.md" "$OUT/XLANG2026/readme.md"
@@ -24,7 +40,7 @@ import os, sys, zipfile
 out_dir = sys.argv[1]
 root = os.path.join(out_dir, "XLANG2026")
 zip_path = os.path.join(out_dir, "XLANG2026.zip")
-skip_dirs = {".git", "build", "__pycache__", ".pytest_cache"}
+skip_dirs = {"build", "__pycache__", ".pytest_cache"}
 n = 0
 with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
     for dirpath, dirnames, filenames in os.walk(root):
