@@ -1,0 +1,4 @@
+Successful requests:                     256       
+Total token throughput (tok/s):          11868.79  
+Mean TTFT (ms):                          2965.17   
+Mean TPOT (ms):                          23.86     
