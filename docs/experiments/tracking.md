@@ -605,3 +605,16 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 今天为快速迭代频繁 `pkill -9`，残留的 CUDA 上下文让 28.5 GB 显存变成"幽灵占用"
 （`ixsmi` 进程表为空但 `memory.used` 不降），容器内 `ixsmi -r` 无法复位（缺 `/dev/corex*`），
 只能重启实例。**后续统一用 SIGTERM + 等待优雅退出**，本次收尾已按此方式执行并确认回落到 210 MiB。
+
+### A28（2026-10-24，否决）：上游 #552 CachedOp 预热
+
+- 分支 `exp/a28-cachedop-prewarm`（至 `25f64e2`），单测 **5 passed**。
+- 官方 4k 同日冷启动 A/B 中位数：基线 **12475.75**、A28 **12466.30 tok/s**（−0.08%）；TTFT 1772.50→1773.96 ms（+0.08%）；启动 113.5→114.0 s。
+- 结论：可运行但无稳态或启动收益，**不并入 integration**。文档 `a28-cachedop-prewarm.md`，原始工件 `runs/a28-cachedop-prewarm/`。
+
+### A29（2026-10-24，否决）：上游 #442 common attention metadata graph
+
+- 分支 `exp/a29-common-attn-metadata`（至 `e1e9f4f`）。MetaX 的 `tl.pointer_type(elem_dtype)` 编译失败，改为显式 i32/i64 指针加载后，metadata 单测 **4 passed**、图测试 **7 passed**。
+- 官方 4k 对照：关闭新路径 **12505.67**，开启新路径 **12024.01 tok/s**（−3.85%）；TTFT 1745.80→2305.95 ms（+32.09%），启动 114→119 s。
+- 结论：功能兼容但端到端负收益，**不并入 integration**。文档 `a29-common-attention-metadata.md`，原始工件 `runs/a29-common-attention-metadata/`。
+

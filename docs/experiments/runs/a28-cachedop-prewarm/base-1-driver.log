@@ -1,0 +1,40 @@
+startup_seconds=115
+Terminated
+benchmark_rc=143
+ 88%|████████▊ | 225/256 [01:44<00:02, 11.45it/s]
+ 90%|████████▉ | 230/256 [01:44<00:01, 15.53it/s]
+ 92%|█████████▏| 235/256 [01:44<00:01, 19.97it/s]
+ 94%|█████████▍| 240/256 [01:44<00:00, 23.49it/s]
+ 95%|█████████▌| 244/256 [01:44<00:00, 26.07it/s]
+ 97%|█████████▋| 248/256 [01:44<00:00, 28.70it/s]
+ 98%|█████████▊| 252/256 [01:44<00:00, 31.17it/s]
+100%|██████████| 256/256 [01:45<00:00, 30.88it/s]
+100%|██████████| 256/256 [01:45<00:00,  2.44it/s]
+tip: install termplotlib and gnuplot to plot the metrics
+============ Serving Benchmark Result ============
+Successful requests:                     256       
+Failed requests:                         0         
+Maximum request concurrency:             64        
+Benchmark duration (s):                  105.12    
+Total input tokens:                      1048576   
+Total generated tokens:                  262144    
+Request throughput (req/s):              2.44      
+Output token throughput (tok/s):         2493.76   
+Peak output token throughput (tok/s):    4024.00   
+Peak concurrent requests:                71.00     
+Total token throughput (tok/s):          12468.78  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1770.31   
+Median TTFT (ms):                        493.14    
+P99 TTFT (ms):                           10167.59  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          23.73     
+Median TPOT (ms):                        24.79     
+P99 TPOT (ms):                           24.87     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           23.73     
+Median ITL (ms):                         16.93     
+P99 ITL (ms):                            91.14     
+==================================================
+/workspace/run_a28.sh: line 35: unexpected EOF while looking for matching `"'
+/workspace/run_a28.sh: line 36: syntax error: unexpected end of file

@@ -1,0 +1,37 @@
+startup_seconds=113
+benchmark_rc=124
+ 88%|████████▊ | 226/256 [01:44<00:02, 11.52it/s]
+ 90%|█████████ | 231/256 [01:44<00:01, 15.68it/s]
+ 92%|█████████▏| 236/256 [01:44<00:00, 20.16it/s]
+ 94%|█████████▍| 240/256 [01:44<00:00, 22.90it/s]
+ 95%|█████████▌| 244/256 [01:44<00:00, 25.59it/s]
+ 97%|█████████▋| 248/256 [01:44<00:00, 28.46it/s]
+ 98%|█████████▊| 252/256 [01:44<00:00, 30.92it/s]
+100%|██████████| 256/256 [01:45<00:00, 30.64it/s]
+100%|██████████| 256/256 [01:45<00:00,  2.44it/s]
+tip: install termplotlib and gnuplot to plot the metrics
+============ Serving Benchmark Result ============
+Successful requests:                     256       
+Failed requests:                         0         
+Maximum request concurrency:             64        
+Benchmark duration (s):                  105.04    
+Total input tokens:                      1048576   
+Total generated tokens:                  262144    
+Request throughput (req/s):              2.44      
+Output token throughput (tok/s):         2495.76   
+Peak output token throughput (tok/s):    3968.00   
+Peak concurrent requests:                71.00     
+Total token throughput (tok/s):          12478.80  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1762.47   
+Median TTFT (ms):                        492.64    
+P99 TTFT (ms):                           10133.26  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          23.72     
+Median TPOT (ms):                        24.77     
+P99 TPOT (ms):                           24.86     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           23.72     
+Median ITL (ms):                         16.92     
+P99 ITL (ms):                            91.20     
+==================================================

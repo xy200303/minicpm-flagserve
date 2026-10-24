@@ -1,0 +1,305 @@
+
+RUNS=4
+SKIP_FIRST=1
+MODEL=/workspace/MiniCPM5-2B
+SERVED_MODEL_NAME=minicpm
+PORT=9031
+ENABLE_ALL=False
+TOTAL_CASES=1
+TEST_CASES=[(4096, 1024, 64, 256)]
+
+================================================================================
+Running: 4096_1024_c64 | Run 1/4
+================================================================================
+vllm bench serve --backend vllm --model minicpm --tokenizer /workspace/MiniCPM5-2B --endpoint /v1/completions --host localhost --port 9031 --dataset-name random --ignore-eos --random-input-len 4096 --random-output-len 1024 --max-concurrency 64 --num-prompts 256
+
+INFO 10-24 17:54:53 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-24 17:54:53 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-24 17:54:53 [__init__.py:58] Loading plugin fl
+/opt/conda/lib/python3.12/site-packages/torch/library.py:381: UserWarning: Warning only once for all operators,  other operators may also be overridden.
+  Overriding a previously registered kernel for the same operator and the same dispatch key
+  operator: _C::cutlass_scaled_mm_supports_fp8(int cuda_device_capability) -> bool
+    registered at /tmp/build-via-sdist-_ouj1d45/mcoplib-0.4.5+maca3.7.0.37.torch2.8/op/vllm/torch_bindings.cpp:26
+  dispatch key: CompositeImplicitAutograd
+  previous kernel: registered at /tmp/build-via-sdist-_ouj1d45/mcoplib-0.4.5+maca3.7.0.37.torch2.8/op/vllm/torch_bindings.cpp:26
+       new kernel: registered at /dev/null:95 (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/core/dispatch/OperatorEntry.cpp:218.)
+  self.m.impl(
+INFO Print the version information of mcoplib during compilation.
+
+Version info:Mcoplib_Version = '0.4.5'
+Build_Maca_Version = '3.7.0.37'
+GIT_BRANCH = 'HEAD'
+GIT_COMMIT = 'a9125e4'
+Vllm Op Version = 0.20.0
+SGlang Op Version  = 0.5.10 
+
+INFO Staring Check the current MACA version of the operating environment.
+
+INFO: Release major.minor matching,  successful:3.7. 
+
+INFO 10-24 17:55:20 [__init__.py:237] Platform plugin fl is activated
+/opt/conda/lib/python3.12/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/opt/conda/lib/python3.12/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+[2026-10-24 17:55:26] [INFO] [vllm_fl.dispatch.backends.vendor.metax.patches.mcblas_mm] fl mcblas_mm: vendor mcBLAS GEMM binding registered
+WARNING 10-24 17:55:26 [import_utils.py:408] Module deep_ep was found but failed to import
+WARNING 10-24 17:55:26 [import_utils.py:408] Traceback (most recent call last):
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/vllm/utils/import_utils.py", line 406, in _has_module
+WARNING 10-24 17:55:26 [import_utils.py:408]     importlib.import_module(module_name)
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "/opt/conda/lib/python3.12/importlib/__init__.py", line 90, in import_module
+WARNING 10-24 17:55:26 [import_utils.py:408]     return _bootstrap._gcd_import(name[level:], package, level)
+WARNING 10-24 17:55:26 [import_utils.py:408]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/deep_ep/__init__.py", line 3, in <module>
+WARNING 10-24 17:55:26 [import_utils.py:408]     from .utils import EventOverlap
+WARNING 10-24 17:55:26 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/deep_ep/utils.py", line 5, in <module>
+WARNING 10-24 17:55:26 [import_utils.py:408]     from deep_ep_cpp import Config, EventHandle
+WARNING 10-24 17:55:26 [import_utils.py:408] ImportError: libmpi.so.40: cannot open shared object file: No such file or directory
+Namespace(subparser='bench', bench_type='serve', dispatch_function=<function BenchmarkServingSubcommand.cmd at 0x7f24c9f12e80>, trust_remote_code=False, seed=0, num_prompts=256, dataset_name='random', no_stream=False, dataset_path=None, no_oversample=False, skip_chat_template=False, enable_multimodal_chat=False, disable_shuffle=False, custom_output_len=256, custom_ensure_client_side_data=False, spec_bench_output_len=256, spec_bench_category=None, sonnet_input_len=550, sonnet_output_len=150, sonnet_prefix_len=200, sharegpt_output_len=None, timed_trace_chunk_hash_size=16, timed_trace_sec_multiplier=1, timed_trace_label_timestamp='timestamp', timed_trace_label_input_length='input_length', timed_trace_label_output_length='output_length', timed_trace_label_hash_ids='hash_ids', blazedit_min_distance=0.0, blazedit_max_distance=1.0, asr_max_audio_len_sec=inf, asr_min_audio_len_sec=0.0, random_input_len=4096, random_output_len=1024, random_range_ratio='0.0', random_prefix_len=0, random_batch_size=1, no_reranker=False, random_mm_base_items_per_request=1, random_mm_num_mm_items_range_ratio=0.0, random_mm_limit_mm_per_prompt={'image': 255, 'video': 1}, random_mm_bucket_config={(256, 256, 1): 0.5, (720, 1280, 1): 0.5, (720, 1280, 16): 0.0}, hf_subset=None, hf_split=None, hf_name=None, hf_output_len=None, bfcl_categories=None, prefix_repetition_prefix_len=256, prefix_repetition_suffix_len=256, prefix_repetition_num_prefixes=10, prefix_repetition_output_len=128, speed_bench_dataset_subset='qualitative', speed_bench_output_len=4096, speed_bench_category=None, label=None, backend='vllm', base_url=None, host='localhost', port=9031, endpoint='/v1/completions', header=None, max_concurrency=64, model='minicpm', input_len=None, output_len=None, tokenizer='/workspace/MiniCPM5-2B', tokenizer_mode='auto', use_beam_search=False, logprobs=None, request_rate=inf, burstiness=1.0, disable_tqdm=False, num_warmups=0, profile=False, save_result=False, save_detailed=False, append_result=False, metadata=None, result_dir=None, result_filename=None, ignore_eos=True, self_timed=None, percentile_metrics=None, metric_percentiles='99', goodput=None, request_id_prefix='bench-40c99314-', top_p=None, top_k=None, min_p=None, temperature=None, frequency_penalty=None, presence_penalty=None, repetition_penalty=None, served_model_name=None, lora_modules=None, lora_assignment='random', ramp_up_strategy=None, ramp_up_start_rps=None, ramp_up_end_rps=None, ready_check_timeout_sec=0, chat_template_kwargs=None, extra_body=None, skip_tokenizer_init=False, insecure=False, plot_timeline=False, timeline_itl_thresholds='25,50', plot_dataset_stats=False)
+INFO 10-24 17:55:28 [utils.py:90] Sampling input_len from [4095, 4095] and output_len from [1024, 1024]
+WARNING: vllm bench serve no longer sets temperature==0 (greedy) in requests by default. The default will be determined on the server side and can be model/API specific. For the old behavior, include --temperature=0.
+Starting initial single prompt test run...
+Skipping endpoint ready check.
+Starting main benchmark run...
+Traffic request rate: inf
+Burstiness factor: 1.0 (Poisson process)
+Maximum request concurrency: 64
+
+  0%|          | 0/256 [00:00<?, ?it/s]
+  0%|          | 1/256 [00:25<1:49:13, 25.70s/it]
+  1%|          | 3/256 [00:25<28:21,  6.73s/it]  
+  2%|▏         | 5/256 [00:26<14:00,  3.35s/it]
+  2%|▏         | 6/256 [00:26<10:23,  2.49s/it]
+  3%|▎         | 7/256 [00:26<07:39,  1.85s/it]
+  3%|▎         | 8/256 [00:26<05:39,  1.37s/it]
+  4%|▎         | 9/256 [00:26<04:12,  1.02s/it]
+  4%|▍         | 10/256 [00:26<03:09,  1.30it/s]
+  4%|▍         | 11/256 [00:27<02:25,  1.69it/s]
+  5%|▍         | 12/256 [00:27<01:53,  2.15it/s]
+  5%|▌         | 13/256 [00:27<01:31,  2.66it/s]
+  5%|▌         | 14/256 [00:27<01:15,  3.19it/s]
+  6%|▌         | 15/256 [00:27<01:04,  3.72it/s]
+  6%|▋         | 16/256 [00:27<00:57,  4.21it/s]
+  7%|▋         | 17/256 [00:28<00:51,  4.62it/s]
+  7%|▋         | 18/256 [00:28<00:47,  4.97it/s]
+  7%|▋         | 19/256 [00:28<00:45,  5.25it/s]
+  8%|▊         | 20/256 [00:28<00:42,  5.55it/s]
+  8%|▊         | 21/256 [00:28<00:41,  5.73it/s]
+  9%|▊         | 22/256 [00:28<00:39,  5.87it/s]
+  9%|▉         | 23/256 [00:29<00:39,  5.95it/s]
+  9%|▉         | 24/256 [00:29<00:38,  6.00it/s]
+ 10%|▉         | 25/256 [00:29<00:37,  6.08it/s]
+ 10%|█         | 26/256 [00:29<00:37,  6.12it/s]
+ 11%|█         | 27/256 [00:29<00:37,  6.13it/s]
+ 11%|█         | 28/256 [00:29<00:37,  6.15it/s]
+ 11%|█▏        | 29/256 [00:30<00:36,  6.16it/s]
+ 12%|█▏        | 30/256 [00:30<00:36,  6.16it/s]
+ 12%|█▏        | 31/256 [00:30<00:36,  6.15it/s]
+ 12%|█▎        | 32/256 [00:30<00:36,  6.14it/s]
+ 13%|█▎        | 33/256 [00:30<00:36,  6.16it/s]
+ 13%|█▎        | 34/256 [00:30<00:36,  6.14it/s]
+ 14%|█▎        | 35/256 [00:31<00:36,  6.13it/s]
+ 14%|█▍        | 36/256 [00:31<00:36,  6.11it/s]
+ 14%|█▍        | 37/256 [00:31<00:35,  6.09it/s]
+ 15%|█▍        | 38/256 [00:31<00:35,  6.10it/s]
+ 15%|█▌        | 39/256 [00:31<00:35,  6.12it/s]
+ 16%|█▌        | 40/256 [00:31<00:35,  6.12it/s]
+ 16%|█▌        | 41/256 [00:32<00:35,  6.14it/s]
+ 16%|█▋        | 42/256 [00:32<00:34,  6.17it/s]
+ 17%|█▋        | 43/256 [00:32<00:34,  6.17it/s]
+ 17%|█▋        | 44/256 [00:32<00:34,  6.14it/s]
+ 18%|█▊        | 45/256 [00:32<00:34,  6.14it/s]
+ 18%|█▊        | 46/256 [00:32<00:38,  5.40it/s]
+ 18%|█▊        | 47/256 [00:33<00:37,  5.57it/s]
+ 19%|█▉        | 48/256 [00:33<00:36,  5.74it/s]
+ 19%|█▉        | 49/256 [00:33<00:35,  5.87it/s]
+ 20%|█▉        | 50/256 [00:33<00:34,  5.96it/s]
+ 20%|█▉        | 51/256 [00:33<00:34,  5.99it/s]
+ 20%|██        | 52/256 [00:33<00:33,  6.03it/s]
+ 21%|██        | 53/256 [00:34<00:33,  6.04it/s]
+ 21%|██        | 54/256 [00:34<00:33,  6.08it/s]
+ 21%|██▏       | 55/256 [00:34<00:32,  6.11it/s]
+ 22%|██▏       | 56/256 [00:34<00:32,  6.14it/s]
+ 22%|██▏       | 57/256 [00:34<00:32,  6.16it/s]
+ 23%|██▎       | 58/256 [00:34<00:32,  6.18it/s]
+ 23%|██▎       | 59/256 [00:35<00:31,  6.19it/s]
+ 23%|██▎       | 60/256 [00:35<00:31,  6.21it/s]
+ 24%|██▍       | 61/256 [00:35<00:31,  6.19it/s]
+ 24%|██▍       | 62/256 [00:35<00:31,  6.19it/s]
+ 25%|██▍       | 63/256 [00:35<00:31,  6.20it/s]
+ 25%|██▌       | 64/256 [00:35<00:31,  6.18it/s]
+ 25%|██▌       | 65/256 [00:51<15:19,  4.82s/it]
+ 26%|██▌       | 67/256 [00:51<08:15,  2.62s/it]
+ 27%|██▋       | 68/256 [00:51<06:18,  2.01s/it]
+ 27%|██▋       | 69/256 [00:51<04:46,  1.53s/it]
+ 27%|██▋       | 70/256 [00:52<03:35,  1.16s/it]
+ 28%|██▊       | 71/256 [00:52<02:42,  1.14it/s]
+ 28%|██▊       | 72/256 [00:52<02:04,  1.48it/s]
+ 29%|██▊       | 73/256 [00:52<01:36,  1.90it/s]
+ 29%|██▉       | 74/256 [00:52<01:16,  2.37it/s]
+ 29%|██▉       | 75/256 [00:52<01:02,  2.89it/s]
+ 30%|██▉       | 76/256 [00:53<00:52,  3.43it/s]
+ 30%|███       | 77/256 [00:53<00:45,  3.94it/s]
+ 30%|███       | 78/256 [00:53<00:40,  4.39it/s]
+ 31%|███       | 79/256 [00:53<00:36,  4.79it/s]
+ 31%|███▏      | 80/256 [00:53<00:34,  5.12it/s]
+ 32%|███▏      | 81/256 [00:54<00:36,  4.80it/s]
+ 32%|███▏      | 82/256 [00:54<00:33,  5.12it/s]
+ 32%|███▏      | 83/256 [00:54<00:32,  5.36it/s]
+ 33%|███▎      | 84/256 [00:54<00:30,  5.56it/s]
+ 33%|███▎      | 85/256 [00:54<00:29,  5.72it/s]
+ 34%|███▎      | 86/256 [00:54<00:29,  5.83it/s]
+ 34%|███▍      | 87/256 [00:55<00:28,  5.92it/s]
+ 34%|███▍      | 88/256 [00:55<00:28,  6.00it/s]
+ 35%|███▍      | 89/256 [00:55<00:27,  6.06it/s]
+ 35%|███▌      | 90/256 [00:55<00:27,  6.09it/s]
+ 36%|███▌      | 91/256 [00:55<00:27,  6.09it/s]
+ 36%|███▌      | 92/256 [00:55<00:26,  6.10it/s]
+ 36%|███▋      | 93/256 [00:55<00:26,  6.11it/s]
+ 37%|███▋      | 94/256 [00:56<00:26,  6.09it/s]
+ 37%|███▋      | 95/256 [00:56<00:26,  6.11it/s]
+ 38%|███▊      | 96/256 [00:56<00:26,  6.09it/s]
+ 38%|███▊      | 97/256 [00:56<00:29,  5.38it/s]
+ 38%|███▊      | 98/256 [00:56<00:28,  5.56it/s]
+ 39%|███▊      | 99/256 [00:57<00:27,  5.71it/s]
+ 39%|███▉      | 100/256 [00:57<00:26,  5.81it/s]
+ 39%|███▉      | 101/256 [00:57<00:26,  5.89it/s]
+ 40%|███▉      | 102/256 [00:57<00:25,  5.97it/s]
+ 40%|████      | 103/256 [00:57<00:25,  6.03it/s]
+ 41%|████      | 104/256 [00:57<00:25,  6.07it/s]
+ 41%|████      | 105/256 [00:58<00:24,  6.10it/s]
+ 41%|████▏     | 106/256 [00:58<00:24,  6.15it/s]
+ 42%|████▏     | 107/256 [00:58<00:24,  6.13it/s]
+ 42%|████▏     | 108/256 [00:58<00:24,  6.13it/s]
+ 43%|████▎     | 109/256 [00:58<00:23,  6.14it/s]
+ 43%|████▎     | 110/256 [00:58<00:23,  6.12it/s]
+ 43%|████▎     | 111/256 [00:59<00:23,  6.11it/s]
+ 44%|████▍     | 112/256 [00:59<00:23,  6.13it/s]
+ 44%|████▍     | 113/256 [00:59<00:23,  6.14it/s]
+ 45%|████▍     | 114/256 [00:59<00:26,  5.40it/s]
+ 45%|████▍     | 115/256 [00:59<00:25,  5.60it/s]
+ 45%|████▌     | 116/256 [00:59<00:24,  5.75it/s]
+ 46%|████▌     | 117/256 [01:00<00:23,  5.86it/s]
+ 46%|████▌     | 118/256 [01:00<00:23,  5.96it/s]
+ 46%|████▋     | 119/256 [01:00<00:22,  6.02it/s]
+ 47%|████▋     | 120/256 [01:00<00:22,  6.07it/s]
+ 47%|████▋     | 121/256 [01:00<00:22,  6.11it/s]
+ 48%|████▊     | 122/256 [01:00<00:21,  6.14it/s]
+ 48%|████▊     | 123/256 [01:01<00:21,  6.13it/s]
+ 48%|████▊     | 124/256 [01:01<00:21,  6.10it/s]
+ 49%|████▉     | 125/256 [01:01<00:21,  6.17it/s]
+ 49%|████▉     | 126/256 [01:01<00:21,  6.16it/s]
+ 50%|████▉     | 127/256 [01:01<00:20,  6.15it/s]
+ 50%|█████     | 128/256 [01:01<00:20,  6.17it/s]
+ 50%|█████     | 129/256 [01:17<10:05,  4.77s/it]
+ 51%|█████     | 131/256 [01:17<05:24,  2.60s/it]
+ 52%|█████▏    | 132/256 [01:17<04:07,  1.99s/it]
+ 52%|█████▏    | 133/256 [01:17<03:06,  1.52s/it]
+ 52%|█████▏    | 134/256 [01:17<02:20,  1.15s/it]
+ 53%|█████▎    | 135/256 [01:18<01:45,  1.15it/s]
+ 53%|█████▎    | 136/256 [01:18<01:20,  1.49it/s]
+ 54%|█████▎    | 137/256 [01:18<01:02,  1.91it/s]
+ 54%|█████▍    | 138/256 [01:18<00:49,  2.39it/s]
+ 54%|█████▍    | 139/256 [01:18<00:40,  2.91it/s]
+ 55%|█████▍    | 140/256 [01:18<00:33,  3.45it/s]
+ 55%|█████▌    | 141/256 [01:19<00:29,  3.95it/s]
+ 55%|█████▌    | 142/256 [01:19<00:25,  4.41it/s]
+ 56%|█████▌    | 143/256 [01:19<00:23,  4.78it/s]
+ 56%|█████▋    | 144/256 [01:19<00:21,  5.13it/s]
+ 57%|█████▋    | 145/256 [01:19<00:23,  4.81it/s]
+ 57%|█████▋    | 146/256 [01:20<00:21,  5.12it/s]
+ 57%|█████▋    | 147/256 [01:20<00:20,  5.36it/s]
+ 58%|█████▊    | 148/256 [01:20<00:19,  5.56it/s]
+ 58%|█████▊    | 149/256 [01:20<00:18,  5.73it/s]
+ 59%|█████▊    | 150/256 [01:20<00:18,  5.84it/s]
+ 59%|█████▉    | 151/256 [01:20<00:17,  5.93it/s]
+ 59%|█████▉    | 152/256 [01:21<00:17,  6.00it/s]
+ 60%|█████▉    | 153/256 [01:21<00:17,  6.05it/s]
+ 60%|██████    | 154/256 [01:21<00:16,  6.07it/s]
+ 61%|██████    | 155/256 [01:21<00:16,  6.09it/s]
+ 61%|██████    | 156/256 [01:21<00:16,  6.10it/s]
+ 61%|██████▏   | 157/256 [01:21<00:16,  6.11it/s]
+ 62%|██████▏   | 158/256 [01:21<00:16,  6.09it/s]
+ 62%|██████▏   | 159/256 [01:22<00:15,  6.10it/s]
+ 62%|██████▎   | 160/256 [01:22<00:15,  6.10it/s]
+ 63%|██████▎   | 161/256 [01:22<00:17,  5.39it/s]
+ 63%|██████▎   | 162/256 [01:22<00:16,  5.55it/s]
+ 64%|██████▎   | 163/256 [01:22<00:16,  5.71it/s]
+ 64%|██████▍   | 164/256 [01:23<00:15,  5.80it/s]
+ 64%|██████▍   | 165/256 [01:23<00:15,  5.89it/s]
+ 65%|██████▍   | 166/256 [01:23<00:15,  5.96it/s]
+ 65%|██████▌   | 167/256 [01:23<00:14,  6.02it/s]
+ 66%|██████▌   | 168/256 [01:23<00:14,  6.05it/s]
+ 66%|██████▌   | 169/256 [01:23<00:14,  6.10it/s]
+ 66%|██████▋   | 170/256 [01:24<00:14,  6.14it/s]
+ 67%|██████▋   | 171/256 [01:24<00:13,  6.12it/s]
+ 67%|██████▋   | 172/256 [01:24<00:13,  6.12it/s]
+ 68%|██████▊   | 173/256 [01:24<00:13,  6.13it/s]
+ 68%|██████▊   | 174/256 [01:24<00:13,  6.11it/s]
+ 68%|██████▊   | 175/256 [01:24<00:13,  6.11it/s]
+ 69%|██████▉   | 176/256 [01:25<00:13,  6.13it/s]
+ 69%|██████▉   | 177/256 [01:25<00:14,  5.41it/s]
+ 70%|██████▉   | 178/256 [01:25<00:13,  5.60it/s]
+ 70%|██████▉   | 179/256 [01:25<00:13,  5.75it/s]
+ 70%|███████   | 180/256 [01:25<00:12,  5.85it/s]
+ 71%|███████   | 181/256 [01:25<00:12,  5.94it/s]
+ 71%|███████   | 182/256 [01:26<00:12,  6.02it/s]
+ 71%|███████▏  | 183/256 [01:26<00:12,  6.07it/s]
+ 72%|███████▏  | 184/256 [01:26<00:11,  6.10it/s]
+ 72%|███████▏  | 185/256 [01:26<00:11,  6.14it/s]
+ 73%|███████▎  | 186/256 [01:26<00:11,  6.16it/s]
+ 73%|███████▎  | 187/256 [01:26<00:11,  6.15it/s]
+ 73%|███████▎  | 188/256 [01:27<00:11,  6.15it/s]
+ 74%|███████▍  | 189/256 [01:27<00:10,  6.16it/s]
+ 74%|███████▍  | 190/256 [01:27<00:10,  6.15it/s]
+ 75%|███████▍  | 191/256 [01:27<00:10,  6.14it/s]
+ 75%|███████▌  | 192/256 [01:27<00:10,  6.29it/s]
+ 75%|███████▌  | 193/256 [01:43<04:58,  4.73s/it]
+ 77%|███████▋  | 196/256 [01:43<02:05,  2.09s/it]
+ 78%|███████▊  | 199/256 [01:43<01:07,  1.18s/it]
+ 79%|███████▉  | 203/256 [01:43<00:34,  1.54it/s]
+ 81%|████████  | 207/256 [01:43<00:19,  2.46it/s]
+ 82%|████████▏ | 210/256 [01:43<00:13,  3.38it/s]
+ 84%|████████▎ | 214/256 [01:43<00:08,  5.01it/s]
+ 85%|████████▌ | 218/256 [01:43<00:05,  7.09it/s]
+ 87%|████████▋ | 222/256 [01:44<00:03,  9.65it/s]
+ 88%|████████▊ | 226/256 [01:44<00:02, 11.74it/s]
+ 90%|█████████ | 231/256 [01:44<00:01, 15.89it/s]
+ 92%|█████████▏| 236/256 [01:44<00:00, 20.39it/s]
+ 94%|█████████▍| 240/256 [01:44<00:00, 22.49it/s]
+ 95%|█████████▌| 244/256 [01:44<00:00, 25.16it/s]
+ 97%|█████████▋| 248/256 [01:44<00:00, 28.10it/s]
+ 99%|█████████▉| 253/256 [01:44<00:00, 30.13it/s]
+100%|██████████| 256/256 [01:45<00:00,  2.44it/s]
+tip: install termplotlib and gnuplot to plot the metrics
+============ Serving Benchmark Result ============
+Successful requests:                     256       
+Failed requests:                         0         
+Maximum request concurrency:             64        
+Benchmark duration (s):                  105.00    
+Total input tokens:                      1048576   
+Total generated tokens:                  262144    
+Request throughput (req/s):              2.44      
+Output token throughput (tok/s):         2496.54   
+Peak output token throughput (tok/s):    3993.00   
+Peak concurrent requests:                71.00     
+Total token throughput (tok/s):          12482.72  
+---------------Time to First Token----------------
+Mean TTFT (ms):                          1774.68   
+Median TTFT (ms):                        495.16    
+P99 TTFT (ms):                           10104.85  
+-----Time per Output Token (excl. 1st token)------
+Mean TPOT (ms):                          23.70     
+Median TPOT (ms):                        24.75     
+P99 TPOT (ms):                           24.84     
+---------------Inter-token Latency----------------
+Mean ITL (ms):                           23.70     
+Median ITL (ms):                         16.92     
+P99 ITL (ms):                            91.02     
+==================================================

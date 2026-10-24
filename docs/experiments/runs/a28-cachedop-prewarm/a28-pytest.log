@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /workspace/exp-plugin
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collected 5 items
+
+tests/unit_tests/dispatch/test_cached_op_prewarm.py .....                [100%]
+
+============================== 5 passed in 29.03s ==============================

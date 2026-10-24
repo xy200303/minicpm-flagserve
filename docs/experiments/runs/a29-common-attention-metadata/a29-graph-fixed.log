@@ -1,0 +1,9 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-8.4.1, pluggy-1.6.0
+rootdir: /workspace/a29-plugin
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collected 7 items
+
+../workspace/a29-plugin/tests/functional_tests/worker/test_common_attention_metadata_graph.py . [ 14%]
+......                                                                   [100%]
