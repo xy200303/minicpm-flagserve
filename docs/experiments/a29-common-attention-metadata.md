@@ -39,3 +39,21 @@
 - `a29-unit.log`：4 个 metadata 单测
 - `a29-graph-fixed.log`：7 个图测试
 - `a29-direct2.log`：最初的 MetaX 指针类型编译错误，供复核
+
+## 开销分解补充
+
+为排除“只是 graph replay 慢”的假设，在 C500 上用同一 `MultiGroupBlockTable` 做 200 次同步测量（decode 形状，64 请求）：
+
+| 路径 | 中位单步耗时 |
+|---|---:|
+| 原始 `BlockTable.compute_slot_mapping` + computed-token 更新 | 0.0870 ms |
+| 公共 metadata eager | 0.0655 ms |
+| 公共 metadata graph replay | 0.0449 ms |
+
+强制 `VLLM_FL_COMMON_ATTENTION_METADATA_NO_REPLAY=1` 后，官方 4k 为 **12028.50 tok/s**，与 replay 的 12024.01 基本同档，说明 replay 不是负收益根因。
+
+进一步对相同 8 请求的 rank0 trace 汇总，基线与 A29 的 kernel 总时长分别为 **3312.37 ms 和 3310.99 ms**，差约 −0.04%。`flash_fwd_splitkv`、mcBLAS GEMM 等主要 kernel 的时间也几乎一致。结合 eager/no-replay 对照，当前不能把负收益归因于某个 metadata kernel；更像 host 侧执行路径或图交互的差异，但尚未定位到可安全修复的单点。保留这些原始分析，避免把“上游有优化”误判为“本卡必然受益”。
+
+## 最终取舍
+
+A29 不进入交付分支。若未来继续研究，应先用生产形状下的 host 侧分段计时定位 `unified_attention_with_output` 附近的额外开销，而不是直接采用上游实现。完整汇总见 `a29-kernel-summary.txt`、`a29-profile-decode.log`、`profiler_out_0.txt`；大体积 trace 文件保留在实验实例上，未复制进文档仓库。

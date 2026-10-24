@@ -1,0 +1,74 @@
+base
+  kernel: total_us=3312365.9, events=180380
+    437778.18 us  mcblas__Mck_bf16gemm_nn_256x256x64_8m1n8k_512t_4stage_bf16_bf16_fp32_sb_0_0
+    426485.65 us  mcblas__Mck_bf16gemm_nn_128x16x256_8m1n8k_256t_bf16_bf16_fp32_sb_0_0
+    371539.23 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 16, 16, 1, mctlass::bfloat16_t> >, false, false, false, false, true, false, true, false, true, (Arch)1000>(mcFlashAttn::Flash_fwd_params, int, int)
+    277862.75 us  mcblas__Mck_bf16gemm_nn_128x128x128_8m1n8k_256t_4stage_bf16_bf16_fp32_sb_0_0
+    231386.05 us  mcblas__Mck_bf16gemm_nn_128x16x256_8m1n8k_256t_bf16_bf16_fp32_sb_0_2
+    200606.27 us  mcblas__Mck_bf16gemm_nn_64x32x256_8m1n8k_256t_4stage_bf16_bf16_fp32_sb_0_0
+    184295.17 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 128, 64, 4, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 128, 64, 4, mctlass::bfloat16_t> >, true, false, false, false, true, false, false, false, true, (Arch)1000>(mcFlashAttn::Flash_fwd_params, int, int)
+    150541.42 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 16, 16, 1, mctlass::bfloat16_t> >, 8, 6, true, false>(mcFlashAttn::Flash_fwd_params)
+    123590.01 us  mcblas__Mck_bf16gemm_nn_256x32x128_4m1n8k_256t_bf16_bf16_fp32_sb_0_2
+    92464.13 us  mcblas__Mck_bf16gemm_nn_256x64x128_8m1n8k_256t_bf16_bf16_fp32_sb_0_0
+  cuda_runtime: total_us=336854.8, events=69863
+    132300.01 us  mcModuleLaunchKernel
+    50280.59 us  mcLaunchKernel
+    34804.73 us  mcGraphLaunch
+    34317.74 us  mcPointerGetAttribute
+    34156.53 us  mcEventSynchronize
+    17140.49 us  mcModuleLoadData
+    13155.24 us  mcMemcpyAsync
+    6024.86 us  mcGetDeviceProperties
+    4377.78 us  mcModuleGetFunction
+    2604.01 us  mcEventRecordWithFlags
+  gpu_memcpy: total_us=11307.0, events=2315
+    10549.50 us  Memcpy HtoD (Pinned -> Device)
+    757.50 us  Memcpy DtoH (Device -> Pinned)
+  cpu_op: total_us=5607601.1, events=98266
+    1284532.62 us  vllm::unified_attention_with_output
+    1021999.81 us  aten::copy_
+    745467.57 us  aten::index
+    363608.86 us  vllm_fl_metax::mcblas_mm
+    350241.93 us  aten::add
+    326596.82 us  aten::fill_
+    224558.85 us  aten::sub
+    198405.25 us  aten::to
+    196129.71 us  aten::_to_copy
+    104098.06 us  FlashAttnVarlenFunc
+a29
+  kernel: total_us=3310987.6, events=180291
+    437787.39 us  mcblas__Mck_bf16gemm_nn_256x256x64_8m1n8k_512t_4stage_bf16_bf16_fp32_sb_0_0
+    423155.18 us  mcblas__Mck_bf16gemm_nn_128x16x256_8m1n8k_256t_bf16_bf16_fp32_sb_0_0
+    372433.44 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 16, 16, 1, mctlass::bfloat16_t> >, false, false, false, false, true, false, true, false, true, (Arch)1000>(mcFlashAttn::Flash_fwd_params, int, int)
+    277599.07 us  mcblas__Mck_bf16gemm_nn_128x128x128_8m1n8k_256t_4stage_bf16_bf16_fp32_sb_0_0
+    229557.86 us  mcblas__Mck_bf16gemm_nn_128x16x256_8m1n8k_256t_bf16_bf16_fp32_sb_0_2
+    197189.73 us  mcblas__Mck_bf16gemm_nn_64x32x256_8m1n8k_256t_4stage_bf16_bf16_fp32_sb_0_0
+    184269.06 us  void flash_fwd_splitkv_kernel<Flash_fwd_kernel_traits<128, 128, 64, 4, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 128, 64, 4, mctlass::bfloat16_t> >, true, false, false, false, true, false, false, false, true, (Arch)1000>(mcFlashAttn::Flash_fwd_params, int, int)
+    151484.67 us  void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat16_t, 128, Flash_kernel_traits<128, 16, 16, 1, mctlass::bfloat16_t> >, 8, 6, true, false>(mcFlashAttn::Flash_fwd_params)
+    122653.39 us  mcblas__Mck_bf16gemm_nn_256x32x128_4m1n8k_256t_bf16_bf16_fp32_sb_0_2
+    92038.14 us  mcblas__Mck_bf16gemm_nn_256x64x128_8m1n8k_256t_bf16_bf16_fp32_sb_0_0
+  cuda_runtime: total_us=370697.4, events=69849
+    155350.21 us  mcModuleLaunchKernel
+    58446.03 us  mcLaunchKernel
+    38201.70 us  mcGraphLaunch
+    33388.04 us  mcPointerGetAttribute
+    32710.37 us  mcEventSynchronize
+    18497.25 us  mcModuleLoadData
+    13946.12 us  mcMemcpyAsync
+    5798.10 us  mcGetDeviceProperties
+    4185.95 us  mcModuleGetFunction
+    2731.73 us  mcEventRecord
+  gpu_memcpy: total_us=11185.9, events=2311
+    10459.14 us  Memcpy HtoD (Pinned -> Device)
+    726.78 us  Memcpy DtoH (Device -> Pinned)
+  cpu_op: total_us=5700172.7, events=98235
+    1306605.80 us  vllm::unified_attention_with_output
+    1043308.76 us  aten::copy_
+    732548.96 us  aten::index
+    366174.96 us  vllm_fl_metax::mcblas_mm
+    363697.56 us  aten::add
+    328971.83 us  aten::fill_
+    233885.50 us  aten::sub
+    209952.19 us  aten::to
+    207594.63 us  aten::_to_copy
+    104257.23 us  FlashAttnVarlenFunc

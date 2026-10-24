@@ -617,4 +617,5 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 分支 `exp/a29-common-attn-metadata`（至 `e1e9f4f`）。MetaX 的 `tl.pointer_type(elem_dtype)` 编译失败，改为显式 i32/i64 指针加载后，metadata 单测 **4 passed**、图测试 **7 passed**。
 - 官方 4k 对照：关闭新路径 **12505.67**，开启新路径 **12024.01 tok/s**（−3.85%）；TTFT 1745.80→2305.95 ms（+32.09%），启动 114→119 s。
 - 结论：功能兼容但端到端负收益，**不并入 integration**。文档 `a29-common-attention-metadata.md`，原始工件 `runs/a29-common-attention-metadata/`。
+- 补充开销分解：decode 微基准原始/eager/replay 中位数为 **0.0870/0.0655/0.0449 ms**；强制 no-replay 后 4k 为 **12028.50 tok/s**，与 replay 的 12024.01 同档。8 请求 trace 的 kernel 总时长基线/A29 为 **3312.37/3310.99 ms**，未见 metadata kernel 级瓶颈，故 replay 不是根因，最终仍不采用。
 
