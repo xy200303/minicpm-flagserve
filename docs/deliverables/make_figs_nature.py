@@ -115,11 +115,11 @@ def fig_c500_throughput():
 # 2. Sorted-free sampling chain
 # --------------------------------------------------------------------------- #
 def fig_sampler():
-    labels = ["优化前\neager PyTorch", "优化后\n融合 Triton 内核"]
-    vals = [1.948, 0.282]
+    labels = ["PyTorch top-p\n参考实现", "fused_top_p_sample\n当前交付"]
+    vals = [4.17024, 0.335616]
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
-        ax, labels, [np.array(vals)], ["采样链"], ylabel="采样全链单步耗时（ms，对数轴）",
+        ax, labels, [np.array(vals)], ["采样链"], ylabel="单次调用耗时（ms，对数轴）",
         colors=[BASE], bar_width=0.16, edgecolor=BASE_EDGE, linewidth=0.4)
     ax.get_legend().remove()
     cont[0][1].set_facecolor(HERO)
@@ -127,15 +127,15 @@ def fig_sampler():
     for bar, v in zip(cont[0], vals):
         label_above(ax, bar.get_x() + bar.get_width() / 2, v * 1.18,
                     f"{v:.3f} ms", HERO if v < 1 else MID, 8)
-    ax.annotate("", xy=(0.52, 0.30), xytext=(0.52, 1.82),
+    ax.annotate("", xy=(0.52, 0.37), xytext=(0.52, 3.80),
                 arrowprops=dict(arrowstyle="<|-|>", color=ACCENT, linewidth=0.7,
                                 shrinkA=0, shrinkB=0, mutation_scale=6))
-    ax.text(0.55, 0.75, "约 6.9×", color=ACCENT, fontsize=8.5, fontweight="bold",
+    ax.text(0.55, 1.2, "约 12.4×", color=ACCENT, fontsize=8.5, fontweight="bold",
             va="center", ha="left")
     ax.set_yscale("log")
-    ax.set_ylim(0.2, 4.0)
+    ax.set_ylim(0.2, 8.0)
     ax.set_xlim(-0.55, 1.55)
-    ax.yaxis.set_major_locator(FixedLocator([0.3, 0.5, 1, 2, 4]))
+    ax.yaxis.set_major_locator(FixedLocator([0.3, 0.5, 1, 2, 4, 8]))
     ax.yaxis.set_minor_locator(NullLocator())
     ax.yaxis.set_major_formatter(mpl.ticker.FuncFormatter(lambda v, _: f"{v:g}"))
     save(fig, "fig2_sampler")

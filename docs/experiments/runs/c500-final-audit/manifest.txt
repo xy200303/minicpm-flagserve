@@ -1,0 +1,103 @@
+Sun Oct 25 17:55:05 CST 2026
+8666768b9328
+               total        used        free      shared  buff/cache   available
+Mem:           120Gi        12Gi       108Gi          0B          0B       108Gi
+Swap:             0B          0B          0B
+Filesystem      Size  Used Avail Use% Mounted on
+overlay          30G  157M   30G   1% /
+mx-smi  version: 2.3.1
+
+=================== MetaX System Management Interface Log ===================
+Timestamp                                         : Sun Oct 25 17:55:05 2026
+
+Attached GPUs                                     : 1
++---------------------------------------------------------------------------------+
+| MX-SMI 2.3.1                       Kernel Mode Driver Version: 3.8.30           |
+| MACA Version: 3.7.0.38             BIOS Version: 1.33.5.0                       |
+|------------------+-----------------+---------------------+----------------------|
+| Board       Name | GPU   Persist-M | Bus-id              | GPU-Util      sGPU-M |
+| Pwr:Usage/Cap    | Temp       Perf | Memory-Usage        | GPU-State            |
+|==================+=================+=====================+======================|
+| 0     MetaX C500 | 0           Off | 0000:0e:00.0        | 0%          Disabled |
+| 71W / 350W       | 36C          P9 | 827/65536 MiB       | Available            |
++------------------+-----------------+---------------------+----------------------+
+
++---------------------------------------------------------------------------------+
+| Process:                                                                        |
+|  GPU                    PID         Process Name                 GPU Memory     |
+|                                                                  Usage(MiB)     |
+|=================================================================================|
+|  no process found                                                               |
++---------------------------------------------------------------------------------+
+
+End of Log
+plugin=0207b7e10f93dfa6e912b00c372f268d618b4c2c
+gems=aff68555e266582f68c6554898f4c795c869578d
+6df418ffb56ba4f6d7592e02ef524afc4e215670bb95cd2e27a6b4c447caef8e  /workspace/XLANG2026-audit.zip
+Name: vllm
+Version: 0.24.0+empty
+Summary: A high-throughput and memory-efficient inference and serving engine for LLMs
+Home-page: https://github.com/vllm-project/vllm
+Author: vLLM Team
+Author-email: 
+License-Expression: Apache-2.0
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: aiohttp, anthropic, blake3, cachetools, cbor2, cloudpickle, compressed-tensors, depyf, diskcache, einops, fastapi, filelock, ijson, jsonschema, lark, llguidance, lm-format-enforcer, mcp, mistral_common, model-hosting-container-standards, msgspec, ninja, numpy, openai, openai-harmony, opencv-python-headless, opentelemetry-api, opentelemetry-exporter-otlp, opentelemetry-sdk, opentelemetry-semantic-conventions-ai, outlines_core, partial-json-parser, pillow, prometheus-fastapi-instrumentator, prometheus_client, protobuf, psutil, py-cpuinfo, pybase64, pydantic, python-json-logger, pyyaml, pyzmq, regex, requests, safetensors, sentencepiece, setproctitle, setuptools, six, starlette, tiktoken, tokenizers, tqdm, transformers, typing_extensions, watchfiles, xgrammar
+Required-by: 
+---
+Name: vllm-plugin-fl
+Version: 0.3.0rc1.post1+g0207b7e10.d20261025
+Summary: A vLLM plugin built on the FlagOS unified multi-chip backend
+Home-page: https://github.com/flagos-ai/vllm-plugin-FL
+Author: 
+Author-email: 
+License-Expression: Apache-2.0
+Location: /workspace/audit-venv/lib/python3.12/site-packages
+Editable project location: /workspace/audit-plugin
+Requires: pyyaml
+Required-by: 
+---
+Name: flag_gems
+Version: 5.3.5.post1.dev11+gaff68555e.d20261025
+Summary: FlagGems is a function library written in Triton language.
+Home-page: 
+Author: 
+Author-email: Zhixin Li <strongspoon@outlook.com>, Tongxin Bai <waffle.bai@gmail.com>, Yuming Huang <jokmingwong@gmail.com>, Feiyu Chen <iclementine@outlook.com>, Ruilin Yang <rlyanger01@gmail.com>, Zhen Wang <516310189@qq.com>, Hui Guo <sunnycase@live.cn>, Xiaoyan Liu <18811205590@163.com>, Chunlie Men <menchunlei@163.com>, Hang Xiao <vincent.xiao.me@gmail.com>, Yiqun Huang <huangyiqun@mail.bnu.edu.cn>, Jinjin Tian <kiddyjinjin@gmail.com>, Yang Zheng <zhengyang_pku@163.com>, Jinjie Liu <sgjzfzzf@gmail.com>
+License: Apache Software License
+Location: /workspace/audit-venv/lib/python3.12/site-packages
+Editable project location: /workspace/audit-gems
+Requires: numpy, packaging, PyYAML, sqlalchemy
+Required-by: 
+---
+Name: torch
+Version: 2.8.0+metax3.7.0.7
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org/
+Author: Metax PyTorch Team
+Author-email: 
+License: BSD-3-Clause
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: filelock, fsspec, jinja2, networkx, setuptools, sympy, typing-extensions
+Required-by: causal_conv1d, compressed-tensors, deep_gemm, flash_attn, flash_mla, flashinfer, hstu_attn, mamba_ssm, mcoplib, mctlassEx, nixl, sageattention, spargeattention, spconv, torch_c_dlpack_ext, xgrammar
+---
+Name: triton
+Version: 3.0.0+metax3.7.0.7
+Summary: A language and compiler for custom Deep Learning operations
+Home-page: https://github.com/triton-lang/triton/
+Author: Philippe Tillet
+Author-email: phil@openai.com
+License: 
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: filelock
+Required-by: mamba_ssm, mcoplib, xgrammar
+---
+Name: evalscope
+Version: 1.11.1
+Summary: EvalScope: Lightweight LLMs Evaluation Framework
+Home-page: https://github.com/modelscope/evalscope
+Author: ModelScope team
+Author-email: contact@modelscope.cn
+License-Expression: Apache-2.0
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: aiohttp, colorlog, docstring_parser, dotenv, editdistance, filetype, jieba, jinja2, jsonlines, jsonschema, latex2sympy2_extended, litellm, Markdown, modelscope, more_itertools, nltk, openai, overrides, pandas, pillow, plotly, pydantic, pylatexenc, pyyaml, requests, rich, rouge-chinese, rouge-score, sacrebleu, sympy, tabulate, tqdm, transformers, word2number, zhconv
+Required-by: 

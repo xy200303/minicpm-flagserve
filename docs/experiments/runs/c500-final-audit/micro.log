@@ -1,0 +1,261 @@
+INFO 10-25 18:44:26 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-25 18:44:26 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-25 18:44:26 [__init__.py:58] Loading plugin fl
+/opt/conda/lib/python3.12/site-packages/torch/library.py:381: UserWarning: Warning only once for all operators,  other operators may also be overridden.
+  Overriding a previously registered kernel for the same operator and the same dispatch key
+  operator: _C::cutlass_scaled_mm_supports_fp8(int cuda_device_capability) -> bool
+    registered at /tmp/build-via-sdist-_ouj1d45/mcoplib-0.4.5+maca3.7.0.37.torch2.8/op/vllm/torch_bindings.cpp:26
+  dispatch key: CompositeImplicitAutograd
+  previous kernel: registered at /tmp/build-via-sdist-_ouj1d45/mcoplib-0.4.5+maca3.7.0.37.torch2.8/op/vllm/torch_bindings.cpp:26
+       new kernel: registered at /dev/null:95 (Triggered internally at /workspace/framework/mcPytorch/aten/src/ATen/core/dispatch/OperatorEntry.cpp:218.)
+  self.m.impl(
+INFO Print the version information of mcoplib during compilation.
+
+Version info:Mcoplib_Version = '0.4.5'
+Build_Maca_Version = '3.7.0.37'
+GIT_BRANCH = 'HEAD'
+GIT_COMMIT = 'a9125e4'
+Vllm Op Version = 0.20.0
+SGlang Op Version  = 0.5.10 
+
+INFO Staring Check the current MACA version of the operating environment.
+
+INFO: Release major.minor matching,  successful:3.7. 
+
+INFO 10-25 18:44:29 [__init__.py:237] Platform plugin fl is activated
+/opt/conda/lib/python3.12/site-packages/torchvision/datapoints/__init__.py:12: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+/opt/conda/lib/python3.12/site-packages/torchvision/transforms/v2/__init__.py:54: UserWarning: The torchvision.datapoints and torchvision.transforms.v2 namespaces are still Beta. While we do not expect major breaking changes, some APIs may still change according to user feedback. Please submit any feedback you may have in this issue: https://github.com/pytorch/vision/issues/6753, and you can also check out https://github.com/pytorch/vision/issues/7319 to learn more about the APIs that we suspect might involve future changes. You can silence this warning by calling torchvision.disable_beta_transforms_warning().
+  warnings.warn(_BETA_TRANSFORMS_WARNING)
+[2026-10-25 18:44:34] [INFO] [vllm_fl.dispatch.backends.vendor.metax.patches.mcblas_mm] fl mcblas_mm: vendor mcBLAS GEMM binding registered
+WARNING 10-25 18:44:34 [import_utils.py:408] Module deep_ep was found but failed to import
+WARNING 10-25 18:44:34 [import_utils.py:408] Traceback (most recent call last):
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/vllm/utils/import_utils.py", line 406, in _has_module
+WARNING 10-25 18:44:34 [import_utils.py:408]     importlib.import_module(module_name)
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "/opt/conda/lib/python3.12/importlib/__init__.py", line 90, in import_module
+WARNING 10-25 18:44:34 [import_utils.py:408]     return _bootstrap._gcd_import(name[level:], package, level)
+WARNING 10-25 18:44:34 [import_utils.py:408]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1387, in _gcd_import
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/deep_ep/__init__.py", line 3, in <module>
+WARNING 10-25 18:44:34 [import_utils.py:408]     from .utils import EventOverlap
+WARNING 10-25 18:44:34 [import_utils.py:408]   File "/opt/conda/lib/python3.12/site-packages/deep_ep/utils.py", line 5, in <module>
+WARNING 10-25 18:44:34 [import_utils.py:408]     from deep_ep_cpp import Config, EventHandle
+WARNING 10-25 18:44:34 [import_utils.py:408] ImportError: libmpi.so.40: cannot open shared object file: No such file or directory
+/workspace/audit-gems/src/flag_gems/config.py:171: UserWarning: resolve_user_setting: no exclude ops found; returning empty list
+  warnings.warn(
+WARNING:root:Skipped registering operator: This is not allowed since there's already a kernel registered from python overriding ne_.Scalar's behavior for CUDA dispatch key and aten namespace.
+WARNING:root:Skipped registering operator: This is not allowed since there's already a kernel registered from python overriding ne_.Tensor's behavior for CUDA dispatch key and aten namespace.
+{
+  "timestamp": "2026-10-25 18:44:35 +0800",
+  "torch": "2.8.0+metax3.7.0.7",
+  "shape": [
+    64,
+    130560
+  ],
+  "dtype": "torch.bfloat16",
+  "top_p": 0.95,
+  "temperature": 1.0,
+  "reps": 30,
+  "fused_top_p": {
+    "median_ms": 0.33561599254608154,
+    "mean_ms": 0.3390293310085932,
+    "min_ms": 0.32972800731658936,
+    "max_ms": 0.3832319974899292,
+    "samples_ms": [
+      0.3832319974899292,
+      0.35225600004196167,
+      0.342272013425827,
+      0.3386879861354828,
+      0.33484798669815063,
+      0.3389439880847931,
+      0.342272013425827,
+      0.33740800619125366,
+      0.33587199449539185,
+      0.34355199337005615,
+      0.3338240087032318,
+      0.3317759931087494,
+      0.3389439880847931,
+      0.33535999059677124,
+      0.3389439880847931,
+      0.3310079872608185,
+      0.33689600229263306,
+      0.3338240087032318,
+      0.3343360126018524,
+      0.33484798669815063,
+      0.33740800619125366,
+      0.3317759931087494,
+      0.3328000009059906,
+      0.3307519853115082,
+      0.33510398864746094,
+      0.32972800731658936,
+      0.37145599722862244,
+      0.3317759931087494,
+      0.3340800106525421,
+      0.33689600229263306
+    ]
+  },
+  "eager_top_p": {
+    "median_ms": 4.170240163803101,
+    "mean_ms": 4.173909298578898,
+    "min_ms": 4.140031814575195,
+    "max_ms": 4.274432182312012,
+    "samples_ms": [
+      4.274432182312012,
+      4.179967880249023,
+      4.178944110870361,
+      4.1561598777771,
+      4.188159942626953,
+      4.168960094451904,
+      4.164351940155029,
+      4.192255973815918,
+      4.143104076385498,
+      4.185344219207764,
+      4.140031814575195,
+      4.178175926208496,
+      4.158976078033447,
+      4.166912078857422,
+      4.173567771911621,
+      4.173567771911621,
+      4.163072109222412,
+      4.1656317710876465,
+      4.176383972167969,
+      4.166399955749512,
+      4.189184188842773,
+      4.166399955749512,
+      4.1656317710876465,
+      4.1756157875061035,
+      4.171520233154297,
+      4.1656317710876465,
+      4.16537618637085,
+      4.1855998039245605,
+      4.1756157875061035,
+      4.162303924560547
+    ]
+  },
+  "top_p_speedup": 12.425630054653931,
+  "lm_head_shape": [
+    64,
+    2048,
+    130560
+  ],
+  "native_lm_head": {
+    "median_ms": 0.38182398676872253,
+    "mean_ms": 0.3821226626634598,
+    "min_ms": 0.37811198830604553,
+    "max_ms": 0.39449599385261536,
+    "samples_ms": [
+      0.39449599385261536,
+      0.38553598523139954,
+      0.3832319974899292,
+      0.37811198830604553,
+      0.3819519877433777,
+      0.382207989692688,
+      0.37913599610328674,
+      0.37887999415397644,
+      0.3827199935913086,
+      0.37939199805259705,
+      0.38092800974845886,
+      0.3837440013885498,
+      0.3816959857940674,
+      0.3837440013885498,
+      0.37939199805259705,
+      0.37862399220466614,
+      0.3827199935913086,
+      0.3816959857940674,
+      0.38144001364707947,
+      0.3816959857940674,
+      0.3819519877433777,
+      0.3816959857940674,
+      0.3832319974899292,
+      0.3827199935913086,
+      0.37913599610328674,
+      0.3840000033378601,
+      0.38067200779914856,
+      0.3829759955406189,
+      0.38144001364707947,
+      0.3845120072364807
+    ]
+  },
+  "triton_lm_head": {
+    "median_ms": 0.5921279788017273,
+    "mean_ms": 0.593228797117869,
+    "min_ms": 0.5852159857749939,
+    "max_ms": 0.6187520027160645,
+    "samples_ms": [
+      0.6187520027160645,
+      0.5995519757270813,
+      0.5911039710044861,
+      0.5880320072174072,
+      0.591871976852417,
+      0.5964800119400024,
+      0.5926399827003479,
+      0.5931519865989685,
+      0.5882880091667175,
+      0.5928959846496582,
+      0.591871976852417,
+      0.5995519757270813,
+      0.5962240099906921,
+      0.6064640283584595,
+      0.5890560150146484,
+      0.5893120169639587,
+      0.5967360138893127,
+      0.5926399827003479,
+      0.5903360247612,
+      0.5941759943962097,
+      0.587007999420166,
+      0.5923839807510376,
+      0.6003199815750122,
+      0.5959680080413818,
+      0.5859839916229248,
+      0.5893120169639587,
+      0.5852159857749939,
+      0.5872640013694763,
+      0.587007999420166,
+      0.5872640013694763
+    ]
+  },
+  "mcblas_lm_head": {
+    "median_ms": 0.4037120044231415,
+    "mean_ms": 0.4051797350247701,
+    "min_ms": 0.3998720049858093,
+    "max_ms": 0.4267520010471344,
+    "samples_ms": [
+      0.4267520010471344,
+      0.4121600091457367,
+      0.40729600191116333,
+      0.40191999077796936,
+      0.4062719941139221,
+      0.4065279960632324,
+      0.40294399857521057,
+      0.4032000005245209,
+      0.4039680063724518,
+      0.40755200386047363,
+      0.4037120044231415,
+      0.4047360122203827,
+      0.40755200386047363,
+      0.40217599272727966,
+      0.4062719941139221,
+      0.40268799662590027,
+      0.404992014169693,
+      0.4034560024738312,
+      0.40780800580978394,
+      0.40294399857521057,
+      0.4034560024738312,
+      0.40089601278305054,
+      0.3998720049858093,
+      0.4032000005245209,
+      0.4037120044231415,
+      0.4037120044231415,
+      0.4057599902153015,
+      0.40243199467658997,
+      0.4047360122203827,
+      0.40268799662590027
+    ]
+  },
+  "lm_head_speedup": 1.4667088724493362
+}

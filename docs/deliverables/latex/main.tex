@@ -182,7 +182,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \end{tabularx}
 \end{table}
 
-2026-10-24 的 C500（64GB 显存、128GB CPU 内存）启动留档对应插件 \texttt{f4971e7} 与算子 \texttt{5eac6b39}：全新 clone 并安装后，服务正常监听 9031 端口，\texttt{/v1/models} 返回 \texttt{minicpm}，实际 chat 请求正常返回，日志包含 \texttt{mcblas\_mm} 注册和采样融合启用记录。留档中的 C500 相关代码与当前交付相同，但该次启动不是对当前 SHA 的验证。
+2026-10-24 的 C500（64GB 显存、128GB CPU 内存）启动留档对应插件 \texttt{f4971e7} 与算子 \texttt{5eac6b39}：全新 clone 并安装后，服务正常监听 9031 端口，\texttt{/v1/models} 返回 \texttt{minicpm}，实际 chat 请求正常返回，日志包含 \texttt{mcblas\_mm} 注册和采样融合启用记录。留档中的 C500 相关代码与当前交付相同，但该次启动不是对当前 SHA 的验证。2026-10-25 在当前 SHA 上复测时，交付版与原生基线均在 20 分钟内未完成初始化，当前实例的端到端复测因此未完成；该故障不作为性能数据。
 
 \begin{table}[!htbp]
 \centering
@@ -272,7 +272,7 @@ A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由�
 \end{figure}
 
 \subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
-自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下，保留集质量不小于 $p\cdot Z$；其三，官方 B=64 形状采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。opt11 同口径记录中，采样全链由 1948 $\mu$s 降至 282 $\mu$s，约 6.9$\times$。
+自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下，保留集质量不小于 $p\cdot Z$；其三，官方 B=64 形状采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在当前交付代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.170 ms，\texttt{fused\_top\_p\_sample} 为 0.336 ms，约 12.4$\times$。
 
 \begin{figure}[!htbp]
 \centering
@@ -310,11 +310,11 @@ A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由�
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig2_sampler.pdf}
-\caption{采样全链单步耗时（对数坐标）}
+\caption{当前交付 top-p 采样与同语义 PyTorch 对照（B=64，30 次中位数，对数坐标）}
 \end{figure}
 
 \subsection{GEMM 布局与路由（opt2／opt4／opt6／opt8／opt11）}
-MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题，lm\_head 由 603 $\mu$s 降至 379 $\mu$s。
+MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 592 $\mu$s，直接 mcBLAS 为 404 $\mu$s（1.47$\times$）；同次原生 \texttt{torch.mm} 为 382 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
 只有已经生成 nn 副本且形状满足条件的线性层才进入新路径。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
 
