@@ -63,8 +63,8 @@ mcBLAS 相对 FlagGems Triton 快 **1.55×**，但比同次原生 `torch.mm` 慢
 ## 过程异常与无效数据
 
 - 首个异常实例中，交付版和原生基线均在 1200 秒内未完成初始化，未进入 benchmark。对应 `serve-startup-failure.log` 与 `baseline-serve-startup-failure.log`。
-- 健康实例第一次交付部署时，`--system-site-packages` 中的基线 `vllm_fl` 覆盖了 editable 安装，导致误跑基线。该轮单独保存在服务器 `c500-final-wrong-import`，不用于报告；随后固定 `PYTHONPATH` 并确认 `mcblas_mm` 与采样融合实际加载后重跑。
-- 一次预热超过 1200 秒外层等待上限，未产生 benchmark。保留缓存后重启，启动完成，官方测试参数和预热均未削减。
+- 健康实例第一次交付部署时，`--system-site-packages` 中的基线 `vllm_fl` 覆盖了 editable 安装，导致误跑基线。对应 `invalid-wrong-import-{serve,driver}.log`，不用于报告；随后固定 `PYTHONPATH` 并确认 `mcblas_mm` 与采样融合实际加载后重跑。
+- 一次预热超过 1200 秒外层等待上限，未产生 benchmark，见 `invalid-warmup-timeout-{serve,driver}.log`。保留缓存后重启，启动完成，官方测试参数和预热均未削减。
 - `micro-native-first.json` 是未区分原生与 Triton 的初步微基准，已由健康实例的三路结果取代。
 
 ## 收尾

@@ -1,0 +1,49 @@
+Looking in indexes: http://mirrors.aliyun.com/pypi/simple, https://mirrors.aliyun.com/pypi/simple/
+Obtaining file:///workspace/audit-plugin
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: pyyaml in /opt/conda/lib/python3.12/site-packages (from vllm-plugin-fl==0.3.0rc1.post1+g0207b7e10.d20261025) (6.0.1)
+Building wheels for collected packages: vllm-plugin-fl
+  Building editable for vllm-plugin-fl (pyproject.toml): started
+  Building editable for vllm-plugin-fl (pyproject.toml): finished with status 'done'
+  Created wheel for vllm-plugin-fl: filename=vllm_plugin_fl-0.3.0rc1.post1+g0207b7e10.d20261025-0.editable-py3-none-any.whl size=11075 sha256=604e739ebcc167ac01c6869e8d8acf9f5fc4ac9d8c1bef57776b7179a1ac2511
+  Stored in directory: /tmp/pip-ephem-wheel-cache-_1kjsj8g/wheels/97/49/03/03cccd6213d29f96d534cc97ed0d7fcc0c46bfcbfc025a76f6
+Successfully built vllm-plugin-fl
+Installing collected packages: vllm-plugin-fl
+  Attempting uninstall: vllm-plugin-fl
+    Found existing installation: vllm-plugin-fl 0.3.0rc1.post1+g13eb9be69
+    Not uninstalling vllm-plugin-fl at /opt/conda/lib/python3.12/site-packages, outside environment /workspace/audit-venv
+    Can't uninstall 'vllm-plugin-fl'. No files were found to uninstall.
+Successfully installed vllm-plugin-fl-0.3.0rc1.post1+g0207b7e10.d20261025
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: python -m pip install --upgrade pip
+Looking in indexes: http://mirrors.aliyun.com/pypi/simple, https://mirrors.aliyun.com/pypi/simple/
+Obtaining file:///workspace/audit-gems
+  Checking if build backend supports build_editable: started
+  Checking if build backend supports build_editable: finished with status 'done'
+  Preparing editable metadata (pyproject.toml): started
+  Preparing editable metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: packaging>=26.0 in /opt/conda/lib/python3.12/site-packages (from flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (26.0)
+Requirement already satisfied: PyYAML==6.0.1 in /opt/conda/lib/python3.12/site-packages (from flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (6.0.1)
+Requirement already satisfied: sqlalchemy==2.0.48 in /opt/conda/lib/python3.12/site-packages (from flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (2.0.48)
+Requirement already satisfied: numpy in /opt/conda/lib/python3.12/site-packages (from flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (1.26.4)
+Requirement already satisfied: greenlet>=1 in /opt/conda/lib/python3.12/site-packages (from sqlalchemy==2.0.48->flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (3.5.3)
+Requirement already satisfied: typing-extensions>=4.6.0 in /opt/conda/lib/python3.12/site-packages (from sqlalchemy==2.0.48->flag_gems==5.3.5.post1.dev11+gaff68555e.d20261025) (4.16.0)
+Building wheels for collected packages: flag_gems
+  Building editable for flag_gems (pyproject.toml): started
+  Building editable for flag_gems (pyproject.toml): finished with status 'done'
+  Created wheel for flag_gems: filename=flag_gems-5.3.5.post1.dev11+gaff68555e.d20261025-0.editable-py3-none-any.whl size=11387 sha256=7b50ab07f364af6e747ea488dc4632d89cc48a0788df6f1ded57b2befdfcb9fa
+  Stored in directory: /tmp/pip-ephem-wheel-cache-gk12k25v/wheels/41/b7/92/2260f9ee8c57f9ddadbfe3b25268e05e26b21914a4890a19ae
+Successfully built flag_gems
+Installing collected packages: flag_gems
+  Attempting uninstall: flag_gems
+    Found existing installation: flag_gems 5.3.5
+    Not uninstalling flag-gems at /opt/conda/lib/python3.12/site-packages, outside environment /workspace/audit-venv
+    Can't uninstall 'flag_gems'. No files were found to uninstall.
+Successfully installed flag_gems-5.3.5.post1.dev11+gaff68555e.d20261025
+
+[notice] A new release of pip is available: 25.0.1 -> 26.2.2
+[notice] To update, run: python -m pip install --upgrade pip
