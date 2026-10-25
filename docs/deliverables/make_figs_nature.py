@@ -685,6 +685,56 @@ def fig_efficiency():
     save(fig, "fig18_efficiency", pad=1.0)
 
 
+# --------------------------------------------------------------------------- #
+# 19. BI-V150 prefill kernel and host-stall profiles
+# --------------------------------------------------------------------------- #
+def fig_biv150_bottleneck():
+    fig, axes = plt.subplots(1, 2, figsize=(15.4 * CM, 6.1 * CM),
+                             gridspec_kw={"width_ratios": [0.85, 1.35]})
+    ax = axes[0]
+    ax.barh([0], [91.8], height=0.32, color=HERO, label="unified attention")
+    ax.barh([0], [8.2], left=[91.8], height=0.32, color=BASE,
+            edgecolor=BASE_EDGE, linewidth=0.4, label="其他内核")
+    ax.text(45.9, 0, "91.8%", ha="center", va="center", color="white", fontsize=9)
+    ax.text(95.9, 0.23, "其他 8.2%", ha="center", va="bottom", color=INK, fontsize=6.5)
+    ax.text(0, 0.36, "36.8 ms／层／2048-token chunk", ha="left", va="bottom",
+            fontsize=7, color=MID)
+    ax.set_yticks([0])
+    ax.set_yticklabels(["初始 16k prefill"])
+    ax.set_xlim(0, 100)
+    ax.set_ylim(-0.65, 0.72)
+    ax.set_xlabel("占 GPU 内核时间（%）")
+    ax.legend(loc="lower left", frameon=False, ncol=1)
+    ax.set_title("a  attention 占 GPU 忙时的 91.8%", loc="left", fontsize=8, pad=6)
+
+    ax = axes[1]
+    gpu = np.array([265.0, 353.0 * 0.763])
+    wall = np.array([677.0, 353.0])
+    wait = wall - gpu
+    y = np.array([1, 0])
+    ax.barh(y, gpu, height=0.34, color=HERO_SOFT, label="GPU 工作")
+    ax.barh(y, wait, left=gpu, height=0.34, color=BASE,
+            edgecolor=BASE_EDGE, linewidth=0.4, label="host 等待")
+    for yi, g, w, total in zip(y, gpu, wait, wall):
+        ax.text(g / 2, yi, f"{g:.0f} ms", ha="center", va="center",
+                color="white", fontsize=7.5)
+        ax.text(g + w / 2, yi, f"{w:.0f} ms", ha="center", va="center",
+                color=INK, fontsize=7.5)
+        ax.text(total + 12, yi, f"wall {total:.0f} ms", ha="left", va="center",
+                color=MID, fontsize=7)
+    ax.set_yticks(y)
+    ax.set_yticklabels(["A1.5 后", "A3 同步修复后"])
+    ax.set_xlim(0, 770)
+    ax.set_ylim(-0.65, 1.65)
+    ax.set_xlabel("16k 混合步时间分解（ms）")
+    ax.xaxis.set_major_locator(MaxNLocator(5))
+    ax.legend(loc="upper right", frameon=False, ncol=2)
+    ax.set_title("b  GPU busy：41.3% → 76.3%", loc="left", fontsize=8, pad=6)
+    fig.subplots_adjust(wspace=0.38)
+    save(fig, "fig19_biv150_bottleneck", pad=1.0)
+
+
 fig_incremental_gains()
 fig_speedup_benefit()
 fig_efficiency()
+fig_biv150_bottleneck()

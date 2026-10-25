@@ -344,8 +344,19 @@ prefill trace 中 GPU 空闲 18.1\%，元凶之一是 vendor flash\_attn 每层�
 \end{figure}
 
 \section{天数 BI-V150：vendor 接入、发射配置与自研 decode 内核}
-\subsection{prefill attention 接入 vendor ixAttnBkd（A1／A6）}
-iluvatar 后端缺少 flash\_attn 包时，attention 落到 vLLM 通用 Triton 参考实现，16k prefill 每层每 2048-chunk 需 36.8 ms，占 GPU busy 91.8\%。接入 vendor ixAttnBkd 内核并确认其 causal 语义为 bottom-right（cmt=2）与 vLLM 的 chunk prefill 对齐后，内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
+\subsection{瓶颈画像}
+BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通用 Triton \path{kernel_unified_attention} 占 GPU 忙时的 91.8\%，每层每 2048-token chunk 耗时 36.8 ms；此时 GPU busy 为 99.1\%，主要开销来自 attention 内核本身。iluvatar 后端缺少 flash\_attn 包，是这条慢路径的直接原因。
+
+接入 vendor attention 后，混合步的主要开销转移到 host 侧。A1.5 的 16k 混合步 wall 约为 677 ms，其中 GPU 工作约 265 ms，GPU busy 仅 41.3\%。builder 中两处 GPU 张量高级索引触发阻塞式 HtoD 和全流同步，每次中位耗时 78.6 ms。A3 将 metadata 构建移到 CPU 侧并减少重复发射后，wall 降至 353 ms，GPU busy 提升到 76.3\%。decode 侧则另有发射配置与 PV 布局转换开销，分别在后续两节展开。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig19_biv150_bottleneck.pdf}
+\caption{BI-V150 的 prefill 内核构成与接入 vendor 后的混合步时间分解\label{fig:biv150_bottleneck}}
+\end{figure}
+
+\subsection{prefill attention 与 host 路径（A1／A3／A6）}
+针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
 \begin{reportcode}{\texttt{vendor\_flash\_attn.py:46--58}：同一 Triton program 收集一页 K 与 V}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=46,lastline=58]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
@@ -585,12 +596,12 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \path{vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py} & nn 权重复本与形状路由，§4.3 \\
 \path{vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py} & ctypes 直调 vendor mcBLAS，§4.3 \\
 \path{vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py} & prefill metadata 的当步 cumsum 缓存，§4.4 \\
-\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py} & vendor prefill、混合步拆分、双 gather，§5.1 \\
-\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py} & 3D decode 发射配置，§5.2 \\
-\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py} & A20 资格检查、slab、混合步回退，§5.3–5.4 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py} & vendor prefill、混合步拆分、双 gather，§5.2 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py} & 3D decode 发射配置，§5.3 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py} & A20 资格检查、slab、混合步回退，§5.4–5.5 \\
 \path{src/flag_gems/fused/top_p_sample.py} & 直方图 top-p 与 Gumbel-Max，§4.2 \\
-\path{src/flag_gems/fused/paged_decode_attention.py} & A20 分段内核与 combine，§5.3 \\
-\path{tests/test_paged_decode_attention.py} & 精度与批量不变性测试，§5.4、§6 \\
+\path{src/flag_gems/fused/paged_decode_attention.py} & A20 分段内核与 combine，§5.4 \\
+\path{tests/test_paged_decode_attention.py} & 精度与批量不变性测试，§5.5、§6 \\
 \bottomrule
 \end{tabularx}
 \end{table}
