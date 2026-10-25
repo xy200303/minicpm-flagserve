@@ -537,3 +537,154 @@ def fig_compliance():
     cb.outline.set_visible(False)
     cb.ax.tick_params(length=1.8, width=0.5, labelsize=6.5)
     save(fig, "fig15_compliance")
+
+
+# --------------------------------------------------------------------------- #
+# 16. Incremental gains, with separate measurement scopes for the two platforms
+# --------------------------------------------------------------------------- #
+def fig_incremental_gains():
+    fig, axes = plt.subplots(1, 2, figsize=(15.4 * CM, 7.0 * CM),
+                             gridspec_kw={"width_ratios": [1.35, 1.0]})
+    ax = axes[0]
+    labels = ["基线", "opt1–6", "opt7", "opt8", "opt10", "opt11"]
+    vals = np.array([5089.645, 8135.29, 8273.58, 10946.86, 12145.31, 12529.39])
+    x = np.arange(len(vals))
+    bottoms = np.r_[0.0, vals[:-1]]
+    heights = np.r_[vals[0], np.diff(vals)]
+    colors = [BASE, HERO_SOFT, HERO_SOFT, HERO, HERO, HERO]
+    bars = ax.bar(x, heights, bottom=bottoms, width=0.62, color=colors,
+                  edgecolor=[BASE_EDGE] + ["white"] * 5, linewidth=0.45)
+    for i in range(1, len(vals)):
+        ax.plot([x[i - 1] + 0.31, x[i] - 0.31], [vals[i - 1], vals[i - 1]],
+                color=BASE_EDGE, linewidth=0.6, linestyle=(0, (2, 2)))
+    for i, (bar, val) in enumerate(zip(bars, vals)):
+        gain = "" if i == 0 else f"\n+{(val / vals[i - 1] - 1) * 100:.1f}%"
+        ax.text(bar.get_x() + bar.get_width() / 2, val + 220,
+                f"{val:,.0f}{gain}", ha="center", va="bottom", fontsize=6.6,
+                color=MID if i == 0 else INK)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, fontsize=6.8)
+    ax.set_ylabel("4k 总吞吐（tokens/s）")
+    ax.set_ylim(0, 14500)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.set_title("a  C500：累计优化过程", loc="left", fontsize=8, pad=6)
+
+    ax = axes[1]
+    labels = ["A6", "A7", "A20"]
+    gains4 = np.array([5.83, 38.0, 16.4])
+    gains16 = np.array([1.01, 39.4, 19.8])
+    x = np.arange(len(labels))
+    width = 0.28
+    b1 = ax.bar(x - width / 2, gains4, width, color=HERO, label="4k")
+    b2 = ax.bar(x + width / 2, gains16, width, color=HERO_SOFT, label="16k")
+    for bars in (b1, b2):
+        for bar in bars:
+            v = bar.get_height()
+            ax.text(bar.get_x() + bar.get_width() / 2, v + 0.8, f"+{v:.1f}%",
+                    ha="center", va="bottom", fontsize=6.8)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("相对当日对照的吞吐提升（%）")
+    ax.set_ylim(0, 47)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.legend(loc="upper left", frameon=False, ncol=2)
+    ax.set_title("b  BI-V150：各实验当日对照（非累计）", loc="left", fontsize=8, pad=6)
+    fig.subplots_adjust(wspace=0.30)
+    save(fig, "fig16_incremental_gains", pad=1.0)
+
+
+# --------------------------------------------------------------------------- #
+# 17. Local kernel speedup versus end-to-end throughput gain
+# --------------------------------------------------------------------------- #
+def fig_speedup_benefit():
+    records = [
+        ("C500 opt1\n采样", 5.4, 27.1, 17.6, HERO),
+        ("C500 opt8\nGEMM", (1.36 + 1.56 + 1.35 + 1.67) / 4, 32.3, 14.7, HERO),
+        ("BI-V150 A7\ndecode 配置", 1.76, 38.0, 39.4, P["violet"]),
+        ("BI-V150 A20\ndecode 内核", 1.04 / 0.72, 16.4, 19.8, P["violet"]),
+    ]
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.8 * CM))
+    for name, speedup, gain4, gain16, color in records:
+        ax.scatter(speedup, gain4, s=38, marker="o", color=color,
+                   edgecolors="white", linewidths=0.6, zorder=3)
+        ax.scatter(speedup, gain16, s=38, marker="s", color=color,
+                   edgecolors="white", linewidths=0.6, zorder=3)
+        ax.annotate(name, (speedup, max(gain4, gain16)),
+                    xytext=(0, 7), textcoords="offset points", ha="center",
+                    va="bottom", fontsize=6.8, color=color)
+    ax.set_xscale("log")
+    ax.set_xlim(1.15, 6.7)
+    ax.set_ylim(0, 49)
+    ax.set_xticks([1.25, 1.5, 2.0, 3.0, 4.0, 5.4])
+    ax.set_xticklabels(["1.25", "1.5", "2.0", "3.0", "4.0", "5.4"])
+    ax.xaxis.set_minor_locator(NullLocator())
+    ax.yaxis.set_major_locator(MaxNLocator(6))
+    ax.set_xlabel("局部内核加速比（×，对数轴）")
+    ax.set_ylabel("官方场景端到端吞吐提升（%）")
+    ax.plot([], [], marker="o", linestyle="", color=MID, label="4k 场景")
+    ax.plot([], [], marker="s", linestyle="", color=MID, label="16k 场景")
+    ax.plot([], [], marker="o", linestyle="", color=HERO, label="C500")
+    ax.plot([], [], marker="o", linestyle="", color=P["violet"], label="BI-V150")
+    ax.legend(loc="upper right", frameon=False, ncol=2, columnspacing=1.0)
+    ax.grid(axis="y", color="#E6E6E6", linewidth=0.45, zorder=0)
+    save(fig, "fig17_speedup_benefit")
+
+
+# --------------------------------------------------------------------------- #
+# 18. Memory-bandwidth utilization and GEMM arithmetic throughput
+# --------------------------------------------------------------------------- #
+def fig_efficiency():
+    fig, axes = plt.subplots(1, 2, figsize=(15.4 * CM, 6.7 * CM),
+                             gridspec_kw={"width_ratios": [0.9, 1.35]})
+    ax = axes[0]
+    labels = ["BI stock", "BI A20", "C500 vendor"]
+    absolute = np.array([258, 372, 1420])
+    reference = np.array([587, 587, 1610])
+    utilization = absolute / reference * 100
+    bars = ax.bar(np.arange(3), utilization, width=0.48,
+                  color=[BASE, HERO, P["teal"]],
+                  edgecolor=[BASE_EDGE, "white", "white"], linewidth=0.5)
+    for bar, pct, bw in zip(bars, utilization, absolute):
+        ax.text(bar.get_x() + bar.get_width() / 2, pct + 2.0,
+                f"{pct:.1f}%", ha="center", va="bottom", fontsize=7.5)
+        ax.text(bar.get_x() + bar.get_width() / 2, pct / 2,
+                f"{bw}\nGB/s", ha="center", va="center", fontsize=7,
+                color="white" if bar.get_facecolor()[0] < 0.8 else INK)
+    ax.axhline(100, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)))
+    ax.set_xticks(np.arange(3))
+    ax.set_xticklabels(labels, fontsize=7)
+    ax.set_ylabel("相对实测带宽参考（%）")
+    ax.set_ylim(0, 113)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.set_title("a  decode attention 带宽利用", loc="left", fontsize=8, pad=6)
+    ax.text(0.0, -0.22, "参考：BI copy 587 GB/s；C500 sum 1610 GB/s",
+            transform=ax.transAxes, fontsize=6.4, color=MID)
+
+    ax = axes[1]
+    labels = ["qkv", "o_proj", "gate_up", "down"]
+    vendor = np.array([163, 152, 197, 175], dtype=float)
+    speedup = np.array([1.36, 1.56, 1.35, 1.67])
+    triton = vendor / speedup
+    x = np.arange(4)
+    width = 0.32
+    b1 = ax.bar(x - width / 2, triton, width, color=BASE,
+                edgecolor=BASE_EDGE, linewidth=0.4, label="Triton 最优配置")
+    b2 = ax.bar(x + width / 2, vendor, width, color=HERO, label="vendor mcBLAS")
+    for bars in (b1, b2):
+        for bar in bars:
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 4,
+                    f"{bar.get_height():.0f}", ha="center", va="bottom", fontsize=6.8)
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("GEMM 计算吞吐（TFLOPS）")
+    ax.set_ylim(0, 230)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    ax.legend(loc="upper left", frameon=False)
+    ax.set_title("b  C500 prefill GEMM（M=2048）", loc="left", fontsize=8, pad=6)
+    fig.subplots_adjust(wspace=0.32, bottom=0.22)
+    save(fig, "fig18_efficiency", pad=1.0)
+
+
+fig_incremental_gains()
+fig_speedup_benefit()
+fig_efficiency()

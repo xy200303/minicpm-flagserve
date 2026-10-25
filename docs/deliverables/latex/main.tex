@@ -425,6 +425,31 @@ A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下
 
 满足形状与特征条件时进入新内核；遇到不支持的特征或异常则回到原实现。used/skipped 计数用于检查混合批中的实际执行路径。
 
+\subsection{跨平台结果对照}
+图~\ref{fig:incremental} 对比两种芯片的收益构成。C500 按累计版本展示 4k 吞吐变化；BI-V150 的 A6、A7、A20 使用各自的当日对照，三组数据不作累计。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig16_incremental_gains.pdf}
+\caption{优化阶段的吞吐收益：C500 为累计过程，BI-V150 为各实验的当日对照\label{fig:incremental}}
+\end{figure}
+
+局部加速与端到端收益的关系见图~\ref{fig:speedup}。其中 opt8 的横坐标为四种 prefill GEMM 形状加速比的算术平均值，A20 为 stock 1.04 ms 与新内核 0.72 ms 之比。由于各内核在完整模型中的时间占比不同，局部加速比与端到端提升之间不存在固定的线性换算关系。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig17_speedup_benefit.pdf}
+\caption{局部内核加速比与官方场景端到端吞吐提升的关系\label{fig:speedup}}
+\end{figure}
+
+图~\ref{fig:efficiency} 进一步比较内核效率。左图将 decode attention 带宽分别归一到同芯片的实测参考：BI-V150 使用 copy 587 GB/s，C500 使用 sum 1610 GB/s；两种参考不作为跨芯片的绝对性能排名。右图给出 C500 四种 prefill GEMM 形状的计算吞吐，Triton 数值由相同矩阵运算量与实测耗时计算。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig18_efficiency.pdf}
+\caption{decode attention 带宽利用与 C500 prefill GEMM 计算吞吐\label{fig:efficiency}}
+\end{figure}
+
 \section{正确性验证}
 正确性检查覆盖内核数值、批量不变性、采样分布和端到端精度。各层的测试对象与结果见下表。
 
