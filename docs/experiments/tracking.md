@@ -621,3 +621,10 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 补充开销分解：decode 微基准原始/eager/replay 中位数为 **0.0870/0.0655/0.0449 ms**；强制 no-replay 后 4k 为 **12028.50 tok/s**，与 replay 的 12024.01 同档。8 请求 trace 的 kernel 总时长基线/A29 为 **3312.37/3310.99 ms**，未见 metadata kernel 级瓶颈，故 replay 不是根因，最终仍不采用。
 - host 函数级 trace：`_run_common_attention_metadata` 仅 **65.9 µs**；`_build_attention_metadata` +1.76%，`execute_model` +1.77%，主要 kernel 总时长几乎不变。未发现可安全修复的单点，A29 仍不进入交付分支。
 
+### 2026-10-25 技术报告事实与代码一致性审计
+
+- 完整审计见 `docs/deliverables/audit-2026-10-25.md`。逐项区分一致、口径需限定、证据不足、明确错误与建议复测。
+- 已确认并修正 C500 16k 无来源端点、采样链耗时口径、默认双布局、实例差异、BI fig19 算术、fig15 TTFT 基线、A20 微基准版本等问题。
+- A20 的 9 个测试用例已补入 FlagGems 集成分支 `aff68555`；设备端通过结果待复测，不提前写作 9 passed。
+- 旧 C500 与 BI 实例认证均已失效。最终交付 SHA 的双平台官方 benchmark、MATH-500、关键微基准与测试仍需新实例复测，不能用历史转录替代。
+

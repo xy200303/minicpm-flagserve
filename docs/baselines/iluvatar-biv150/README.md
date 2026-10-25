@@ -1,8 +1,7 @@
 # 天数 BI-V150（Iluvatar，OnlineLab 实例 32GB 版）
 
-赛道二第二张卡的工作区。注意：本实例是 **32GB** 显存版（赛题评测机为 64GB），
-KV 池约 52 万 token，16k×64 并发会排队，绝对值低于 64GB 口径；
-优化方向与相对收益不受影响（同 silicon）。
+赛道二第二张卡的工作区。官方开发与评测均使用 **32GB** 显存版。
+本实例 KV 池约 52 万 token，16k×64 并发会排队；性能数据均按 32GB 口径分析。
 
 ## 基线（stock flagos-2026-s2，官方 serve 命令 + FULL_DECODE_ONLY）
 
@@ -32,16 +31,16 @@ TTFT：4k 12.3s→4.8s；16k 636.5s→193.7s。
 详见 `a1-iluvatar-vendor-fa.md`（探针矩阵、cmt 语义、三个连环坑：
 per-layer tolist 同步 / 分配器风暴 / 阈值门控误判与拆除）。
 
-decode 侧（A2 调研结论，见 `a2-decode-attention-investigation.md`）：
-自研 Triton flash-decoding 打平 stock、vendor decode 无 flash-decoding
-分段、GEMM vendor≈gems——decode 在 Triton 层面已无可挖，收官。
+decode 侧（A2 调研，见 `a2-decode-attention-investigation.md`）：
+初版自研 Triton flash-decoding 与 stock 默认配置接近，该结果只适用于当时实现与配置。
+后续 A7 发射配置和 A20 页对齐内核继续优化 decode，不再沿用“A2 已无优化空间”的旧结论。
 
 ## A3：host 侧修复（2026-10-13，见 `a3-host-sync-fix.md`）
 
 补抓 A1.5 的 16k 端到端 profile 发现 builder 里 `aten::index` 每步
 2 次隐式阻塞式 HtoD+全流同步（占混合步 wall 57%）。修复后混合步
 wall 677→353ms、GPU busy 41%→76%；32GB 卡端到端持平（16k 受
-decode/尾部/KV 排队支配），64GB 评测机上应有体现。
+decode/尾部/KV 排队支配），不引用其他显存规格推断收益。
 最终官方 benchmark：4k 2582.04 / 16k 2488.58。
 
 ## A4：GEMM pinned-config（2026-10-13，见 `a4-gemm-pinned-configs.md`）
@@ -49,8 +48,8 @@ decode/尾部/KV 排队支配），64GB 评测机上应有体现。
 libtuner 运行时 autotune 在 event-timing 降级模式下误选 mm_kernel
 配置。对 8 个 serve 形状离线全空间扫描后在派发层 pin 最优配置：
 decode GEMM 微基准 1.22-1.81x，prefill 追平/反超 vendor。
-端到端 32GB 持平（4k 2579.14 / 16k 2485.52，噪声内），收益预计
-在 64GB 评测机体现。精度 97.1% 达标（与 A3 一致）。
+端到端 32GB 持平（4k 2579.14 / 16k 2485.52，噪声内），微基准收益未转化为整网收益。
+精度 97.1% 达标（与 A3 一致）。
 FlagGems commit `5eac6b39`（FlagGems/dev）。
 
 ## A5：sampler 尾部融合（2026-10-14，见 `a5-sampler-fusion.md`）

@@ -42,24 +42,25 @@
   段缓存 slab 在 `apply()`（捕获之前）一次性预分配；
 - 混合步（prefill+decode 混批）里的 decode 行也走本内核（`try_fast_decode`）。
 
-| | stock | A20 | 变化 |
+| | A7 栈（关闭 A20，非原生 stock） | A20 | 变化 |
 |---|---|---|---|
 | 4k `[4096,1024,64,256]` | 2239.43 | **2606.56** | **+16.4%**，TPOT 113.6→95.5 ms |
 | 16k `[16384,1024,64,128]` | 2956.59 | **3541.34** | **+19.8%**，TTFT 155.5→130.1 s |
-| MATH-500 Level 3 | 96.2% | **96.2~98.1%**（四次） | 达标（≥95%） |
+| MATH-500 Level 3 | 96.2% | **96.2–98.1%**（开发过程跨版本记录） | 达标（≥95%） |
 
 同日的 4k/16k 交错配对（2026-10-20，新实例、从干净树 + 一条 `apply_a20.py` 重建）：
 4k 2239.43 → 2606.56（+16.4%），16k 2956.59 → 3541.34（+19.8%）。
+页对齐版本的两次 MATH-500 记录为 96.2% 和 97.1%，其他版本的精度不混入当前结果。
 
 测试：`FlagGems/tests/test_paged_decode_attention.py`（8 个精度用例对照 fp32 参考 +
-1 个**批量不变性**用例：单条/两条/半批/全批/逆序全批逐位相等），BI-V150 上 `9 passed`。
+1 个**批量不变性**用例：单条/两条/半批/全批/逆序全批逐位相等），共 9 个用例。
 
 内核关键点（可在 `FlagGems/src/flag_gems/fused/paged_decode_attention.py` 顶部注释里看到完整推导）：
 单 warp/段、`BLOCK_N=16`、base-2 在线 softmax、主循环无 mask、**段边界按整页对齐**
 （`block_n == block_size` 时 `page` 变成标量、去掉逐 token 除模与向量页 gather，再快 7–10%），
 段数固定、段长由 device 侧 `seq_lens` 现算（CUDA-graph 安全）。
 
-（以上为同日交错 A/B，A×2 / B×3–4，取中位数。）
+最终展示的 B19/B20 数据点各实测一次，不取多次中位数；A×2 / B×3–4 的过程统计不适用于这两个点。
 
 开关：`VLLM_FL_DISABLE_DECODE_FAST=1` 整体回退；`VLLM_FL_DECODE_FAST_SEGMENTS`
 /`_BLOCK`/`_WARPS`/`_STAGES` 调形状；`VLLM_FL_DECODE_FAST_DEBUG=1` 打印
@@ -74,7 +75,7 @@
 ## 2. 沐曦 C500
 
 见 `vllm_fl/dispatch/backends/vendor/metax/` 下的 opt1–opt11（sort-free 采样链、
-GEMM 路由、host 同步消除等），详见技术报告第 3 节。
+GEMM 路由、host 同步消除等），详见技术报告第 4 节。
 
 ## 3. 复现
 
