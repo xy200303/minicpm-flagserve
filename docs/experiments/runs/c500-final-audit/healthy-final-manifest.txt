@@ -1,0 +1,35 @@
+Sun Oct 25 20:55:06 CST 2026
+9920581743b6
+               total        used        free      shared  buff/cache   available
+Mem:           128Gi        12Gi       115Gi          0B          0B       115Gi
+Swap:             0B          0B          0B
+mx-smi  version: 2.3.1
+
+=================== MetaX System Management Interface Log ===================
+Timestamp                                         : Sun Oct 25 20:55:06 2026
+
+Attached GPUs                                     : 1
++---------------------------------------------------------------------------------+
+| MX-SMI 2.3.1                       Kernel Mode Driver Version: 3.8.30           |
+| MACA Version: 3.7.0.38             BIOS Version: 1.33.5.0                       |
+|------------------+-----------------+---------------------+----------------------|
+| Board       Name | GPU   Persist-M | Bus-id              | GPU-Util      sGPU-M |
+| Pwr:Usage/Cap    | Temp       Perf | Memory-Usage        | GPU-State            |
+|==================+=================+=====================+======================|
+| 0     MetaX C500 | 0           Off | 0000:12:00.0        | 0%          Disabled |
+| 60W / 350W       | 35C          P0 | 826/65536 MiB       | Available            |
++------------------+-----------------+---------------------+----------------------+
+
++---------------------------------------------------------------------------------+
+| Process:                                                                        |
+|  GPU                    PID         Process Name                 GPU Memory     |
+|                                                                  Usage(MiB)     |
+|=================================================================================|
+|  no process found                                                               |
++---------------------------------------------------------------------------------+
+
+End of Log
+plugin=0207b7e10f93dfa6e912b00c372f268d618b4c2c
+gems=aff68555e266582f68c6554898f4c795c869578d
+PYTHONPATH=/workspace/audit-plugin:/workspace/audit-gems/src
+1523bbc79417e37ee732e5c3b58c74fb9359050a7ad2dd36727d0e6e17ce6983  /workspace/XLANG2026-audit.zip

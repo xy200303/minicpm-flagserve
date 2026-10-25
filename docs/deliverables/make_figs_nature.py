@@ -91,17 +91,17 @@ def label_above(ax, x, y, text, color, size=7, dy=None):
 # --------------------------------------------------------------------------- #
 def fig_c500_throughput():
     labels = ["4k 场景", "16k 场景"]
-    base = np.array([5089.645, 7029.675])
-    instance1 = np.array([12403.21, 11104.26])
-    instance2 = np.array([11868.79, 11167.87])
+    official = np.array([5089.645, 7029.675])
+    local = np.array([4210.20, 5867.59])
+    current = np.array([12399.31, 11046.19])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
-        ax, labels, [base, instance1, instance2],
-        ["官方基线", "实例 1（单次）", "实例 2（单次）"],
+        ax, labels, [official, local, current],
+        ["官网基线", "本机原生基线", "当前交付"],
         ylabel="总吞吐（tokens/s）", colors=[BASE, HERO_SOFT, HERO], bar_width=0.65,
         edgecolor=BASE_EDGE, linewidth=0.4)
     ax.legend(loc="upper left").set_zorder(5)
-    for series, vals, color in zip(cont, [base, instance1, instance2],
+    for series, vals, color in zip(cont, [official, local, current],
                                    [MID, HERO_SOFT, HERO]):
         for i, bar in enumerate(series):
             cx = bar.get_x() + bar.get_width() / 2
@@ -116,7 +116,7 @@ def fig_c500_throughput():
 # --------------------------------------------------------------------------- #
 def fig_sampler():
     labels = ["PyTorch top-p\n参考实现", "fused_top_p_sample\n当前交付"]
-    vals = [4.17024, 0.335616]
+    vals = [4.08576, 0.3808]
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [np.array(vals)], ["采样链"], ylabel="单次调用耗时（ms，对数轴）",
@@ -130,7 +130,7 @@ def fig_sampler():
     ax.annotate("", xy=(0.52, 0.37), xytext=(0.52, 3.80),
                 arrowprops=dict(arrowstyle="<|-|>", color=ACCENT, linewidth=0.7,
                                 shrinkA=0, shrinkB=0, mutation_scale=6))
-    ax.text(0.55, 1.2, "约 12.4×", color=ACCENT, fontsize=8.5, fontweight="bold",
+    ax.text(0.55, 1.2, "约 10.7×", color=ACCENT, fontsize=8.5, fontweight="bold",
             va="center", ha="left")
     ax.set_yscale("log")
     ax.set_ylim(0.2, 8.0)
@@ -289,9 +289,9 @@ def fig_a7_config():
 # 8/9. Constraint panels (half column, horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
-    labels = ["C500 后续实例", "BI 页对齐 1", "BI 页对齐 2"]
-    vals = [97.14, 96.2, 97.1]
-    colors = [HERO] + [P["violet"]] * 2
+    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2"]
+    vals = [98.1, 98.1, 96.2, 97.1]
+    colors = [HERO, HERO] + [P["violet"]] * 2
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(vals))[::-1]
     ax.barh(y, vals, height=0.40, color=colors,
@@ -299,13 +299,13 @@ def fig_accuracy():
     for yi, v in zip(y, vals):
         ax.text(v + 0.11, yi, f"{v:.2f}", va="center", ha="left", fontsize=7)
     ax.axvline(95.0, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
-    ax.text(95.25, 2.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
+    ax.text(95.25, 3.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
             va="center", bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=7)
     ax.tick_params(axis="y", length=0)
     ax.set_xlim(93, 99.6)
-    ax.set_ylim(-0.6, 2.9)
+    ax.set_ylim(-0.6, 3.9)
     ax.set_xlabel("MATH-500 Level 3 准确率（%）", fontsize=7.5)
     ax.xaxis.set_major_locator(MaxNLocator(4))
     save(fig, "fig8_accuracy")
@@ -507,10 +507,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(11868.79 / 5089.645 - 1) * 100, (2606.56 / 2028.01 - 1) * 100],
-        [(11104.26 / 7029.675 - 1) * 100, (3541.34 / 915.15 - 1) * 100],
-        [(97.14 / 95.0 - 1) * 100, (96.20 / 95.0 - 1) * 100],
-        [(1 - 18.05191 / 27.197135) * 100, (1 - 130.1 / 599.262) * 100],
+        [(12399.31 / 5089.645 - 1) * 100, (2606.56 / 2028.01 - 1) * 100],
+        [(11046.19 / 7029.675 - 1) * 100, (3541.34 / 915.15 - 1) * 100],
+        [(98.10 / 95.0 - 1) * 100, (96.20 / 95.0 - 1) * 100],
+        [(1 - 18.14147 / 27.197135) * 100, (1 - 130.1 / 599.262) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",

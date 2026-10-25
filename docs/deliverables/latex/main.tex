@@ -123,7 +123,7 @@
 \setlength{\parindent}{2em}
 本报告面向国产芯片上的大模型推理吞吐优化任务，在官方指定的 FlagOS 栈（vllm-plugin-FL 分支 flagos-2026-s2、FlagGems 标签 v5.3.5）上，对 MiniCPM5-2B 在天数 BI-V150 与沐曦曦云 C500 两款芯片开展算子、内核与调度优化，保持 \texttt{vllm serve} 启动参数、模型与精度要求不变。
 
-已有测量中，沐曦 C500 平台 4k 场景总吞吐为 11868.79–12403.21 tok/s，是官方基线的 2.33–2.44 倍；16k 场景为 11104.26–11167.87 tok/s，是基线的 1.58–1.59 倍。区间端点来自不同实例的单次 \texttt{vllm bench serve} 输出。天数 BI-V150 的官方开发与评测环境均为 32GB：4k 场景由 2028.01 提升至 2606.56 tok/s（+28.5\%），16k 场景由 915.15 提升至 3541.34 tok/s（+287\%）；A20 相对同日 A7 栈（关闭 A20）再提升 16.4\% 与 19.8\%。MATH-500 Level 3 记录中，C500 后续实例为 97.14\%，BI-V150 页对齐版本两次结果为 96.2\% 和 97.1\%，均高于 95\% 的赛题要求；这些记录的 TTFT 均未回退。
+当前交付版本的 C500 复测中，4k 场景总吞吐为 12399.31 tok/s，是官网基线的 2.44 倍；16k 场景为 11046.19 tok/s，是基线的 1.57 倍。两项数据均来自同一实例、同一交付提交的官方四轮去首均值。天数 BI-V150 的官方开发与评测环境均为 32GB：4k 场景由 2028.01 提升至 2606.56 tok/s（+28.5\%），16k 场景由 915.15 提升至 3541.34 tok/s（+287\%）；A20 相对同日 A7 栈（关闭 A20）再提升 16.4\% 与 19.8\%。MATH-500 Level 3 中，C500 两次复测均为 98.1\%，BI-V150 页对齐版本两次结果为 96.2\% 和 97.1\%，均高于 95\% 的赛题要求；TTFT 均未回退。
 
 主要优化包括：按输入形状选择 GEMM 与 attention 的实现或执行配置；用 1024-bin 质量直方图实现免排序 top-p 采样；针对 PV 矩阵乘的布局转换开销重写 paged decode attention，最终页对齐版本在 A26 扫描中达到 0.629 ms、约 427 GB/s；减少 prefill 阶段的隐式同步与冗余内核发射。
 
@@ -160,10 +160,10 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \end{tabularx}
 \end{table}
 
-性能数字均由官方 \texttt{vllm bench serve} 产生，但测量口径分别标明：历史 opt 系列采用同一服务连续四轮、去首轮后三轮均值；C500 区间端点采用单次输出。连续运行不保证每轮冷缓存，prefix cache 命中情况须逐次查日志。精度数字来自 evalscope 官方原命令的 MATH-500 Level 3 子集（105 题）。
+性能数字均由官方 \texttt{vllm bench serve} 产生。当前 C500 复测与历史 opt 系列均采用同一服务连续四轮、去首轮后三轮均值；连续运行不保证每轮冷缓存，prefix cache 命中情况逐次查日志。精度数字来自 evalscope 官方原命令的 MATH-500 Level 3 子集（105 题）。
 
 \section{总体成绩}
-沐曦 C500 的结果来自两台实例，4k 高端来自前一实例，16k 高端来自后一实例，区间两端不是同机成对结果。天数 BI-V150 的官方开发与评测环境均为 32GB；相对收益采用同日交错 A/B，避免跨时段漂移的影响。
+当前 C500 数据来自同一健康实例、同一交付提交的完整复测，并同时保留官网基线和本机原生基线。天数 BI-V150 的官方开发与评测环境均为 32GB；相对收益采用同日交错 A/B，避免跨时段漂移的影响。
 
 \subsection{交付版本与启动验证}
 交付代码为插件与算子两个独立仓库中的固定提交，均保留完整 Git 历史，可用 \texttt{git log}、\texttt{git show} 和 \texttt{git diff} 查看改动。
@@ -182,27 +182,27 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \end{tabularx}
 \end{table}
 
-2026-10-24 的 C500（64GB 显存、128GB CPU 内存）启动留档对应插件 \texttt{f4971e7} 与算子 \texttt{5eac6b39}：全新 clone 并安装后，服务正常监听 9031 端口，\texttt{/v1/models} 返回 \texttt{minicpm}，实际 chat 请求正常返回，日志包含 \texttt{mcblas\_mm} 注册和采样融合启用记录。留档中的 C500 相关代码与当前交付相同，但该次启动不是对当前 SHA 的验证。2026-10-25 在当前 SHA 上复测时，交付版与原生基线均在 20 分钟内未完成初始化，当前实例的端到端复测因此未完成；该故障不作为性能数据。
+2026-10-25 在 C500（64GB 显存、128GB CPU 内存）上，从上述提交部署并显式固定源码路径。交付版启动耗时 293 秒，日志包含 \texttt{mcblas\_mm} 注册、采样融合启用和 lm\_head nn 路由；原生基线启动耗时 161 秒。两者均完成官方四轮 benchmark，当前交付版另完成两次 MATH-500 评测。
 
 \begin{table}[!htbp]
 \centering
-\caption{已有性能测量结果（BI-V150 官方开发与评测均为 32GB）}
+\caption{当前交付性能与已有 BI-V150 结果（BI-V150 官方开发与评测均为 32GB）}
 \begin{tabularx}{\linewidth}{@{}l l r r Y@{}}
 \toprule
-平台 & 场景 & 官方基线（tok/s） & 测量结果（tok/s） & 提升 \\
+平台 & 场景 & 官网基线（tok/s） & 当前交付（tok/s） & 提升 \\
 \midrule
-沐曦 C500 & 4k & 5089.645 & 11868.79–12403.21 & 2.33$\times$–2.44$\times$\\
-沐曦 C500 & 16k & 7029.675 & 11104.26–11167.87 & 1.58$\times$–1.59$\times$\\
+沐曦 C500 & 4k & 5089.645 & 12399.31 & 2.44$\times$\\
+沐曦 C500 & 16k & 7029.675 & 11046.19 & 1.57$\times$\\
 天数 BI-V150 & 4k & 2028.01（官网，32GB） & 2606.56 & +28.5\%\\
 天数 BI-V150 & 16k & 915.15（官网，32GB） & 3541.34 & +287\%\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-MATH-500 Level 3 记录中，C500 后续实例为 97.14\%；BI-V150 页对齐版本两次结果为 96.2\% 和 97.1\%。C500 的 4k TTFT 为 2965 ms（基线 3199 ms），16k TTFT 为 17902 ms（基线 27197 ms）；天数 A20 的 16k TTFT 相对 A7 栈（关闭 A20）由 155.5 s 降至 130.1 s。
+本机原生基线为 4k 4210.20、16k 5867.59 tok/s；当前交付相对本机基线分别为 2.95$\times$ 和 1.88$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%（105/105 请求成功）；BI-V150 页对齐版本两次结果为 96.2\% 和 97.1\%。C500 的 4k TTFT 为 1719.18 ms（官网基线 3199.435 ms），16k TTFT 为 18141.47 ms（官网基线 27197.135 ms）；天数 A20 的 16k TTFT 相对 A7 栈（关闭 A20）由 155.5 s 降至 130.1 s。
 
 \subsection{性能与约束对照}
-图~\ref{fig:compliance} 汇总历史结果的吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。按保守端点计算，C500 四项数值为 +133.2\%／+58.0\%／+2.3\%／+33.6\%，BI-V150 为 +28.5\%／+287\%／+1.3\%／+78.3\%。
+图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +143.6\%／+57.1\%／+3.3\%／+33.3\%，BI-V150 为 +28.5\%／+287\%／+1.3\%／+78.3\%。
 
 \begin{figure}[!htbp]
 \centering
@@ -228,7 +228,7 @@ MATH-500 Level 3 记录中，C500 后续实例为 97.14\%；BI-V150 页对齐版
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig1_c500_throughput.pdf}
-\caption{沐曦 C500：官方基线与跨实例单次测量的历史吞吐对比}
+\caption{沐曦 C500：官网基线、本机原生基线与当前交付的四轮去首均值对比}
 \end{figure}
 
 \section{优化流程}
@@ -272,7 +272,7 @@ A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由�
 \end{figure}
 
 \subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
-自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下，保留集质量不小于 $p\cdot Z$；其三，官方 B=64 形状采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在当前交付代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.170 ms，\texttt{fused\_top\_p\_sample} 为 0.336 ms，约 12.4$\times$。
+自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下，保留集质量不小于 $p\cdot Z$；其三，官方 B=64 形状采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在当前交付代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，约 10.7$\times$。
 
 \begin{figure}[!htbp]
 \centering
@@ -314,7 +314,7 @@ A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由�
 \end{figure}
 
 \subsection{GEMM 布局与路由（opt2／opt4／opt6／opt8／opt11）}
-MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 592 $\mu$s，直接 mcBLAS 为 404 $\mu$s（1.47$\times$）；同次原生 \texttt{torch.mm} 为 382 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
+MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
 只有已经生成 nn 副本且形状满足条件的线性层才进入新路径。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
 
@@ -475,9 +475,9 @@ bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select
 数值误差 & A20 vs stock，含 ragged 形状 & 4k 最大 $2.4\times10^{-4}$，ragged 最大 $9.8\times10^{-4}$ \\
 批量不变性 & 单条／两条／半批／全批／逆序全批，对照 fp32 & 测试源码已纳入交付，共 9 个用例 \\
 采样等价 & greedy、top-p、Gumbel 与 TV 距离 & greedy 与 \texttt{torch.argmax} 完全一致；保留集 IoU $\geq 0.999$；TV 与参考实现同档 \\
-端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 后续实例为 97.14\%；BI-V150 页对齐版本为 96.2\% 和 97.1\% \\
+端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 当前交付两次均为 98.1\%；BI-V150 页对齐版本为 96.2\% 和 97.1\% \\
 真实路径命中 & 混合步 decode 切片 used/skipped & B12 摘要为 used=44000、skipped=0，表示通过资格检查并尝试 fast path \\
-启动验证 & 全新 clone + 独立 venv + 官方启动 & C500 的 \texttt{f4971e7+5eac6b39} 启动、\texttt{/v1/models} 与实际 chat 请求均通过；相关代码与交付版相同 \\
+启动验证 & 固定交付源码路径 + 独立 venv + 官方启动 & 当前 C500 交付版 293 秒启动，官方四轮 benchmark 与两次精度评测均完成 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -492,12 +492,12 @@ bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select
 约束 & 本提交做法 \\
 \midrule
 \texttt{vllm serve} 参数与基线一致 & 两张卡均按官网原命令启动，未增删任何参数；C500 不额外添加 \texttt{--compilation-config}\\
-禁止 benchmark 脚本调优 & 未修改官方脚本；历史 opt 采用四轮去首后三轮均值，单次测量单独标明\\
+禁止 benchmark 脚本调优 & 未修改官方脚本；当前 C500 与历史 opt 采用四轮去首后三轮均值，其他单次测量单独标明\\
 禁止直接 merge 上游分支 & 基线为 flagos-2026-s2 与 FlagGems v5.3.5，全部改动以补丁形式叠加\\
 算子优化须有开发量 & 新增 Triton 内核（paged decode attention、采样链、dual-gather）与路由/同步改造，均可独立 A/B\\
 禁止改超参开启量化、投机采样 & 保持官方模型精度与生成配置，不启用量化或投机采样\\
-精度 $\geq 0.95$ & C500 后续实例为 97.14\%；BI-V150 页对齐版本为 96.2\% 和 97.1\%\\
-TTFT 不回退 & 历史记录中各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 17902 ms\\
+精度 $\geq 0.95$ & C500 当前交付两次均为 98.1\%；BI-V150 页对齐版本为 96.2\% 和 97.1\%\\
+TTFT 不回退 & 各场景 TTFT 均优于基线；16k C500 由 27197 ms 降至 18141 ms\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -517,15 +517,16 @@ cd ../FlagGems   && pip install -e . --no-build-isolation
 \end{minted}
 \end{reportcode}
 
-沐曦 C500 还需设置以下环境变量（天数无需）：
+两平台均设置 \texttt{VLLM\_PLUGINS=fl}。C500 还需以下环境变量；当镜像已有其他版本的插件时，同时固定源码路径，避免加载到非交付目录：
 
-\begin{reportcode}{C500 环境变量（天数无需额外设置）}
+\begin{reportcode}{C500 环境变量}
 \begin{minted}{bash}
 export PATH=/opt/conda/bin:$PATH
 export MACA_PATH=/opt/maca
 export MACA_HOME=/opt/maca
 export LD_LIBRARY_PATH=/opt/maca/lib:/opt/maca/lib64
 export VLLM_PLUGINS=fl
+export PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src
 \end{minted}
 \end{reportcode}
 
@@ -554,22 +555,21 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \end{minted}
 \end{reportcode}
 
-精度评测执行官网给出的 evalscope 命令，结果见
-\texttt{reports/minicpm/math\_500.json} 的 score 字段。
+精度评测执行官网给出的 evalscope 命令。结果位于工作目录的 \path{<timestamp>/reports/minicpm/math_500.json}；当前 evalscope 版本的精度字段为 \texttt{metrics[0].score}。
 
 \subsection{复现注意事项}
-（1）检查 prefix cache：benchmark 使用 seed=0，同一 serve 上重复相同 input\_len 的负载可能命中 prefix cache；本队日志出现过 35.9\% 命中率，并伴随 prefill 开销降低和吞吐虚高。旧日志不能证明各次运行均无命中，因此每个数据点都须检查命中率日志，必要时在新启动的 serve 上测量。
+（1）检查 prefix cache：benchmark 使用 seed=0，同一 serve 上重复相同 input\_len 的负载可能命中 prefix cache；本队日志出现过 35.9\% 命中率，并伴随 prefill 开销降低和吞吐虚高。旧日志不能证明各次运行均无命中，因此每个数据点都须检查命中率日志，必要时在新启动的 serve 上测量。当前交付复测的命中率低于 1\%。
 
 （2）C500 需要 $\geq$128 GB CPU 内存：在模力方舟 64 GB 内存规格实例上，纯镜像原版 \texttt{vllm serve} 也会在 inductor 编译阶段被 cgroup OOM killer 杀掉（匿名内存峰值 63.4 GB，被杀时 GPU 显存仅 858 MiB，与显存、负载、代码改动均无关）。128 GB 规格实例全程稳定。
 
-（3）启动耗时：C500 需执行 GEMM autotune 预热。留档包括 367 秒（已有 Triton cache 的第二次启动）与 973 秒（另一台实例），二者不都代表首次启动。
+（3）启动耗时：C500 需执行 GEMM autotune 预热。当前交付复测启动为 293 秒，原生基线为 161 秒；预热时间随实例和缓存状态变化，不能用固定秒数估计。
 
-（4）实例间差异：按低端归一，两台 C500 实例的 4k 吞吐相差 4.50\%、TTFT 相差 67.90\%，16k 吞吐相差 0.57\%。报告因此保留跨实例单次测量的区间，不以单台最优值充当普遍成绩。
+（4）测量波动：当前交付 4k 后三轮吞吐极差为 0.80\%，16k 为 0.29\%。本机原生基线慢于官网基线，因此报告同时给出两种参照，不用跨实例区间替代当前结果。
 
 \section{结论}
-本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整和 paged decode attention 重写。已有测量中，C500 的 4k 与 16k 吞吐分别为官方基线的 2.33–2.44 倍和 1.58–1.59 倍；BI-V150 在官方 32GB 环境中分别达到 2606.56 tok/s 和 3541.34 tok/s。MATH-500 Level 3 记录中，C500 后续实例为 97.14\%，BI-V150 页对齐版本为 96.2\% 和 97.1\%。
+本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整和 paged decode attention 重写。当前交付的 C500 复测中，4k 与 16k 吞吐分别为官网基线的 2.44 倍和 1.57 倍，为本机原生基线的 2.95 倍和 1.88 倍；BI-V150 在官方 32GB 环境中分别达到 2606.56 tok/s 和 3541.34 tok/s。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-V150 页对齐版本为 96.2\% 和 97.1\%。
 
-测量结果也反映了实例间的差异。BI-V150 的跨时段绝对值存在漂移，因此采用同日交错 A/B 比较；按低端归一，两台 C500 的 4k 吞吐、TTFT 和 16k 吞吐差异分别为 4.50\%、67.90\% 和 0.57\%。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
+当前交付复测的 4k TTFT 为 1719.18 ms，16k TTFT 为 18141.47 ms，均优于官网和本机原生基线。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
 
 \begin{thebibliography}{9}
 \bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.

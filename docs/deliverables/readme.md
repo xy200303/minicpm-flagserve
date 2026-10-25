@@ -25,7 +25,7 @@ git clone --single-branch --branch integration/flaggems \
 # 打包时保留两个目录下的 .git；只剔除本机 build、__pycache__ 和虚拟环境
 ```
 
-**历史启动记录（2026-10-24，C500 64GB / RAM 128GB）**：当时验证版本为插件 `f4971e7`、算子 `5eac6b39`，在全新 clone、独立 `venv --system-site-packages` 中分别执行 `pip install -e . --no-build-isolation`，随后按第 4.3 节的官方命令启动。启动成功，`/v1/models` 返回 `minicpm`，实际 `/v1/chat/completions` 请求返回正常；日志确认 `mcblas_mm` 与采样融合均已加载。该版本的 C500 相关代码与当前交付相同，但不是当前 SHA 的启动验证。
+**当前交付复测（2026-10-25，C500 64GB / RAM 128GB）**：部署上表两个固定提交，显式设置 `PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src` 后按官方命令启动。交付版 293 秒启动，原生基线 161 秒启动；日志确认 `mcblas_mm`、采样融合与 lm_head nn 路由。两个版本均完成官方四轮 benchmark，交付版另完成两次 MATH-500 Level 3，均为 98.1%。
 
 ## 0.1 环境要求与启动耗时
 
@@ -41,28 +41,26 @@ git clone --single-branch --branch integration/flaggems \
 被杀时 GPU 显存仅 858 MiB）。128 GB 规格实例全程稳定。
 **这不是代码问题**，与负载、vllm 版本、我们的改动均无关。
 
-**启动耗时**：C500 首次启动需要执行 GEMM autotune 预热；当次实测配置为
-5 个权重形状 × 120 次 `torch.mm` 调用，该数量不是普遍固定值。已有 cache 的
-第二次启动实测 **367 秒**，另一台实例首次启动实测 **973 秒**，两者不能都视为首次启动。
+**启动耗时**：C500 首次启动需要执行 GEMM autotune 预热。当前交付复测启动为
+**293 秒**，原生基线为 **161 秒**；预热时间随实例和缓存状态变化。
 **请耐心等待，不要误判为卡死**。如不需要预热可设 `VLLM_FL_MM_WARMUP=0`，
 但 4k 吞吐会下降约 6%、TTFT 变差。
 
 ## 1. 性能结果
 
 官方用例 `[input_len, output_len, concurrency, num_prompts]`，使用
-`vllm bench serve`，无计时埋点。历史 opt 结果采用 4 轮去首均值，最终 C500
-区间为单次 bench 输出，不能统称为官方聚合结果或冷缓存结果。
+`vllm bench serve`，无计时埋点。当前 C500 复测与历史 opt 系列均采用 4 轮去首、
+后三轮均值；prefix cache 命中情况逐次检查，当前交付复测低于 1%。
 
-| 平台 | 场景 | 官网基线 | 本包实测 | 提升 |
+| 平台 | 场景 | 官网基线 | 当前交付 | 提升 |
 |---|---|---|---|---|
-| C500 | 4k `[4096,1024,64,256]` | 5089.645 | **11868.79 – 12403.21** | **2.33x – 2.44x** |
-| C500 | 16k `[16384,1024,64,128]` | 7029.675 | **11104.26 – 11167.87** | **1.58x – 1.59x** |
+| C500 | 4k `[4096,1024,64,256]` | 5089.645 | **12399.31** | **2.44x** |
+| C500 | 16k `[16384,1024,64,128]` | 7029.675 | **11046.19** | **1.57x** |
 | BI-V150 | 4k | 2028.01 | **2606.56** | **+28.5%** |
 | BI-V150 | 16k | 915.15 | **3541.34** | **+287%** |
 
-C500 数字给的是**两台不同实例**的实测区间（实例间存在真实差异：
-4k 吞吐差 4.50%、TTFT 差 67.90%，16k 几乎一致）。
-BI-V150 的官方开发与评测环境均为 **32 GB**，以下数字采用同一显存口径。
+本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**；当前交付相对本机基线
+分别为 **2.95x** 和 **1.88x**。BI-V150 的官方开发与评测环境均为 **32 GB**。
 天数一栏为 **A20 交付栈**实测；其同日交错 A/B 的对照组是**关闭 A20 的 A7 栈**，
 不是原生 stock：**2239.43 → 2606.56（+16.4%）** 与
 **2956.59 → 3541.34（+19.8%）**，即 A20 在 A7 栈之上再带来的增量
@@ -70,11 +68,11 @@ BI-V150 的官方开发与评测环境均为 **32 GB**，以下数字采用同�
 最终展示的 B19/B20 数据点各实测一次，不取多次中位数。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 后续实例复测 **97.14%**；BI-V150 页对齐版本两次结果为 **96.2%** 和 **97.1%**。
-均 ≥ 0.95；其他早期版本的精度不混入当前结果。
+C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 页对齐版本两次结果为
+**96.2%** 和 **97.1%**。均 ≥ 0.95。
 
-**TTFT**：C500 4k 2965 ms（基线 3199 ms）、16k 17902 ms（基线 27197 ms）；
-天数 A20 4k 113.6 → 95.5 ms（TPOT）、16k TTFT 155.5 → 130.1 s。
+**TTFT**：C500 4k **1719.18 ms**（官网基线 3199.435 ms）、16k **18141.47 ms**
+（官网基线 27197.135 ms）；天数 A20 4k 113.6 → 95.5 ms（TPOT）、16k TTFT 155.5 → 130.1 s。
 
 ## 2. 天数 BI-V150 改动
 
@@ -144,7 +142,9 @@ cd ../FlagGems && pip install -e . --no-build-isolation
 
 ### 4.2 环境变量
 
-天数（Iluvatar）与 C500 均需保留 `VLLM_PLUGINS=fl`。C500 的完整环境变量为：
+天数（Iluvatar）与 C500 均需保留 `VLLM_PLUGINS=fl`。若镜像已有其他插件版本，
+同时设置 `PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src`，确保加载交付源码。
+C500 的完整环境变量为：
 
 ```bash
 export PATH=/opt/conda/bin:$PATH
@@ -152,6 +152,7 @@ export MACA_PATH=/opt/maca
 export MACA_HOME=/opt/maca
 export LD_LIBRARY_PATH=/opt/maca/lib:/opt/maca/lib64
 export VLLM_PLUGINS=fl
+export PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src
 ```
 
 ### 4.3 启动（与官方一致，一字未改）
@@ -194,7 +195,7 @@ evalscope eval --model minicpm \
   --work-dir /workspace/evalscope-datasets/level3 --ignore-errors
 ```
 
-结果在 `/workspace/evalscope-datasets/level3/reports/minicpm/math_500.json` 的 `score` 字段。
+结果在 `/workspace/evalscope-datasets/level3/<timestamp>/reports/minicpm/math_500.json`；当前 evalscope 版本的精度字段为 `metrics[0].score`。
 
 ## 5. 实验记录与事实来源
 
