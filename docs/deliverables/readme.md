@@ -31,9 +31,16 @@ git clone --single-branch --branch integration/flaggems \
 
 | 项目 | 天数 BI-V150 | 沐曦 C500 |
 |---|---|---|
-| 显存 | 32 GB（本队开发机） | 64 GB |
-| **CPU 内存** | ≥ 64 GB | **≥ 128 GB**（见下） |
+| GPU / 显存 | BI-V150 / 32 GB（官方开发与评测） | C500（104 SM）/ 64 GB |
+| CPU | Intel Xeon Gold 6330 @ 2.00GHz | Intel Core i7-8550U |
+| **CPU 内存（最终实测实例）** | 503 GiB | 128 GiB；**复现建议 ≥128 GB**（见下） |
+| PyTorch | 2.10.0+corex.4.5.0 | 2.8.0+metax3.7.0.7 |
+| vLLM / Triton | 0.24.0 / 3.6.0 | 0.24.0 / 3.0.0+metax3.7.0.7 |
+| 芯片软件栈 | IX-ML 4.4.0，驱动 4.5.0 | MACA 3.7.0.38，驱动 3.8.30 |
+| evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
+
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。两平台均使用插件 `0207b7e1` 和 FlagGems `aff68555`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -70,8 +77,11 @@ C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V15
 均 ≥ 0.95。
 
 **TTFT**：C500 4k **1719.18 ms**（官网基线 3199.435 ms）、16k **18141.47 ms**
-（官网基线 27197.135 ms）；BI-V150 16k 为 **111.64–111.67 s**，A7 对照为
-**136.86–137.00 s**。BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%。
+（官网基线 27197.135 ms）；BI-V150 4k 为 **4139.85–4327.86 ms**（官网基线
+11573.53 ms），16k 为 **111.64–111.67 s**（官网基线 599262.03 ms，A7 对照为
+136.86–137.00 s）。按官网基线判断，两平台各场景均满足 `baseline +1%` 上限。
+同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，
+不替代官网基线判断。
 
 ## 2. 天数 BI-V150 改动
 
@@ -202,3 +212,16 @@ evalscope eval --model minicpm \
 不作为后续开发的直接输入；引用前须核对代码版本、硬件规格、测量口径和原始日志。
 事实与代码审计见 `xy200303/minicpm-flagserve` 仓库的
 `docs/deliverables/audit-2026-10-25.md`。
+
+最终复测原始证据均保存在该文档仓库，可用以下路径直接核查：
+
+| 结果 | 原始证据 |
+|---|---|
+| C500 当前交付性能 | `docs/experiments/runs/c500-final-audit/healthy-final-{raw,summary}.csv` 与同目录 serve／bench 日志 |
+| C500 本机原生基线 | 同目录 `healthy-baseline-{raw,summary}.csv` 与 serve／bench 日志 |
+| C500 两次精度与微基准 | 同目录 `healthy-eval1-math500.json`、`healthy-eval2-math500.json`、`micro-healthy.json` |
+| BI-V150 两组 A7/A20 | `docs/experiments/runs/bi-final-audit/{1-a7,1-a20,2-a7,2-a20}/benchmark_results/` 及同级 serve／bench 日志 |
+| BI-V150 精度与内核验证 | 同目录 `eval1-math500.json`、`eval2-math500.json`、`micro.json`、`pytest-a20.log` |
+| 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
+
+官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-10-27）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。

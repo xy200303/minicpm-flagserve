@@ -199,7 +199,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \end{tabularx}
 \end{table}
 
-C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.95$\times$ 和 1.88$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-V150 为 96.19\% 和 98.1\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1719.18 ms（官网基线 3199.435 ms），16k TTFT 为 18141.47 ms（官网基线 27197.135 ms）；BI-V150 的 16k TTFT 为 111.64–111.67 s，A7 对照为 136.86–137.00 s。
+C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.95$\times$ 和 1.88$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-V150 为 96.19\% 和 98.1\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1719.18 ms（官网基线 3199.435 ms），16k TTFT 为 18141.47 ms（官网基线 27197.135 ms）；BI-V150 的 4k TTFT 为 4139.85–4327.86 ms（官网基线 11573.53 ms），16k TTFT 为 111.64–111.67 s（官网基线 599262.03 ms；A7 对照为 136.86–137.00 s）。按官网基线判断，两平台各场景均满足 TTFT 不超过 baseline +1\% 的约束。
 
 \subsection{性能与约束对照}
 图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +143.6\%／+57.1\%／+3.3\%／+33.3\%，BI-V150 为 +101.6\%／+393.9\%／+1.3\%／+81.4\%。
@@ -230,6 +230,42 @@ C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相�
 \includegraphics[width=\linewidth]{fig1_c500_throughput.pdf}
 \caption{沐曦 C500：官网基线、本机原生基线与当前交付的四轮去首均值对比}
 \end{figure}
+
+\subsection{实验环境}
+表~\ref{tab:environment} 列出最终复测环境。硬件容量、驱动与运行时来自实例管理接口，依赖版本来自 Python 包信息；BI-V150 的 Triton 版本采用运行时 \texttt{triton.\_\_version\_\_} 读数。两平台使用同一组交付提交，避免把代码差异混入平台对比。
+
+\begin{table}[!htbp]
+\centering\small
+\caption{双平台最终复测的软硬件环境\label{tab:environment}}
+\begin{tabularx}{\linewidth}{@{}p{2.6cm}YY@{}}
+\toprule
+项目 & 天数 BI-V150 & 沐曦曦云 C500 \\
+\midrule
+GPU / 显存 & BI-V150 / 32GB & C500（104 SM）/ 64GB \\
+CPU & Intel Xeon Gold 6330 @ 2.00GHz & Intel Core i7-8550U \\
+CPU 内存 / Swap & 503GiB / 8GiB & 128GiB / 无 \\
+实例与镜像 & FlagOS 线上实验室官方环境 & 模力方舟，FlagOS 2.1 \\
+PyTorch & 2.10.0+corex.4.5.0 & 2.8.0+metax3.7.0.7 \\
+vLLM & 0.24.0 & 0.24.0 \\
+Triton & 3.6.0 & 3.0.0+metax3.7.0.7 \\
+芯片软件栈 & IX-ML 4.4.0；驱动 4.5.0 & MACA 3.7.0.38；驱动 3.8.30 \\
+evalscope & 1.11.1 & 1.11.1 \\
+插件 / FlagGems & 0207b7e1 / aff68555 & 0207b7e1 / aff68555 \\
+最终复测日期 & 2026-10-26 至 2026-10-27 & 2026-10-25 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+C500 的 CPU 内存是本队实例的实测复现条件，不是官网公布的评测规格；CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段。64GB CPU 内存实例上原生镜像也曾发生启动期 OOM，因此复现说明单独保留这一现象与内存建议。BI-V150 的 32GB 指 GPU 显存，不能与 CPU 内存混淆。
+
+\subsection{关键优化点}
+本提交的技术路线由以下三部分组成，详细实现和实验分别见第 4、5 章。
+
+\textbf{（1）面向芯片与输入形状的执行路径选择。} 不假定同一 GEMM 或 attention 配置在所有形状上最优，而是在保留原实现的前提下，按 M、KV 页尺寸和 prefill／decode 类型选择 vendor 库或 Triton 内核。C500 侧重 lm\_head 与 prefill GEMM 的布局、库调用和 host 元数据路径；BI-V150 侧重 warp 级发射配置与 attention 实现。路由之外还包含权重复本、布局转换、同步消除和页对齐访问等代码改动。
+
+\textbf{（2）免排序 top-p 采样与温度折叠。} 将 bf16 logits 读取、top-p 阈值估计、掩码与 Gumbel-Max 合并，避免对 130560 词表进行完整排序。阈值由 1024-bin 质量直方图定位并保守取 bin 下沿；温度通过 $\arg\max(x/T+g)=\arg\max(x+Tg)$ 折叠进采样分数。该路径直接作用于每步解码末尾的采样热点。
+
+\textbf{（3）减少 PV 布局转换的 paged decode attention。} 针对 BI-V150 上 PV 矩阵乘的累加器到操作数布局转换，将并行单元组织为 warp 内的（序列、KV 头、分段）计算，配合单 warp 发射、base-2 在线 softmax 和分段归并。段边界与 KV 页对齐后，页号在段内保持标量，省去逐 token 除模和向量页 gather；段长由设备端 \texttt{seq\_lens} 计算，分段缓存在图捕获前分配，以兼容 FULL\_DECODE\_ONLY。
 
 \section{优化流程}
 两种芯片采用相同的分析与验证流程，测试脚本、profile、日志和 benchmark CSV 按实验编号保存。
@@ -497,7 +533,7 @@ bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select
 算子优化须有开发量 & 新增 Triton 内核（paged decode attention、采样链、dual-gather）与路由/同步改造，均可独立 A/B\\
 禁止改超参开启量化、投机采样 & 保持官方模型精度与生成配置，不启用量化或投机采样\\
 精度 $\geq 0.95$ & C500 两次均为 98.1\%；BI-V150 为 96.19\% 和 98.1\%\\
-TTFT 不回退 & C500 各场景均优于基线；BI 16k 由 136.86–137.00 s 降至 111.64–111.67 s，4k 两组差异为 +2.1\% 和 −1.9\%\\
+TTFT 上限为官网 baseline +1\% & 两平台各场景均满足：BI 4k 为 4.14–4.33 s，低于官网 11.57 s；BI 16k 为 111.64–111.67 s，低于官网 599.26 s。同日 A/B 中 BI 4k 的 A20-1 相对 A7-1 为 +2.1\%，另一组为 −1.9\%；该对照用于分离 A20 收益，不替代官网基线判断\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -607,6 +643,38 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \end{table}
 
 实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录）、\path{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（后续实验、台账 \texttt{tracking.md} 与 \texttt{runs/} 原始数据）。目录中包含配置、serve 日志、benchmark CSV 和机器状态。
+
+\subsection{结果与原始证据对应表}
+以下路径均相对于文档仓库 \href{https://github.com/xy200303/minicpm-flagserve}{xy200303/minicpm-flagserve} 的根目录。汇总 CSV 可由同目录原始 CSV 复算，精度取 JSON 的 \texttt{metrics[0].score}；日志同时保留启动参数、实际加载路径和逐轮运行过程。
+
+\begin{table}[!htbp]
+\centering\small
+\caption{报告结果、代码版本与原始证据索引}
+\begin{tabularx}{\linewidth}{@{}p{2.5cm}p{4.2cm}Y@{}}
+\toprule
+结果 & 代码 / 对照 & 原始证据（路径与文件）\\
+\midrule
+C500 交付性能 & 插件 0207b7e1；算子 aff68555 & \path{docs/experiments/runs/c500-final-audit/healthy-final-raw.csv}；\texttt{healthy-final-summary.csv}；\texttt{healthy-final-serve.log} \\
+C500 原生基线 & 插件 13eb9be；FlagGems v5.3.5 & 同目录 \texttt{healthy-baseline-raw.csv}、\texttt{healthy-baseline-summary.csv}、\texttt{healthy-baseline-serve.log} \\
+C500 精度与微基准 & 当前交付提交 & 同目录 \texttt{healthy-eval1-math500.json}、\texttt{healthy-eval2-math500.json}、\texttt{micro-healthy.json}；环境见 \texttt{healthy-final-manifest.txt} \\
+BI-V150 两组 A/B & A7 对照与 A20；同一交付提交内开关切换 & \path{docs/experiments/runs/bi-final-audit/1-a7/benchmark_results/}、\texttt{1-a20/}、\texttt{2-a7/}、\texttt{2-a20/} 下的 \texttt{benchmark\_results/}；同级 serve／bench 日志 \\
+BI-V150 精度 & 当前交付提交 & 同目录 \texttt{eval1-math500.json}、\texttt{eval2-math500.json}、\texttt{eval-serve.log} \\
+BI-V150 内核验证 & A20 与 stock & 同目录 \texttt{micro.json}、\texttt{pytest-a20.log}、\texttt{manifest.txt}；测试脚本为 \path{docs/verification/bi_micro_audit.py} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{官网基线来源}
+官网基线位于赛题页面“4.3 评审方案”的“天数基线”和“沐曦基线”图片中，访问日期为 2026-10-27：\url{https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn}。原图随报告源文件保存为 \texttt{official\_baseline\_biv150.png} 与 \texttt{official\_baseline\_c500.png}；图~\ref{fig:official-baselines} 原样展示，报告表 3 的官网基线数字由这两张表读取。
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{official_baseline_biv150.png}\\[5pt]
+\includegraphics[width=\linewidth]{official_baseline_c500.png}
+\caption{官网天数 BI-V150（上）与沐曦 C500（下）基线原图\label{fig:official-baselines}}
+\end{figure}
+
+原始图片地址分别为 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/QlVfSLuI/image.png}{天数基线}和 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/1a2hydOd/image.png}{沐曦基线}。官网基线用于统一赛题参照；本机原生基线和 A7 当日对照用于分析实际代码收益，三种参照在正文中分别标明，不相互替代。
 
 \section{内核形状扫描与测量波动}
 本附录给出 paged decode attention 在 NSEG $\times$ 并发度上的实测分布，以及官方 benchmark 连续 4 次 run 的吞吐波动。数据来源分别为 \texttt{docs/experiments/a26/a26\_sweep.log}（20 次重复取均值）和 \texttt{docs/baselines/metax-c500/raw\_runs\_baseline.csv}。
