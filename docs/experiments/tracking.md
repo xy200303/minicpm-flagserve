@@ -638,3 +638,12 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 当前 MATH-500 Level 3 两次为 **96.19%／98.1%**，均 105/105 成功。混合步 used=132000、skipped=0，未见 decode fast-path 异常回退。
 - 完整工件见 `runs/bi-final-audit/` 与 `tmp/bi-final-audit-complete.tar.gz`；此前关机前的部分结果已补齐，不再作为最终状态。
 
+### A30（2026-10-27，否决）：paged decode 流水与尾页拆分
+
+- 分支：插件/FlagGems `exp/a30-decode-pipeline`（`2fb32ad`/`6b13c991`）；默认 `split_tail=False`，集成分支未改。
+- `num_stages=2/3` 在 4k/16k、等长/ragged 全部比 stage 1 慢，否决；30 次原始样本见 `runs/a30-decode-pipeline/stage-probe.json`。
+- 完整页与 ragged 尾页拆分在微基准提升 8.03%/14.55%（4k/16k 等长），新增页边界测试 **10 passed**，与当前实现逐位一致。
+- B=16/32/64 的全部扫描点仍有 7.68%–20.25% 孤立收益，不能用 batch 形状解释集成回退。
+- 官方 4k 四轮去首、A/B/A/B：A20 **4815.68/4716.31**，拆分 **4158.66/4192.17**；中位数 **4766.00→4175.42（−12.39%）**。候选不合入，16k 官方长测不继续。
+- 完整证据：`runs/a30-decode-pipeline/`、`a30-4k-official.tar.gz`。后续以 ixsys/ixkn 分析图内与组合路径，诊断计时不作为成绩。
+

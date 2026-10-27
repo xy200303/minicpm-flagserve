@@ -1,0 +1,101 @@
+/workspace/a30-gems/src/flag_gems/utils/libentry.py:728: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+==15246== IXKN-CLI is profiling on Iluvatar BI-V150
+==15246== IXKN-CLI is profiling process 15246, command: /workspace/audit-venv/bin/python /workspace/bi_a30_pipeline_probe.py --output /workspace/experiments/runs/a30-decode-pipeline/profiles/split-attention.json --reps 1 --stages 1 --kv 4096 --batch 64 --split-tail 
+/workspace/a30-gems/src/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+INFO 10-27 19:35:00 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-27 19:35:00 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-27 19:35:00 [__init__.py:58] Loading plugin fl
+INFO 10-27 19:35:03 [__init__.py:237] Platform plugin fl is activated
+==15246== Warning: Kernel Replay may FAIL when HOST MEMORY (memory allocated by cudaMallocHost, etc) is used, please use '--replay-mode application' instead.
+==15246== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+==15246== Replaying kernel "_segment_kernel_paged_split" (done)
+{
+  "timestamp": "2026-10-27 19:35:04 +0800",
+  "torch": "2.10.0",
+  "triton": "3.6.0",
+  "flag_gems_source": "/workspace/a30-gems/src/flag_gems/__init__.py",
+  "flag_gems_commit": "aff68555e266582f68c6554898f4c795c869578d",
+  "reps": 1,
+  "stages": [
+    1
+  ],
+  "num_segments": 32,
+  "block_n": 16,
+  "num_warps": 1,
+  "split_tail": true,
+  "batch": [
+    64
+  ],
+  "cases": [
+    {
+      "kv": 4096,
+      "ragged": false,
+      "batch": 64,
+      "kv_gb_read": 0.268435456,
+      "correctness": {
+        "1": {
+          "max_diff": 3.0517578125e-05,
+          "mean_abs_diff": 1.4554515246345545e-06,
+          "finite": true
+        }
+      },
+      "timings": {
+        "1": {
+          "median_ms": 562.7521362304688,
+          "mean_ms": 562.7521362304688,
+          "min_ms": 562.7521362304688,
+          "max_ms": 562.7521362304688,
+          "samples_ms": [
+            562.7521362304688
+          ]
+        }
+      },
+      "speedup_vs_stage1": {
+        "1": 1.0
+      },
+      "effective_gb_s": {
+        "1": 0.4770047747807488
+      }
+    },
+    {
+      "kv": 4096,
+      "ragged": true,
+      "batch": 64,
+      "kv_gb_read": 0.1793536,
+      "correctness": {
+        "1": {
+          "max_diff": 6.103515625e-05,
+          "mean_abs_diff": 1.907836576720001e-06,
+          "finite": true
+        }
+      },
+      "timings": {
+        "1": {
+          "median_ms": 555.6873168945312,
+          "mean_ms": 555.6873168945312,
+          "min_ms": 555.6873168945312,
+          "max_ms": 555.6873168945312,
+          "samples_ms": [
+            555.6873168945312
+          ]
+        }
+      },
+      "speedup_vs_stage1": {
+        "1": 1.0
+      },
+      "effective_gb_s": {
+        "1": 0.3227599308948077
+      }
+    }
+  ]
+}

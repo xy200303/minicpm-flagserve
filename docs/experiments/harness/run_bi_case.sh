@@ -74,7 +74,7 @@ SERVE_CMD=(
   "$VENV/bin/python" -m vllm.entrypoints.openai.api_server --model "$MODEL"
   --port 9031 --served-model-name minicpm
   --gpu-memory-utilization 0.85 --max-model-len 131072
-  --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
+  --compilation-config '{"cudagraph_mode":"FULL_DECODE_ONLY"}'
 )
 if [ "$IXSYS" = 1 ]; then
   /usr/local/corex/bin/ixsys \

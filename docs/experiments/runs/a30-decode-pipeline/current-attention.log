@@ -1,0 +1,101 @@
+/workspace/audit-gems/src/flag_gems/utils/libentry.py:728: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+==15172== IXKN-CLI is profiling on Iluvatar BI-V150
+==15172== IXKN-CLI is profiling process 15172, command: /workspace/audit-venv/bin/python /workspace/bi_a30_pipeline_probe.py --output /workspace/experiments/runs/a30-decode-pipeline/profiles/current-attention.json --reps 1 --stages 1 --kv 4096 --batch 64 
+/workspace/audit-gems/src/flag_gems/utils/libentry.py:411: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+INFO 10-27 19:34:39 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 10-27 19:34:39 [__init__.py:46] - fl -> vllm_fl:register
+INFO 10-27 19:34:39 [__init__.py:58] Loading plugin fl
+INFO 10-27 19:34:43 [__init__.py:237] Platform plugin fl is activated
+==15172== Warning: Kernel Replay may FAIL when HOST MEMORY (memory allocated by cudaMallocHost, etc) is used, please use '--replay-mode application' instead.
+==15172== Some kernel(s) will be replayed on device 0 in order to collect all events/metrics.
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+==15172== Replaying kernel "_segment_kernel_paged" (done)
+{
+  "timestamp": "2026-10-27 19:34:44 +0800",
+  "torch": "2.10.0",
+  "triton": "3.6.0",
+  "flag_gems_source": "/workspace/audit-gems/src/flag_gems/__init__.py",
+  "flag_gems_commit": "aff68555e266582f68c6554898f4c795c869578d",
+  "reps": 1,
+  "stages": [
+    1
+  ],
+  "num_segments": 32,
+  "block_n": 16,
+  "num_warps": 1,
+  "split_tail": false,
+  "batch": [
+    64
+  ],
+  "cases": [
+    {
+      "kv": 4096,
+      "ragged": false,
+      "batch": 64,
+      "kv_gb_read": 0.268435456,
+      "correctness": {
+        "1": {
+          "max_diff": 3.0517578125e-05,
+          "mean_abs_diff": 1.4554515246345545e-06,
+          "finite": true
+        }
+      },
+      "timings": {
+        "1": {
+          "median_ms": 627.3161010742188,
+          "mean_ms": 627.3161010742188,
+          "min_ms": 627.3161010742188,
+          "max_ms": 627.3161010742188,
+          "samples_ms": [
+            627.3161010742188
+          ]
+        }
+      },
+      "speedup_vs_stage1": {
+        "1": 1.0
+      },
+      "effective_gb_s": {
+        "1": 0.42791099342154615
+      }
+    },
+    {
+      "kv": 4096,
+      "ragged": true,
+      "batch": 64,
+      "kv_gb_read": 0.1793536,
+      "correctness": {
+        "1": {
+          "max_diff": 6.103515625e-05,
+          "mean_abs_diff": 1.907836576720001e-06,
+          "finite": true
+        }
+      },
+      "timings": {
+        "1": {
+          "median_ms": 618.496337890625,
+          "mean_ms": 618.496337890625,
+          "min_ms": 618.496337890625,
+          "max_ms": 618.496337890625,
+          "samples_ms": [
+            618.496337890625
+          ]
+        }
+      },
+      "speedup_vs_stage1": {
+        "1": 1.0
+      },
+      "effective_gb_s": {
+        "1": 0.2899832852878054
+      }
+    }
+  ]
+}
