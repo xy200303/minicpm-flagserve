@@ -24,6 +24,9 @@ PID=
 
 cleanup() {
   RC=$?
+  if [ "$IXSYS" = 1 ]; then
+    pkill -TERM -f "vllm.entrypoints.openai.api_server" 2>/dev/null || true
+  fi
   if [ -n "$PID" ] && kill -0 "$PID" 2>/dev/null; then
     kill -TERM "$PID" 2>/dev/null || true
     wait "$PID" 2>/dev/null || true
@@ -80,7 +83,7 @@ if [ "$IXSYS" = 1 ]; then
   /usr/local/corex/bin/ixsys \
     -d "$IXSYS_DELAY" -l "$IXSYS_LIMIT" \
     -t cuda_api,cuda_device -o "$ROOT/serve.ixsys" \
-    --print-gpu-summary --print-api-summary \
+    --event-sync true --print-gpu-summary --print-api-summary \
     "${SERVE_CMD[@]}" > "$ROOT/serve.log" 2>&1 &
 else
   "${SERVE_CMD[@]}" > "$ROOT/serve.log" 2>&1 &
