@@ -14,6 +14,11 @@ GEMS_ROOT=${GEMS_ROOT:-/workspace/audit-gems}
 VENV=${VENV:-/workspace/audit-venv}
 MODEL=${MODEL:-/workspace/MiniCPM5-2B}
 BI_ENV=${BI_ENV:-/workspace/bi-env.sh}
+IXSYS=${IXSYS:-0}
+IXSYS_DELAY=${IXSYS_DELAY:-300}
+IXSYS_LIMIT=${IXSYS_LIMIT:-120}
+PROFILE_ONLY=${PROFILE_ONLY:-0}
+PROFILE_BENCH_TIMEOUT=${PROFILE_BENCH_TIMEOUT:-180}
 ROOT=$RESULT_ROOT/$EXP
 PID=
 
@@ -49,6 +54,8 @@ START=$(date +%s)
   echo "gems_commit=$(git -C "$GEMS_ROOT" rev-parse HEAD)"
   echo "gems_branch=$(git -C "$GEMS_ROOT" branch --show-current)"
   echo "gems_diff=$(git -C "$GEMS_ROOT" diff --shortstat)"
+  echo "ixsys=$IXSYS delay=$IXSYS_DELAY limit=$IXSYS_LIMIT"
+  echo "profile_only=$PROFILE_ONLY bench_timeout=$PROFILE_BENCH_TIMEOUT"
   echo "uname=$(uname -a)"
   env | grep -E '^VLLM_FL_|^VLLM_PLUGINS|^PYTHONPATH|^MACA_|^LD_LIBRARY_PATH' | sort
 } > "$ROOT/config.txt"
@@ -63,11 +70,21 @@ export PYTHONPATH=$PLUGIN_ROOT:$GEMS_ROOT/src${PYTHONPATH:+:$PYTHONPATH}
   echo "VLLM_PLUGINS=$VLLM_PLUGINS"
   echo "PYTHONPATH=$PYTHONPATH"
 } >> "$ROOT/config.txt"
-"$VENV/bin/python" -m vllm.entrypoints.openai.api_server --model "$MODEL" \
-  --port 9031 --served-model-name minicpm \
-  --gpu-memory-utilization 0.85 --max-model-len 131072 \
-  --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}' \
-  > "$ROOT/serve.log" 2>&1 &
+SERVE_CMD=(
+  "$VENV/bin/python" -m vllm.entrypoints.openai.api_server --model "$MODEL"
+  --port 9031 --served-model-name minicpm
+  --gpu-memory-utilization 0.85 --max-model-len 131072
+  --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
+)
+if [ "$IXSYS" = 1 ]; then
+  /usr/local/corex/bin/ixsys \
+    -d "$IXSYS_DELAY" -l "$IXSYS_LIMIT" \
+    -t cuda_api,cuda_device -o "$ROOT/serve.ixsys" \
+    --print-gpu-summary --print-api-summary \
+    "${SERVE_CMD[@]}" > "$ROOT/serve.log" 2>&1 &
+else
+  "${SERVE_CMD[@]}" > "$ROOT/serve.log" 2>&1 &
+fi
 PID=$!
 echo "$PID" > "$ROOT/serve.pid"
 READY=0
@@ -90,11 +107,18 @@ fi
 echo "startup_seconds=$(( $(date +%s) - START ))" > "$ROOT/startup.txt"
 
 cd "$ROOT"
-timeout 3600 "$VENV/bin/python" \
+BENCH_TIMEOUT=3600
+if [ "$PROFILE_ONLY" = 1 ]; then
+  BENCH_TIMEOUT=$PROFILE_BENCH_TIMEOUT
+fi
+timeout "$BENCH_TIMEOUT" "$VENV/bin/python" \
   "$PLUGIN_ROOT/benchmarks/benchmark_throughput_serve.py" \
   --model "$MODEL" --served-model-name minicpm --port 9031 \
   --test-cases "$CASE" > "$ROOT/bench.log" 2>&1
 RC=$?
+if [ "$PROFILE_ONLY" = 1 ] && [ "$RC" = 124 ]; then
+  RC=0
+fi
 echo "$RC" > "$ROOT/benchmark.rc"
 SUMMARY=$(ls -1t benchmark_results/summary_*.csv 2>/dev/null | head -1 || true)
 if [ -n "$SUMMARY" ]; then
