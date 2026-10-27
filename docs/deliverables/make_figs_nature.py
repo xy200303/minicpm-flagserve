@@ -178,7 +178,7 @@ def fig_ladder():
 # --------------------------------------------------------------------------- #
 def fig_decode_bw():
     labels = ["stock 3D", "A20 页对齐", "实测 copy 参考"]
-    vals = np.array([258, 427, 587])
+    vals = np.array([258, 457, 587])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [vals], ["有效带宽"], ylabel="decode attention 有效带宽（GB/s）",
@@ -204,37 +204,38 @@ def fig_decode_bw():
 # 5. Iluvatar same-day A/B
 # --------------------------------------------------------------------------- #
 def fig_ab_same_day():
-    labels = ["4k 场景", "16k 场景"]
-    base = np.array([2239.43, 2956.59])
-    ours = np.array([2606.56, 3541.34])
-    gain = (ours / base - 1) * 100
-    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.6 * CM))
-    for i in range(2):
-        x0, x1 = i - 0.15, i + 0.15
-        ax.plot([x0, x1], [base[i], ours[i]], color=FAINT, linewidth=1.1,
-                zorder=1)
-        ax.scatter([x0], [base[i]], s=32, color=BASE_EDGE, zorder=3,
-                   edgecolors="white", linewidths=0.7)
-        ax.scatter([x1], [ours[i]], s=36, color=HERO, zorder=3,
-                   edgecolors="white", linewidths=0.7)
-        ax.text(x0, base[i] - 145, f"{base[i]:,.0f}", ha="center", va="top",
-                fontsize=7.5, color=MID)
-        ax.text(x1, ours[i] + 95, f"{ours[i]:,.0f}", ha="center", va="bottom",
-                fontsize=8, color=HERO)
-        ax.text(i + 0.30, ours[i] - 40, f"+{gain[i]:.1f}%", ha="left",
-                va="center", fontsize=8.5, color=ACCENT, fontweight="bold")
-    ax.set_xticks(range(2))
-    ax.set_xticklabels(labels)
-    ax.set_ylabel("总吞吐（tokens/s）")
-    ax.set_xlim(-0.55, 1.55)
-    ax.set_ylim(1850, 3900)
-    ax.yaxis.set_major_locator(MaxNLocator(5))
-    ax.plot([], [], marker="o", color=BASE_EDGE, linewidth=0, markersize=4,
-            label="A7 栈（关闭 A20）")
-    ax.plot([], [], marker="o", color=HERO, linewidth=0, markersize=4,
-            label="A20 自研内核")
-    ax.legend(loc="upper left", frameon=False)
-    save(fig, "fig5_iluvatar_ab")
+    groups = [
+        ("A7-1 → A20-1", [3855.31, 3568.31], [4087.91, 4520.19]),
+        ("A7-2 → A20-2", [3840.80, 3570.61], [4722.22, 4520.10]),
+    ]
+    fig, axes = plt.subplots(2, 2, figsize=(15.4 * CM, 8.6 * CM))
+    for row, (name, base, ours) in enumerate(groups):
+        for col in range(2):
+            ax = axes[row, col]
+            gain = (ours[col] / base[col] - 1) * 100
+            ax.plot([0, 1], [base[col], ours[col]], color=FAINT, linewidth=1.1)
+            ax.scatter([0], [base[col]], s=34, color=BASE_EDGE,
+                       edgecolors="white", linewidths=0.7, zorder=3)
+            ax.scatter([1], [ours[col]], s=38, color=HERO,
+                       edgecolors="white", linewidths=0.7, zorder=3)
+            ax.annotate(f"{base[col]:,.0f}", (0, base[col]), ha="center", va="top",
+                    fontsize=7, color=MID, xytext=(0, -6), textcoords="offset points")
+            ax.annotate(f"{ours[col]:,.0f}", (1, ours[col]), ha="center", va="bottom",
+                    fontsize=7.5, color=HERO, xytext=(0, 5), textcoords="offset points")
+            ax.text(0.52, (base[col] + ours[col]) / 2, f"+{gain:.1f}%",
+                    ha="left", va="center", fontsize=8.5, color=ACCENT,
+                    fontweight="bold")
+            ax.set_xlim(-0.4, 1.65)
+            ax.set_ylim(base[col] * 0.82, ours[col] * 1.15)
+            ax.set_xticks([0, 1])
+            ax.set_xticklabels(["A7 关闭 A20", "A20"], fontsize=7)
+            ax.yaxis.set_major_locator(MaxNLocator(4))
+            if col == 0:
+                ax.set_ylabel(f"{name}\n总吞吐（tokens/s）", fontsize=7.5)
+            if row == 0:
+                ax.set_title("4k 场景" if col == 0 else "16k 场景", fontsize=8, pad=5)
+    fig.subplots_adjust(wspace=0.32, hspace=0.48)
+    save(fig, "fig5_iluvatar_ab", pad=1.0)
 
 
 # --------------------------------------------------------------------------- #
@@ -290,7 +291,7 @@ def fig_a7_config():
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
     labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2"]
-    vals = [98.1, 98.1, 96.2, 97.1]
+    vals = [98.1, 98.1, 96.19, 98.1]
     colors = [HERO, HERO] + [P["violet"]] * 2
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(vals))[::-1]
@@ -312,8 +313,8 @@ def fig_accuracy():
 
 
 def fig_ttft():
-    labels = ["C500 官方基线", "C500 本提交", "BI-V150 A20 前", "BI-V150 A20 后"]
-    secs = [27.2, 17.9, 155.5, 130.1]
+    labels = ["C500 官方基线", "C500 本提交", "BI A7（关闭 A20）", "BI A20"]
+    secs = [27.197, 18.141, 136.946, 111.652]
     colors = [BASE, HERO, BASE, HERO]
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(secs))[::-1]
@@ -384,7 +385,7 @@ def heat(data, name, unit, best_is_min=True, figsize=(7.3 * CM, 6.0 * CM),
 def fig_decode_evolution():
     labels = ["stock 2D", "stock 3D", "stock 3D\n+A7 pin", "A20\n自研内核",
               "硬件 copy\n上限"]
-    vals = np.array([117, 153, 258, 427, 587])
+    vals = np.array([117, 153, 258, 457, 587])
     fig, ax = plt.subplots(figsize=(14.5 * CM, 6.8 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [vals], ["有效带宽"], ylabel="decode attention 有效带宽（GB/s）",
@@ -507,10 +508,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12399.31 / 5089.645 - 1) * 100, (2606.56 / 2028.01 - 1) * 100],
-        [(11046.19 / 7029.675 - 1) * 100, (3541.34 / 915.15 - 1) * 100],
-        [(98.10 / 95.0 - 1) * 100, (96.20 / 95.0 - 1) * 100],
-        [(1 - 18.14147 / 27.197135) * 100, (1 - 130.1 / 599.262) * 100],
+        [(12399.31 / 5089.645 - 1) * 100, (4087.91 / 2028.01 - 1) * 100],
+        [(11046.19 / 7029.675 - 1) * 100, (4520.10 / 915.15 - 1) * 100],
+        [(98.10 / 95.0 - 1) * 100, (96.19 / 95.0 - 1) * 100],
+        [(1 - 18.14147 / 27.197135) * 100, (1 - 111.66677 / 599.262) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
@@ -562,12 +563,18 @@ def fig_incremental_gains():
 
     ax = axes[1]
     labels = ["A6", "A7", "A20"]
-    gains4 = np.array([5.83, 38.0, 16.4])
-    gains16 = np.array([1.01, 39.4, 19.8])
+    gains4 = np.array([5.83, 38.0, (6.033 + 22.949) / 2])
+    gains16 = np.array([1.01, 39.4, (26.676 + 26.592) / 2])
     x = np.arange(len(labels))
     width = 0.28
-    b1 = ax.bar(x - width / 2, gains4, width, color=HERO, label="4k")
-    b2 = ax.bar(x + width / 2, gains16, width, color=HERO_SOFT, label="16k")
+    b1 = ax.bar(x - width / 2, gains4, width, color=HERO, label="4k",
+                yerr=[[0, 0, 8.458], [0, 0, 8.458]], capsize=2,
+                error_kw={"linewidth": 0.6})
+    b2 = ax.bar(x + width / 2, gains16, width, color=HERO_SOFT, label="16k",
+                yerr=[[0, 0, 0.042], [0, 0, 0.042]], capsize=2,
+                error_kw={"linewidth": 0.6})
+    ax.scatter([1.82, 1.90], [6.033, 22.949], s=10, color=INK, zorder=4)
+    ax.scatter([2.10, 2.18], [26.676, 26.592], s=10, marker="s", color=INK, zorder=4)
     for bars in (b1, b2):
         for bar in bars:
             v = bar.get_height()
@@ -590,19 +597,20 @@ def fig_incremental_gains():
 def fig_speedup_benefit():
     records = [
         ("C500 opt1\n采样", 5.4, (6573.22 / 5089.645 - 1) * 100,
-         (8208.44 / 7029.675 - 1) * 100, HERO),
-        ("C500 opt8\nGEMM", (1.36 + 1.56 + 1.35 + 1.67) / 4, 32.3, 14.7, HERO),
-        ("BI-V150 A7\ndecode 配置", 1.76, 38.0, 39.4, P["violet"]),
-        ("BI-V150 A20\ndecode 内核", 1.04 / 0.629, 16.4, 19.8, P["violet"]),
+         (8208.44 / 7029.675 - 1) * 100, HERO, (0, 7)),
+        ("C500 opt8\nGEMM", (1.36 + 1.56 + 1.35 + 1.67) / 4, 32.3, 14.7, HERO, (0, 7)),
+        ("BI-V150 A7\ndecode 配置", 1.76, 38.0, 39.4, P["violet"], (0, 7)),
+        ("BI A20-1", 0.938592 / 0.587688, 6.033, 26.676, P["violet"], (-48, 8)),
+        ("BI A20-2", 0.938592 / 0.587688, 22.949, 26.592, P["violet"], (10, -24)),
     ]
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.8 * CM))
-    for name, speedup, gain4, gain16, color in records:
+    for name, speedup, gain4, gain16, color, offset in records:
         ax.scatter(speedup, gain4, s=38, marker="o", color=color,
                    edgecolors="white", linewidths=0.6, zorder=3)
         ax.scatter(speedup, gain16, s=38, marker="s", color=color,
                    edgecolors="white", linewidths=0.6, zorder=3)
         ax.annotate(name, (speedup, max(gain4, gain16)),
-                    xytext=(0, 7), textcoords="offset points", ha="center",
+                    xytext=offset, textcoords="offset points", ha="center",
                     va="bottom", fontsize=6.8, color=color)
     ax.set_xscale("log")
     ax.set_xlim(1.15, 6.7)
@@ -630,7 +638,7 @@ def fig_efficiency():
                              gridspec_kw={"width_ratios": [0.9, 1.35]})
     ax = axes[0]
     labels = ["BI stock", "BI A20", "C500 vendor"]
-    absolute = np.array([258, 427, 1466])
+    absolute = np.array([258, 457, 1466])
     reference = np.array([587, 587, 1610])
     utilization = absolute / reference * 100
     bars = ax.bar(np.arange(3), utilization, width=0.48,
