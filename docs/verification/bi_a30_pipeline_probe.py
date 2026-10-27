@@ -34,7 +34,7 @@ def summarize(samples):
     }
 
 
-def run_case(kv, ragged, stages, reps):
+def run_case(kv, ragged, stages, reps, split_tail=False):
     batch, hq, hkv, head_dim, block_size = 64, 16, 2, 128, 16
     blocks_per_seq = (kv + block_size - 1) // block_size
     pages = batch * blocks_per_seq
@@ -118,6 +118,7 @@ def run_case(kv, ragged, stages, reps):
             block_n=block_size,
             num_warps=1,
             num_stages=stage,
+            **({"split_tail": True} if split_tail else {}),
         )
 
     correctness = {}
@@ -175,6 +176,7 @@ def main():
     parser.add_argument("--reps", type=int, default=30)
     parser.add_argument("--stages", type=int, nargs="+", default=[1, 2, 3])
     parser.add_argument("--kv", type=int, nargs="+", default=[4096, 16384])
+    parser.add_argument("--split-tail", action="store_true")
     args = parser.parse_args()
     if args.reps < 1 or not args.stages or any(stage < 1 for stage in args.stages):
         parser.error("reps and all stages must be positive")
@@ -189,8 +191,9 @@ def main():
         "num_segments": 32,
         "block_n": 16,
         "num_warps": 1,
+        "split_tail": args.split_tail,
         "cases": [
-            run_case(kv, ragged, args.stages, args.reps)
+            run_case(kv, ragged, args.stages, args.reps, args.split_tail)
             for kv in args.kv
             for ragged in (False, True)
         ],

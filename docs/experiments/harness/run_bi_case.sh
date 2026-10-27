@@ -44,11 +44,11 @@ START=$(date +%s)
   echo "plugin_root=$PLUGIN_ROOT"
   echo "plugin_commit=$(git -C "$PLUGIN_ROOT" rev-parse HEAD)"
   echo "plugin_branch=$(git -C "$PLUGIN_ROOT" branch --show-current)"
-  echo "plugin_dirty=$(git -C "$PLUGIN_ROOT" status --porcelain | tr '\n' ';')"
+  echo "plugin_diff=$(git -C "$PLUGIN_ROOT" diff --shortstat)"
   echo "gems_root=$GEMS_ROOT"
   echo "gems_commit=$(git -C "$GEMS_ROOT" rev-parse HEAD)"
   echo "gems_branch=$(git -C "$GEMS_ROOT" branch --show-current)"
-  echo "gems_dirty=$(git -C "$GEMS_ROOT" status --porcelain | tr '\n' ';')"
+  echo "gems_diff=$(git -C "$GEMS_ROOT" diff --shortstat)"
   echo "uname=$(uname -a)"
   env | grep -E '^VLLM_FL_|^VLLM_PLUGINS|^PYTHONPATH|^MACA_|^LD_LIBRARY_PATH' | sort
 } > "$ROOT/config.txt"
@@ -63,7 +63,7 @@ export PYTHONPATH=$PLUGIN_ROOT:$GEMS_ROOT/src${PYTHONPATH:+:$PYTHONPATH}
   echo "VLLM_PLUGINS=$VLLM_PLUGINS"
   echo "PYTHONPATH=$PYTHONPATH"
 } >> "$ROOT/config.txt"
-"$VENV/bin/vllm" serve "$MODEL" \
+"$VENV/bin/python" -m vllm.entrypoints.openai.api_server --model "$MODEL" \
   --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072 \
   --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}' \
