@@ -1,0 +1,749 @@
+{
+  "file": "/workspace/experiments/runs/a30-profile-current-4k-v2/serve.ixsys",
+  "sync_patterns": [
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "count": 60
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "count": 35
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "count": 27
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_3",
+      "count": 19
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_combine_kernel",
+      "count": 19
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "index_select_kernel",
+      "count": 12
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_0",
+      "count": 11
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_dual_gather_kernel",
+      "count": 10
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_copy_kernel_kernel_rank_3",
+      "count": 3
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "reshape_and_cache_kernel_flash",
+      "count": 2
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "count": 1
+    },
+    {
+      "sync": "cudaStreamSynchronize",
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_segment_kernel_paged",
+      "count": 1
+    }
+  ],
+  "longest_sync": [
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 74.370215,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "next_kernel_delay_ms": -74.230793
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 74.079967,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_0",
+      "next_kernel_delay_ms": -73.909103
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 73.495766,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -73.011614
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 73.14008,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_0",
+      "next_kernel_delay_ms": -73.089025
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 72.736708,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -72.052879
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 72.654928,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -72.207696
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 72.489756,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_0",
+      "next_kernel_delay_ms": -72.237801
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 72.042881,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -71.61882
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 71.994804,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -71.983635
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 71.47224,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -71.409201
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 71.311946,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "next_kernel_delay_ms": -70.698329
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 71.025048,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "next_kernel_delay_ms": -70.379506
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 70.73628,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_3",
+      "next_kernel_delay_ms": -70.626635
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 70.633174,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "next_kernel_delay_ms": -70.599468
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 70.367417,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "next_kernel_delay_ms": -70.282581
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 70.014847,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "index_select_kernel",
+      "next_kernel_delay_ms": -69.757194
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 69.699751,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -69.096301
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 69.56636,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "index_select_kernel",
+      "next_kernel_delay_ms": -69.519479
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 69.119998,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_combine_kernel",
+      "next_kernel_delay_ms": -68.525251
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.861418,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_combine_kernel",
+      "next_kernel_delay_ms": -68.234434
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.706018,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "_combine_kernel",
+      "next_kernel_delay_ms": -68.420541
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.510695,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "next_kernel_delay_ms": -67.845531
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.456547,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "next_kernel_delay_ms": -68.42741
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.358159,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -68.09177
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.271557,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -68.174639
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 68.170507,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "next_kernel_delay_ms": -67.895488
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 67.945431,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_0",
+      "next_kernel_delay_ms": -67.770151
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 67.506426,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_poi_fused_mul_silu_slice_1",
+      "next_kernel_delay_ms": -67.229061
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 67.440173,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "mm_kernel",
+      "next_kernel_delay_ms": -67.311204
+    },
+    {
+      "api": "cudaStreamSynchronize",
+      "wait_ms": 67.4184,
+      "next_api": "cuDevicePrimaryCtxGetState",
+      "next_kernel": "triton_red_fused_fused_add_rms_norm_2",
+      "next_kernel_delay_ms": -67.390203
+    }
+  ],
+  "gap_patterns": [
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "count": 1789,
+      "total_gap_ms": 67970.38449600012
+    },
+    {
+      "before": "_compute_slot_mapping_kernel",
+      "after": "_index_linearized_jit_function",
+      "count": 5,
+      "total_gap_ms": 17721.632724000003
+    },
+    {
+      "before": "fill_scalar_func_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "count": 6,
+      "total_gap_ms": 9270.267195999999
+    },
+    {
+      "before": "triton_red_fused_fused_add_rms_norm_2",
+      "after": "_index_linearized_jit_function",
+      "count": 7,
+      "total_gap_ms": 8794.792743999998
+    },
+    {
+      "before": "_copy_kernel",
+      "after": "_copy_kernel",
+      "count": 259,
+      "total_gap_ms": 1337.1537080000016
+    },
+    {
+      "before": "_combine_kernel",
+      "after": "_index_copy_jit_function",
+      "count": 67,
+      "total_gap_ms": 298.52755400000007
+    },
+    {
+      "before": "zeros_kernel",
+      "after": "_index_linearized_jit_function",
+      "count": 7,
+      "total_gap_ms": 275.58340599999997
+    },
+    {
+      "before": "_sample_reduce",
+      "after": "fill_scalar_func_kernel_rank_1",
+      "count": 17,
+      "total_gap_ms": 103.73616999999997
+    },
+    {
+      "before": "_copy_kernel",
+      "after": "triton_red_fused__to_copy_embedding_rms_norm_0",
+      "count": 16,
+      "total_gap_ms": 96.12024199999999
+    },
+    {
+      "before": "reshape_and_cache_kernel_flash",
+      "after": "_copy_kernel_kernel_rank_3",
+      "count": 19,
+      "total_gap_ms": 83.63075699999999
+    },
+    {
+      "before": "_copy_kernel_kernel_rank_3",
+      "after": "index_select_kernel",
+      "count": 21,
+      "total_gap_ms": 55.57561600000001
+    },
+    {
+      "before": "add_func_kernel_rank_1",
+      "after": "_copy_kernel_kernel_rank_1",
+      "count": 17,
+      "total_gap_ms": 52.76776700000001
+    },
+    {
+      "before": "_copy_kernel_kernel_rank_2",
+      "after": "_copy_kernel",
+      "count": 15,
+      "total_gap_ms": 40.71722100000001
+    },
+    {
+      "before": "triton_red_fused_fused_add_rms_norm_0",
+      "after": "mm_kernel",
+      "count": 10,
+      "total_gap_ms": 33.214554
+    },
+    {
+      "before": "_index_copy_jit_function",
+      "after": "_to_copy_func_kernel_rank_1",
+      "count": 10,
+      "total_gap_ms": 32.386988
+    },
+    {
+      "before": "mm_kernel",
+      "after": "triton_red_fused_fused_add_rms_norm_2",
+      "count": 15,
+      "total_gap_ms": 31.889344
+    },
+    {
+      "before": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "after": "mm_kernel",
+      "count": 16,
+      "total_gap_ms": 31.809640999999996
+    },
+    {
+      "before": "mm_kernel",
+      "after": "triton_poi_fused_mul_silu_slice_1",
+      "count": 19,
+      "total_gap_ms": 30.269762000000007
+    },
+    {
+      "before": "_segment_kernel_paged",
+      "after": "_combine_kernel",
+      "count": 14,
+      "total_gap_ms": 27.269947
+    },
+    {
+      "before": "_copy_kernel_kernel_rank_1",
+      "after": "add_func_kernel_rank_1",
+      "count": 12,
+      "total_gap_ms": 26.452686999999997
+    },
+    {
+      "before": "_dual_gather_kernel",
+      "after": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "count": 7,
+      "total_gap_ms": 24.045222000000003
+    },
+    {
+      "before": "_index_linearized_jit_function",
+      "after": "linear_kernel",
+      "count": 11,
+      "total_gap_ms": 23.016009
+    },
+    {
+      "before": "_copy_kernel_kernel_rank_3",
+      "after": "_segment_kernel_paged",
+      "count": 7,
+      "total_gap_ms": 22.545478000000003
+    },
+    {
+      "before": "_copy_kernel_kernel_rank_1",
+      "after": "sub_func_tensor_scalar_kernel_rank_1",
+      "count": 10,
+      "total_gap_ms": 20.322815000000002
+    },
+    {
+      "before": "_to_copy_func_kernel_rank_1",
+      "after": "_dual_gather_kernel",
+      "count": 5,
+      "total_gap_ms": 19.198252000000004
+    },
+    {
+      "before": "triton_red_fused__to_copy_embedding_rms_norm_0",
+      "after": "mm_kernel",
+      "count": 4,
+      "total_gap_ms": 19.023689
+    },
+    {
+      "before": "_index_linearized_jit_function",
+      "after": "_to_copy_func_kernel_rank_1",
+      "count": 4,
+      "total_gap_ms": 18.083951
+    },
+    {
+      "before": "triton_poi_fused_1",
+      "after": "reshape_and_cache_kernel_flash",
+      "count": 4,
+      "total_gap_ms": 17.445631
+    },
+    {
+      "before": "mm_kernel",
+      "after": "triton_red_fused_fused_add_rms_norm_0",
+      "count": 10,
+      "total_gap_ms": 15.989806
+    },
+    {
+      "before": "mm_kernel",
+      "after": "triton_poi_fused_3",
+      "count": 8,
+      "total_gap_ms": 13.08544
+    }
+  ],
+  "longest_gaps": [
+    {
+      "before": "fill_scalar_func_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 4805.392315,
+      "before_dur_ms": 0.003938,
+      "after_dur_ms": 0.00585,
+      "active_apis": []
+    },
+    {
+      "before": "fill_scalar_func_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 4455.300419,
+      "before_dur_ms": 0.003942,
+      "after_dur_ms": 0.004373,
+      "active_apis": []
+    },
+    {
+      "before": "triton_red_fused_fused_add_rms_norm_2",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 4363.545724,
+      "before_dur_ms": 0.066661,
+      "after_dur_ms": 0.006623,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 38.440334,
+      "before_dur_ms": 0.004073,
+      "after_dur_ms": 0.006788,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.392705,
+      "before_dur_ms": 0.00403,
+      "after_dur_ms": 0.006619,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.360936,
+      "before_dur_ms": 0.003965,
+      "after_dur_ms": 0.006792,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.358635,
+      "before_dur_ms": 0.003965,
+      "after_dur_ms": 0.0075,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.332491,
+      "before_dur_ms": 0.003961,
+      "after_dur_ms": 0.007669,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.330614,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.007003,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.329054,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.006684,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.309065,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.007669,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.305757,
+      "before_dur_ms": 0.003965,
+      "after_dur_ms": 0.006684,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.304732,
+      "before_dur_ms": 0.00403,
+      "after_dur_ms": 0.006746,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.289692,
+      "before_dur_ms": 0.004026,
+      "after_dur_ms": 0.007453,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.287136,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.006988,
+      "active_apis": [
+        {
+          "name": "cudaGraphLaunch",
+          "start_ms": -0.26465,
+          "dur_ms": 0.332815
+        }
+      ]
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.28617,
+      "before_dur_ms": 0.004007,
+      "after_dur_ms": 0.006923,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.279761,
+      "before_dur_ms": 0.003965,
+      "after_dur_ms": 0.00703,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.26274,
+      "before_dur_ms": 0.003988,
+      "after_dur_ms": 0.007842,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.244694,
+      "before_dur_ms": 0.003965,
+      "after_dur_ms": 0.007546,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.242462,
+      "before_dur_ms": 0.004073,
+      "after_dur_ms": 0.007092,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.231366,
+      "before_dur_ms": 0.003988,
+      "after_dur_ms": 0.006903,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.225565,
+      "before_dur_ms": 0.003961,
+      "after_dur_ms": 0.006792,
+      "active_apis": []
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "_index_linearized_jit_function",
+      "gap_ms": 36.19898,
+      "before_dur_ms": 0.004046,
+      "after_dur_ms": 0.00795,
+      "active_apis": []
+    },
+    {
+      "before": "_copy_kernel",
+      "after": "_copy_kernel",
+      "gap_ms": 14.330389,
+      "before_dur_ms": 0.003942,
+      "after_dur_ms": 0.003815,
+      "active_apis": [
+        {
+          "name": "cudaStreamSynchronize",
+          "start_ms": -0.054335,
+          "dur_ms": 0.076455
+        }
+      ]
+    },
+    {
+      "before": "_copy_kernel",
+      "after": "_copy_kernel",
+      "gap_ms": 12.733716,
+      "before_dur_ms": 0.004176,
+      "after_dur_ms": 0.004073,
+      "active_apis": [
+        {
+          "name": "cudaStreamSynchronize",
+          "start_ms": -0.058392,
+          "dur_ms": 0.09333
+        }
+      ]
+    },
+    {
+      "before": "sub_func_tensor_scalar_kernel_rank_1",
+      "after": "arange_func",
+      "gap_ms": 11.564329,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.00373,
+      "active_apis": []
+    },
+    {
+      "before": "_copy_kernel",
+      "after": "_copy_kernel",
+      "gap_ms": 10.996846,
+      "before_dur_ms": 0.003984,
+      "after_dur_ms": 0.003857,
+      "active_apis": [
+        {
+          "name": "cudaStreamSynchronize",
+          "start_ms": -0.034731,
+          "dur_ms": 0.074909
+        }
+      ]
+    },
+    {
+      "before": "_dual_gather_kernel",
+      "after": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "gap_ms": 10.308263,
+      "before_dur_ms": 0.007692,
+      "after_dur_ms": 0.327857,
+      "active_apis": [
+        {
+          "name": "cuModuleLoadData",
+          "start_ms": -2.71659,
+          "dur_ms": 7.889339
+        }
+      ]
+    },
+    {
+      "before": "_sample_reduce",
+      "after": "fill_scalar_func_kernel_rank_1",
+      "gap_ms": 10.131303,
+      "before_dur_ms": 0.006557,
+      "after_dur_ms": 0.003942,
+      "active_apis": []
+    },
+    {
+      "before": "_index_linearized_jit_function",
+      "after": "_to_copy_func_kernel_rank_1",
+      "gap_ms": 10.078934,
+      "before_dur_ms": 0.00585,
+      "after_dur_ms": 0.004926,
+      "active_apis": [
+        {
+          "name": "cuModuleGetFunction",
+          "start_ms": -0.094067,
+          "dur_ms": 0.140856
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,931 @@
+{
+  "/workspace/experiments/runs/a30-profile-current-4k-v2/serve.ixsys": {
+    "file": "/workspace/experiments/runs/a30-profile-current-4k-v2/serve.ixsys",
+    "counts": {
+      "cuda_kernel": 251149,
+      "cuda_api": 4065370,
+      "cuda_graph": 1796,
+      "cuda_memcpy": 18873
+    },
+    "top_kernels": [
+      {
+        "name": "mm_kernel",
+        "calls": 46319,
+        "total_ms": 31058.500763,
+        "mean_ms": 0.670534786221637,
+        "min_ms": 0.241261,
+        "max_ms": 1.471903
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "calls": 16158,
+        "total_ms": 7082.353726,
+        "mean_ms": 0.43831871060774846,
+        "min_ms": 0.020461,
+        "max_ms": 0.865134
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "calls": 11496,
+        "total_ms": 5490.633812,
+        "mean_ms": 0.47761254453723034,
+        "min_ms": 0.042515,
+        "max_ms": 0.671803
+      },
+      {
+        "name": "_copy_kernel_kernel_rank_3",
+        "calls": 22866,
+        "total_ms": 3117.125718,
+        "mean_ms": 0.1363214256100761,
+        "min_ms": 0.009876,
+        "max_ms": 0.261792
+      },
+      {
+        "name": "linear_kernel",
+        "calls": 2071,
+        "total_ms": 2340.220009,
+        "mean_ms": 1.1299951757605022,
+        "min_ms": 0.834792,
+        "max_ms": 1.169634
+      },
+      {
+        "name": "triton_poi_fused_mul_silu_slice_1",
+        "calls": 11580,
+        "total_ms": 1593.647809,
+        "mean_ms": 0.13762070889464595,
+        "min_ms": 0.110592,
+        "max_ms": 0.144834
+      },
+      {
+        "name": "triton_red_fused_fused_add_rms_norm_2",
+        "calls": 11579,
+        "total_ms": 965.094175,
+        "mean_ms": 0.08334866352880213,
+        "min_ms": 0.057965,
+        "max_ms": 0.091023
+      },
+      {
+        "name": "triton_poi_fused_3",
+        "calls": 11304,
+        "total_ms": 927.039163,
+        "mean_ms": 0.08200983395258316,
+        "min_ms": 0.073584,
+        "max_ms": 0.084388
+      },
+      {
+        "name": "_masked_sample_partial",
+        "calls": 2071,
+        "total_ms": 734.609625,
+        "mean_ms": 0.35471251810719456,
+        "min_ms": 0.015703,
+        "max_ms": 0.37155
+      },
+      {
+        "name": "triton_red_fused_fused_add_rms_norm_0",
+        "calls": 11580,
+        "total_ms": 593.93751,
+        "mean_ms": 0.051289940414507774,
+        "min_ms": 0.04305,
+        "max_ms": 0.054788
+      },
+      {
+        "name": "_hist_zoom",
+        "calls": 2071,
+        "total_ms": 537.045621,
+        "mean_ms": 0.25931705504587155,
+        "min_ms": 0.104465,
+        "max_ms": 0.345388
+      },
+      {
+        "name": "_combine_kernel",
+        "calls": 11496,
+        "total_ms": 369.233804,
+        "mean_ms": 0.03211845894224078,
+        "min_ms": 0.008765,
+        "max_ms": 0.040903
+      },
+      {
+        "name": "reshape_and_cache_kernel_flash",
+        "calls": 11580,
+        "total_ms": 354.685388,
+        "mean_ms": 0.030629135405872192,
+        "min_ms": 0.026465,
+        "max_ms": 0.033857
+      },
+      {
+        "name": "_dual_gather_kernel",
+        "calls": 17082,
+        "total_ms": 190.132882,
+        "mean_ms": 0.0111305984076806,
+        "min_ms": 0.005034,
+        "max_ms": 0.0231
+      },
+      {
+        "name": "index_select_kernel",
+        "calls": 11770,
+        "total_ms": 131.410863,
+        "mean_ms": 0.011164899150382327,
+        "min_ms": 0.009642,
+        "max_ms": 0.033665
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<128u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "calls": 924,
+        "total_ms": 108.343513,
+        "mean_ms": 0.1172548841991342,
+        "min_ms": 0.016134,
+        "max_ms": 0.14173
+      },
+      {
+        "name": "_row_stats_partial",
+        "calls": 2071,
+        "total_ms": 90.841193,
+        "mean_ms": 0.043863444229840655,
+        "min_ms": 0.007992,
+        "max_ms": 0.048619
+      },
+      {
+        "name": "_index_copy_jit_function",
+        "calls": 11496,
+        "total_ms": 73.911949,
+        "mean_ms": 0.0064293622999304105,
+        "min_ms": 0.0048,
+        "max_ms": 0.008911
+      },
+      {
+        "name": "_copy_kernel_kernel_rank_1",
+        "calls": 6075,
+        "total_ms": 24.327413,
+        "mean_ms": 0.004004512427983539,
+        "min_ms": 0.003684,
+        "max_ms": 0.005657
+      },
+      {
+        "name": "_hist_walk",
+        "calls": 2071,
+        "total_ms": 23.136674,
+        "mean_ms": 0.01117174022211492,
+        "min_ms": 0.009042,
+        "max_ms": 0.014507
+      },
+      {
+        "name": "_index_linearized_jit_function",
+        "calls": 4282,
+        "total_ms": 22.966376,
+        "mean_ms": 0.005363469406819243,
+        "min_ms": 0.004007,
+        "max_ms": 0.008353
+      },
+      {
+        "name": "triton_poi_fused_1",
+        "calls": 276,
+        "total_ms": 22.72254,
+        "mean_ms": 0.08232804347826086,
+        "min_ms": 0.074119,
+        "max_ms": 0.08415
+      },
+      {
+        "name": "add_func_kernel_rank_1",
+        "calls": 4144,
+        "total_ms": 17.62393,
+        "mean_ms": 0.004252878861003861,
+        "min_ms": 0.003938,
+        "max_ms": 0.007392
+      },
+      {
+        "name": "_compute_slot_mapping_kernel",
+        "calls": 2072,
+        "total_ms": 16.190336,
+        "mean_ms": 0.007813868725868726,
+        "min_ms": 0.006619,
+        "max_ms": 0.01185
+      },
+      {
+        "name": "fill_scalar_func_kernel_rank_1",
+        "calls": 4158,
+        "total_ms": 16.068619,
+        "mean_ms": 0.003864506734006734,
+        "min_ms": 0.0036,
+        "max_ms": 0.006238
+      },
+      {
+        "name": "_row_stats_reduce",
+        "calls": 2071,
+        "total_ms": 12.052988,
+        "mean_ms": 0.00581988797682279,
+        "min_ms": 0.004265,
+        "max_ms": 0.007542
+      },
+      {
+        "name": "_sample_reduce",
+        "calls": 2071,
+        "total_ms": 11.90457,
+        "mean_ms": 0.005748223080637374,
+        "min_ms": 0.004565,
+        "max_ms": 0.007776
+      },
+      {
+        "name": "_copy_kernel_kernel_rank_2",
+        "calls": 545,
+        "total_ms": 11.335667,
+        "mean_ms": 0.02079938899082569,
+        "min_ms": 0.008573,
+        "max_ms": 0.044376
+      },
+      {
+        "name": "triton_red_fused__to_copy_embedding_rms_norm_0",
+        "calls": 276,
+        "total_ms": 11.291165,
+        "mean_ms": 0.04091001811594203,
+        "min_ms": 0.032419,
+        "max_ms": 0.047119
+      },
+      {
+        "name": "_to_copy_func_kernel_rank_1",
+        "calls": 2479,
+        "total_ms": 10.931195,
+        "mean_ms": 0.004409517950786607,
+        "min_ms": 0.00388,
+        "max_ms": 0.006473
+      },
+      {
+        "name": "zeros_kernel",
+        "calls": 2078,
+        "total_ms": 10.878856,
+        "mean_ms": 0.0052352531280077,
+        "min_ms": 0.003661,
+        "max_ms": 0.00705
+      },
+      {
+        "name": "sub_func_tensor_scalar_kernel_rank_1",
+        "calls": 2072,
+        "total_ms": 8.24568,
+        "mean_ms": 0.003979575289575289,
+        "min_ms": 0.003796,
+        "max_ms": 0.006342
+      },
+      {
+        "name": "_copy_kernel",
+        "calls": 552,
+        "total_ms": 2.20338,
+        "mean_ms": 0.003991630434782609,
+        "min_ms": 0.003703,
+        "max_ms": 0.005915
+      },
+      {
+        "name": "arange_func",
+        "calls": 274,
+        "total_ms": 1.03878,
+        "mean_ms": 0.003791167883211679,
+        "min_ms": 0.003642,
+        "max_ms": 0.004715
+      },
+      {
+        "name": "_scatter_jit_function",
+        "calls": 139,
+        "total_ms": 0.612044,
+        "mean_ms": 0.004403194244604317,
+        "min_ms": 0.004157,
+        "max_ms": 0.004865
+      }
+    ],
+    "kernel_variants": [
+      {
+        "name": "mm_kernel",
+        "grid": "(384, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 97,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 65536,
+        "calls": 5544,
+        "total_ms": 7804.808581,
+        "mean_ms": 1.4077937555916307
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(384, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 65536,
+        "calls": 5418,
+        "total_ms": 7623.945994,
+        "mean_ms": 1.40715134625323
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(128, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 97,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 11089,
+        "total_ms": 5388.578325,
+        "mean_ms": 0.48593906799531067
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(128, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 10836,
+        "total_ms": 5260.050649,
+        "mean_ms": 0.4854236479328165
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(8, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 7380,
+        "total_ms": 4311.861855,
+        "mean_ms": 0.5842631239837399
+      },
+      {
+        "name": "_copy_kernel_kernel_rank_3",
+        "grid": "(4096, 1, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 41,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 11412,
+        "total_ms": 2941.305951,
+        "mean_ms": 0.25773799079915877
+      },
+      {
+        "name": "linear_kernel",
+        "grid": "(510, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 31,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 40960,
+        "calls": 2007,
+        "total_ms": 2281.694955,
+        "mean_ms": 1.136868437967115
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 61)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 3138,
+        "total_ms": 1980.097677,
+        "mean_ms": 0.6310062705544933
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 60)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 2898,
+        "total_ms": 1720.584396,
+        "mean_ms": 0.5937144223602484
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(160, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 97,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 5545,
+        "total_ms": 1682.181286,
+        "mean_ms": 0.30336903264201986
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(160, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 5418,
+        "total_ms": 1642.617114,
+        "mean_ms": 0.30317776190476187
+      },
+      {
+        "name": "triton_poi_fused_mul_silu_slice_1",
+        "grid": "(24576, 1, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 11223,
+        "total_ms": 1545.520959,
+        "mean_ms": 0.13771014514835606
+      },
+      {
+        "name": "triton_red_fused_fused_add_rms_norm_2",
+        "grid": "(1024, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 128,
+        "calls": 11495,
+        "total_ms": 958.456335,
+        "mean_ms": 0.08338028142670727
+      },
+      {
+        "name": "triton_poi_fused_3",
+        "grid": "(9216, 1, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 11222,
+        "total_ms": 920.651104,
+        "mean_ms": 0.08203984173944039
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(384, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 189,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 65536,
+        "calls": 576,
+        "total_ms": 810.440364,
+        "mean_ms": 1.4070145208333333
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(7, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1470,
+        "total_ms": 709.664423,
+        "mean_ms": 0.48276491360544216
+      },
+      {
+        "name": "_masked_sample_partial",
+        "grid": "(64, 32, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 155,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 32,
+        "calls": 1795,
+        "total_ms": 659.492674,
+        "mean_ms": 0.36740538941504175
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(128, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 189,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 1234,
+        "total_ms": 598.888771,
+        "mean_ms": 0.4853231531604538
+      },
+      {
+        "name": "triton_red_fused_fused_add_rms_norm_0",
+        "grid": "(1024, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 128,
+        "calls": 11496,
+        "total_ms": 589.895012,
+        "mean_ms": 0.0513130664578984
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(6, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1386,
+        "total_ms": 553.500612,
+        "mean_ms": 0.3993510909090909
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(5, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1218,
+        "total_ms": 473.882736,
+        "mean_ms": 0.38906628571428575
+      },
+      {
+        "name": "_hist_zoom",
+        "grid": "(64, 32, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 36,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 8192,
+        "calls": 1795,
+        "total_ms": 473.670537,
+        "mean_ms": 0.26388330752089134
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(3, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1344,
+        "total_ms": 390.870012,
+        "mean_ms": 0.29082590178571427
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(4, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1218,
+        "total_ms": 352.808335,
+        "mean_ms": 0.2896620155993432
+      },
+      {
+        "name": "reshape_and_cache_kernel_flash",
+        "grid": "(2048, 1, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 11496,
+        "total_ms": 352.25735,
+        "mean_ms": 0.030641731906750173
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(2, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 1470,
+        "total_ms": 224.809121,
+        "mean_ms": 0.15293137482993197
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(160, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 189,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 49152,
+        "calls": 617,
+        "total_ms": 187.197547,
+        "mean_ms": 0.30339958995137767
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 62)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 252,
+        "total_ms": 155.357116,
+        "mean_ms": 0.6164964920634921
+      },
+      {
+        "name": "index_select_kernel",
+        "grid": "(2048, 1, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 5,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 11397,
+        "total_ms": 122.831559,
+        "mean_ms": 0.010777534351145037
+      },
+      {
+        "name": "_combine_kernel",
+        "grid": "(61, 2, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 2048,
+        "calls": 3138,
+        "total_ms": 120.823014,
+        "mean_ms": 0.038503191204588914
+      },
+      {
+        "name": "_combine_kernel",
+        "grid": "(60, 2, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 2048,
+        "calls": 2898,
+        "total_ms": 110.330628,
+        "mean_ms": 0.03807130020703933
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<128u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(1, 16, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 924,
+        "total_ms": 108.343513,
+        "mean_ms": 0.1172548841991342
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 63)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 168,
+        "total_ms": 100.84226,
+        "mean_ms": 0.6002515476190475
+      },
+      {
+        "name": "_row_stats_partial",
+        "grid": "(64, 32, 1)",
+        "block": "(128, 1, 1)",
+        "regs": 50,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 8,
+        "calls": 1795,
+        "total_ms": 80.920309,
+        "mean_ms": 0.04508095208913649
+      },
+      {
+        "name": "_dual_gather_kernel",
+        "grid": "(256, 1, 1)",
+        "block": "(256, 1, 1)",
+        "regs": 14,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 0,
+        "calls": 5754,
+        "total_ms": 78.25359,
+        "mean_ms": 0.013599859228362878
+      },
+      {
+        "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+        "grid": "(1, 16, 1)",
+        "block": "(1024, 1, 1)",
+        "regs": 112,
+        "staticSharedMemory": 65536,
+        "dynamicSharedMemory": 0,
+        "calls": 672,
+        "total_ms": 64.956632,
+        "mean_ms": 0.09666165476190476
+      },
+      {
+        "name": "mm_kernel",
+        "grid": "(384, 1, 1)",
+        "block": "(512, 1, 1)",
+        "regs": 189,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 65536,
+        "calls": 42,
+        "total_ms": 59.792132,
+        "mean_ms": 1.4236221904761905
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 45)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 126,
+        "total_ms": 55.452887,
+        "mean_ms": 0.4401022777777778
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 59)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 84,
+        "total_ms": 47.466288,
+        "mean_ms": 0.5650748571428572
+      },
+      {
+        "name": "_segment_kernel_paged",
+        "grid": "(32, 2, 58)",
+        "block": "(64, 1, 1)",
+        "regs": 0,
+        "staticSharedMemory": 0,
+        "dynamicSharedMemory": 6144,
+        "calls": 84,
+        "total_ms": 46.694975,
+        "mean_ms": 0.5558925595238094
+      }
+    ],
+    "top_apis": [
+      {
+        "name": "cudaEventSynchronize",
+        "calls": 4144,
+        "total_ms": 58006.347627,
+        "mean_ms": 13.997670759411196,
+        "max_ms": 35.685922
+      },
+      {
+        "name": "cudaStreamSynchronize",
+        "calls": 552,
+        "total_ms": 13758.395778,
+        "mean_ms": 24.924630032608697,
+        "max_ms": 74.370215
+      },
+      {
+        "name": "cuLaunchKernel",
+        "calls": 234286,
+        "total_ms": 2714.46318,
+        "mean_ms": 0.011586109199866829,
+        "max_ms": 3.249876
+      },
+      {
+        "name": "cuModuleGetFunction",
+        "calls": 182,
+        "total_ms": 1427.879277,
+        "mean_ms": 7.845490532967033,
+        "max_ms": 87.224878
+      },
+      {
+        "name": "cudaGetDevice",
+        "calls": 2030807,
+        "total_ms": 367.814107,
+        "mean_ms": 0.0001811172144866548,
+        "max_ms": 0.018584
+      },
+      {
+        "name": "cuPointerGetAttribute",
+        "calls": 878990,
+        "total_ms": 342.599964,
+        "mean_ms": 0.00038976548538663695,
+        "max_ms": 2.904856
+      },
+      {
+        "name": "cudaLaunchKernel",
+        "calls": 17094,
+        "total_ms": 238.93028,
+        "mean_ms": 0.013977435357435357,
+        "max_ms": 1.985748
+      },
+      {
+        "name": "cudaMemcpyAsync",
+        "calls": 18890,
+        "total_ms": 168.933862,
+        "mean_ms": 0.008943031339332979,
+        "max_ms": 1.236196
+      },
+      {
+        "name": "cudaGraphLaunch",
+        "calls": 1796,
+        "total_ms": 84.179514,
+        "mean_ms": 0.04687055345211581,
+        "max_ms": 2.434734
+      },
+      {
+        "name": "cuDevicePrimaryCtxGetState",
+        "calls": 612415,
+        "total_ms": 83.503186,
+        "mean_ms": 0.0001363506543765257,
+        "max_ms": 0.009022
+      },
+      {
+        "name": "cuCtxGetCurrent",
+        "calls": 234468,
+        "total_ms": 31.851613,
+        "mean_ms": 0.00013584631165020387,
+        "max_ms": 0.013531
+      },
+      {
+        "name": "cuModuleLoadData",
+        "calls": 184,
+        "total_ms": 31.605037,
+        "mean_ms": 0.1717665054347826,
+        "max_ms": 7.889339
+      },
+      {
+        "name": "cudaStreamWaitEvent",
+        "calls": 2072,
+        "total_ms": 31.222366,
+        "mean_ms": 0.01506870945945946,
+        "max_ms": 0.102466
+      },
+      {
+        "name": "cudaEventRecord",
+        "calls": 8567,
+        "total_ms": 19.251341,
+        "mean_ms": 0.0022471508112524804,
+        "max_ms": 0.019226
+      },
+      {
+        "name": "cudaSetDevice",
+        "calls": 11868,
+        "total_ms": 14.537483,
+        "mean_ms": 0.0012249311594202898,
+        "max_ms": 0.0101
+      },
+      {
+        "name": "cudaEventQuery",
+        "calls": 4417,
+        "total_ms": 11.235319,
+        "mean_ms": 0.0025436538374462307,
+        "max_ms": 0.054372
+      },
+      {
+        "name": "cudaStreamIsCapturing",
+        "calls": 1801,
+        "total_ms": 2.333706,
+        "mean_ms": 0.0012957834536368685,
+        "max_ms": 0.008752
+      },
+      {
+        "name": "cudaHostAlloc",
+        "calls": 17,
+        "total_ms": 1.374623,
+        "mean_ms": 0.08086017647058824,
+        "max_ms": 0.108996
+      },
+      {
+        "name": "cudaGetLastError",
+        "calls": 2074,
+        "total_ms": 0.59012,
+        "mean_ms": 0.0002845323047251687,
+        "max_ms": 0.000887
+      },
+      {
+        "name": "cudaMalloc",
+        "calls": 5,
+        "total_ms": 0.140335,
+        "mean_ms": 0.028067,
+        "max_ms": 0.071852
+      },
+      {
+        "name": "cuDeviceGetAttribute",
+        "calls": 184,
+        "total_ms": 0.08185,
+        "mean_ms": 0.00044483695652173914,
+        "max_ms": 0.00189
+      },
+      {
+        "name": "cuFuncGetAttribute",
+        "calls": 548,
+        "total_ms": 0.071496,
+        "mean_ms": 0.00013046715328467152,
+        "max_ms": 0.000607
+      },
+      {
+        "name": "cudaEventCreateWithFlags",
+        "calls": 5,
+        "total_ms": 0.01816,
+        "mean_ms": 0.003632,
+        "max_ms": 0.007062
+      },
+      {
+        "name": "cuFuncSetCacheConfig",
+        "calls": 2,
+        "total_ms": 0.000707,
+        "mean_ms": 0.0003535,
+        "max_ms": 0.000416
+      },
+      {
+        "name": "cuFuncSetAttribute",
+        "calls": 2,
+        "total_ms": 0.000451,
+        "mean_ms": 0.0002255,
+        "max_ms": 0.00025
+      }
+    ],
+    "graphs": [
+      {
+        "name": "CUDA Graph 25",
+        "calls": 1796,
+        "total_ms": 68216.287476,
+        "mean_ms": 37.982342692650334
+      }
+    ],
+    "streams": [
+      {
+        "stream": 1,
+        "kernel_calls": 251149,
+        "kernel_ms": 55982.297736,
+        "gap_ms": 108918.113681,
+        "max_gap_ms": 4805.392315,
+        "gaps_over_1ms": 2473,
+        "gaps_over_10ms": 1819
+      }
+    ]
+  }
+}
