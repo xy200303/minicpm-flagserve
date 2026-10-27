@@ -185,19 +185,21 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 2026-10-25 在 C500（64GB 显存、128GB CPU 内存）上，从上述提交部署并显式固定源码路径。交付版启动耗时 293 秒，日志包含 \texttt{mcblas\_mm} 注册、采样融合启用和 lm\_head nn 路由；原生基线启动耗时 161 秒。两者均完成官方四轮 benchmark，当前交付版另完成两次 MATH-500 评测。
 
 \begin{table}[!htbp]
-\centering
-\caption{当前交付性能结果（BI-V150 官方开发与评测均为 32GB）}
-\begin{tabularx}{\linewidth}{@{}l l r r Y@{}}
+\centering\small
+\caption{官网基线、原生栈复测与当前交付的总吞吐（tok/s）}
+\begin{tabularx}{\linewidth}{@{}l l r r r Y@{}}
 \toprule
-平台 & 场景 & 官网基线（tok/s） & 当前交付（tok/s） & 提升 \\
+平台 & 场景 & 官网基线 & 原生栈复测 & 当前交付 & 相对官网 \\
 \midrule
-沐曦 C500 & 4k & 5089.645 & 12399.31 & 2.44$\times$\\
-沐曦 C500 & 16k & 7029.675 & 11046.19 & 1.57$\times$\\
-天数 BI-V150 & 4k & 2028.01（官网，32GB） & 4087.91–4722.22 & 2.02$\times$–2.33$\times$\\
-天数 BI-V150 & 16k & 915.15（官网，32GB） & 4520.10–4520.19 & 4.94$\times$\\
+沐曦 C500 & 4k & 5089.645 & 4210.20 & 12399.31 & 2.44$\times$\\
+沐曦 C500 & 16k & 7029.675 & 5867.59 & 11046.19 & 1.57$\times$\\
+天数 BI-V150 & 4k & 2028.01 & 1902.15 & 4087.91–4722.22 & 2.02$\times$–2.33$\times$\\
+天数 BI-V150 & 16k & 915.15 & 861.98 & 4520.10–4520.19 & 4.94$\times$\\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+原生栈复测均使用未修改的官方栈、官方启动命令和四轮去首均值：C500 测于 2026-10-25，BI-V150 测于 2026-10-10（32GB 官方实例）。BI 原生数据及逐轮值见 \path{docs/baselines/iluvatar-biv150/a1-iluvatar-vendor-fa.md}；因实例和日期不同，只用于区分官网数字、原生复现与最终交付，不替代文中的同日 A/B 对照。
 
 注意，total tok/s 同时计入输入与输出，且 4k／16k 的请求数分别为 256／128，不能用该指标直接比较单请求速度。以 BI-V150 第一组为例，两场景总 token 分别为 1.31M／2.23M，因此 16k 总吞吐可接近 4k；同组 decode 输出吞吐则由 817.58 降至 265.89 tok/s，TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
@@ -231,6 +233,12 @@ C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相�
 \centering
 \includegraphics[width=\linewidth]{fig1_c500_throughput.pdf}
 \caption{沐曦 C500：官网基线、本机原生基线与当前交付的四轮去首均值对比}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{fig20_bi_three_way.pdf}
+\caption{天数 BI-V150：官网基线、历史原生栈复测与当前交付对比；误差线保留两次交付复测范围，原生复测与交付复测不视为同日 A/B}
 \end{figure}
 
 \subsection{实验环境}

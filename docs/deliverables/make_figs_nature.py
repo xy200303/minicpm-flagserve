@@ -734,7 +734,38 @@ def fig_biv150_bottleneck():
     save(fig, "fig19_biv150_bottleneck", pad=1.0)
 
 
+def fig_bi_three_way():
+    labels = ["4k 场景", "16k 场景"]
+    official = np.array([2028.01, 915.15])
+    native = np.array([1902.15, 861.98])
+    current_low = np.array([4087.91, 4520.10])
+    current_high = np.array([4722.22, 4520.19])
+    fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
+    cont = na.make_grouped_bar(
+        ax, labels, [official, native, current_low],
+        ["官网基线", "原生栈复测（2026-10-10）", "当前交付（两次复测）"],
+        ylabel="总吞吐（tokens/s）", colors=[BASE, HERO_SOFT, HERO], bar_width=0.65,
+        edgecolor=BASE_EDGE, linewidth=0.4)
+    for series, vals, color in zip(cont[:2], [official, native], [MID, HERO_SOFT]):
+        for i, bar in enumerate(series):
+            label_above(ax, bar.get_x() + bar.get_width() / 2, vals[i] + 110,
+                        f"{vals[i]:,.0f}", color, 6.8)
+    for i, bar in enumerate(cont[2]):
+        cx = bar.get_x() + bar.get_width() / 2
+        ax.errorbar(cx, current_low[i],
+                    yerr=[[0], [current_high[i] - current_low[i]]],
+                    fmt="none", ecolor=HERO, elinewidth=1.2, capsize=4,
+                    capthick=1.2, zorder=4)
+        label_above(ax, cx, current_high[i] + 110,
+                    f"{current_low[i]:,.0f}–{current_high[i]:,.0f}", HERO, 6.8)
+    ax.legend(loc="upper left", frameon=False).set_zorder(5)
+    ax.set_ylim(0, 5500)
+    ax.yaxis.set_major_locator(MaxNLocator(5))
+    save(fig, "fig20_bi_three_way")
+
+
 fig_incremental_gains()
 fig_speedup_benefit()
 fig_efficiency()
 fig_biv150_bottleneck()
+fig_bi_three_way()
