@@ -3,7 +3,7 @@ import cProfile
 import os
 import pstats
 
-from vllm.v1.worker.gpu_model_runner import GPUModelRunner
+from vllm_fl.worker.model_runner import ModelRunnerFL as GPUModelRunner
 
 
 _OUTPUT = os.environ["HOST_PROFILE"]
@@ -13,11 +13,10 @@ _calls = 0
 
 
 def _dump():
+    if _calls == 0:
+        return
     _profiler.dump_stats(_OUTPUT + ".prof")
     with open(_OUTPUT + ".txt", "w", encoding="utf-8") as f:
-        if _calls == 0:
-            f.write("no execute_model calls captured\n")
-            return
         stats = pstats.Stats(_profiler, stream=f)
         stats.sort_stats("cumulative").print_stats(120)
 

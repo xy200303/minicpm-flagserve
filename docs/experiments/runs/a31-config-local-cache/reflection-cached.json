@@ -1,0 +1,7 @@
+{
+  "source": "/workspace/a31-gems/src/flag_gems/__init__.py",
+  "table": "mul_broadcast_2d_kernel_acf4969522c69cc919c4cac21529e3d083dfa2ddd297b14076c5f5c49c8f6381_benchmark_v2-d3c810e6246e0d8cf3587a98b9bf2a86",
+  "model_loaded": true,
+  "model_table": "mul_broadcast_2d_kernel_acf4969522c69cc919c4cac21529e3d083dfa2ddd297b14076c5f5c49c8f6381_benchmark_v2-d3c810e6246e0d8cf3587a98b9bf2a86",
+  "elapsed_ms": 26.34712401777506
+}
