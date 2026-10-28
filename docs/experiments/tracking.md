@@ -659,3 +659,10 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 4k 性能、TTFT 和精度要求均已满足，A31 合入 `integration/flaggems`（`9c06143c`）。
 - 16k A/B/A/B：A1/A2 4516.49/4511.37，B1/B2 4515.71/4512.11，中位数 **4513.93→4513.91**，基本持平。16k host 总时间 148.42→141.48s，metadata、copy 和设备计算成为主要部分；证据见 `a31-16k-evidence.tar.gz`、`16k-{current,a31}-host.prof`。
 
+### A32（2026-10-28，4k 基本持平，16k 验证中）：纯 decode 元数据快速路径
+
+- 分支 `exp/a32-decode-metadata-fastpath`（`e1ea441`）。纯 decode 用 `torch.arange` 并直接复用 `seq_lens/block_table`，混合批保留原 gather。
+- 两项测试通过；`_build_split` 微基准 **108.76→29.37μs（3.70×）**。
+- 官方 4k 中位数 **5198.68→5199.62（约 +0.02%）**，无显著端到端收益，暂不合入；完整证据 `a32-4k-evidence.tar.gz`。
+- 16k `_build_split` 占比更高，继续交错验证，未将微基准收益写成最终成绩。
+
