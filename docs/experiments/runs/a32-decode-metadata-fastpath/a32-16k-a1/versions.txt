@@ -1,0 +1,56 @@
+Name: vllm
+Version: 0.24.0+empty
+Summary: A high-throughput and memory-efficient inference and serving engine for LLMs
+Home-page: https://github.com/vllm-project/vllm
+Author: vLLM Team
+Author-email: 
+License-Expression: Apache-2.0
+Location: /usr/local/lib/python3.12/site-packages
+Requires: aiohttp, anthropic, blake3, cachetools, cbor2, cloudpickle, compressed-tensors, depyf, diskcache, einops, fastapi, filelock, ijson, jsonschema, lark, llguidance, lm-format-enforcer, mcp, mistral_common, model-hosting-container-standards, msgspec, ninja, numpy, openai, openai-harmony, opencv-python-headless, opentelemetry-api, opentelemetry-exporter-otlp, opentelemetry-sdk, opentelemetry-semantic-conventions-ai, outlines_core, partial-json-parser, pillow, prometheus-fastapi-instrumentator, prometheus_client, protobuf, psutil, py-cpuinfo, pybase64, pydantic, python-json-logger, pyyaml, pyzmq, regex, requests, safetensors, sentencepiece, setproctitle, setuptools, six, starlette, tiktoken, tokenizers, tqdm, transformers, typing_extensions, watchfiles, xgrammar
+Required-by: 
+---
+Name: vllm-plugin-fl
+Version: 0.3.0rc1.post1+g0207b7e10.d20261026
+Summary: A vLLM plugin built on the FlagOS unified multi-chip backend
+Home-page: https://github.com/flagos-ai/vllm-plugin-FL
+Author: 
+Author-email: 
+License-Expression: Apache-2.0
+Location: /workspace/audit-venv/lib/python3.12/site-packages
+Editable project location: /workspace/audit-plugin
+Requires: pyyaml
+Required-by: 
+---
+Name: flag_gems
+Version: 5.3.5.post1.dev11+gaff68555e.d20261026
+Summary: FlagGems is a function library written in Triton language.
+Home-page: 
+Author: 
+Author-email: Zhixin Li <strongspoon@outlook.com>, Tongxin Bai <waffle.bai@gmail.com>, Yuming Huang <jokmingwong@gmail.com>, Feiyu Chen <iclementine@outlook.com>, Ruilin Yang <rlyanger01@gmail.com>, Zhen Wang <516310189@qq.com>, Hui Guo <sunnycase@live.cn>, Xiaoyan Liu <18811205590@163.com>, Chunlie Men <menchunlei@163.com>, Hang Xiao <vincent.xiao.me@gmail.com>, Yiqun Huang <huangyiqun@mail.bnu.edu.cn>, Jinjin Tian <kiddyjinjin@gmail.com>, Yang Zheng <zhengyang_pku@163.com>, Jinjie Liu <sgjzfzzf@gmail.com>
+License: Apache Software License
+Location: /workspace/audit-venv/lib/python3.12/site-packages
+Editable project location: /workspace/audit-gems
+Requires: numpy, packaging, PyYAML, sqlalchemy
+Required-by: 
+---
+Name: torch
+Version: 2.10.0+corex.4.5.0
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org
+Author: 
+Author-email: PyTorch Team <packages@pytorch.org>
+License: BSD-3-Clause
+Location: /usr/local/lib/python3.12/site-packages
+Requires: filelock, fsspec, jinja2, networkx, setuptools, sympy, typing-extensions
+Required-by: compressed-tensors, torchaudio, torchvision, xgrammar
+---
+Name: evalscope
+Version: 1.11.1
+Summary: EvalScope: Lightweight LLMs Evaluation Framework
+Home-page: https://github.com/modelscope/evalscope
+Author: ModelScope team
+Author-email: contact@modelscope.cn
+License-Expression: Apache-2.0
+Location: /usr/local/lib/python3.12/site-packages
+Requires: aiohttp, colorlog, docstring_parser, dotenv, editdistance, filetype, jieba, jinja2, jsonlines, jsonschema, latex2sympy2_extended, litellm, Markdown, modelscope, more_itertools, nltk, openai, overrides, pandas, pillow, plotly, pydantic, pylatexenc, pyyaml, requests, rich, rouge-chinese, rouge-score, sacrebleu, sympy, tabulate, tqdm, transformers, word2number, zhconv
+Required-by: 
