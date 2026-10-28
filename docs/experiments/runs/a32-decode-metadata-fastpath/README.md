@@ -1,0 +1,41 @@
+# A32：纯 decode 元数据快速路径（2026-10-28）
+
+## 依据
+
+A31 后的 16k host profile 中，`_build_split` 仍是主要热点之一。原实现即使全部请求都是连续 decode 行，也会创建索引、执行 HtoD 拷贝，并对 `seq_lens` 和 `block_table` 做 `index_select`。
+
+A32 在 `n == len(seq_l) and cu_l[n] == n` 时：
+
+- 用 `torch.arange` 生成 decode 行号；
+- 直接复用 `m.seq_lens` 和 `m.block_table`，不再 gather；
+- 保持 `dec_meta` 的字段和值与原版一致。
+
+混合批继续使用原索引和 gather 路径。该改动只涉及元数据，不改变 attention 计算、调度参数或启动命令。
+
+## 代码与测试
+
+- 分支：`exp/a32-decode-metadata-fastpath`
+- 提交：`e1ea441`
+- 基线：插件 `0207b7e1` + A31 FlagGems；候选为 A32 + A31 FlagGems。
+
+`tests/unit_tests/dispatch/test_iluvatar_vendor_split.py`：
+
+1. 纯 decode 直接复用元数据。
+2. prefill+decode 混合批保持原 gather 语义。
+
+两项测试均通过。
+
+## 微基准
+
+`docs/verification/bi_a32_split_probe.py`，B=64 纯 decode，1000 次 `_build_split`：
+
+| 实现 | 单次耗时 | 结果检查 |
+|---|---:|---|
+| 原版 | 108.76μs | dec_rows、block_table 正确 |
+| A32 | 29.37μs | 直接复用 seq_lens 和 block_table，全部正确 |
+
+约 3.70×。该数字只用于候选筛选，不代表端到端收益。
+
+## 官方验证
+
+按 A/B/A/B 执行官方 4k 四轮去首均值，基线为 A31、候选为 A31+A32。当前运行中，尚无最终结论。

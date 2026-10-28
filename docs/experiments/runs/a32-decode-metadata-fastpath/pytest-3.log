@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/a32-plugin
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 2 items
+
+../workspace/a32-plugin/tests/unit_tests/dispatch/test_iluvatar_vendor_split.py . [ 50%]
+.                                                                        [100%]
+
+=============================== warnings summary ===============================
+../workspace/a31-gems/src/flag_gems/utils/libentry.py:421
+  /workspace/a31-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 2 passed, 1 warning in 11.48s =========================

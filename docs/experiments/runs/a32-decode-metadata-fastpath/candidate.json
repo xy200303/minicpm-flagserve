@@ -1,0 +1,11 @@
+{
+  "calls": 1000,
+  "elapsed_ms": 29.368813149631023,
+  "us_per_call": 29.368813149631023,
+  "direct_seq_lens": true,
+  "direct_block_table": true,
+  "pre_idx": [],
+  "dec_rows_correct": true,
+  "seq_lens_correct": true,
+  "block_table_correct": true
+}
