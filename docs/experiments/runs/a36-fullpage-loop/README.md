@@ -21,7 +21,9 @@
 
 ## 官方验证状态
 
-官方 4k A/B/A/B 使用 `run_bi_case_v5.sh`，保持官网 serve 参数；A 为 `/workspace/a31-gems`，B 为 `/workspace/a36-official-gems`（A31 加本补丁）。运行 ID：`a36-4k-a1`、`a36-4k-b1`、`a36-4k-a2`、`a36-4k-b2`。完成后再记录中位数、TTFT 和 MATH-500，不以微基准代替官方结论。
+官方 4k A/B/A/B 使用 `run_bi_case_v5.sh`，保持官网 serve 参数；A 为 `/workspace/a31-gems`，B 为 `/workspace/a36-official-gems`（A31 加本补丁）。运行 ID：`a36-4k-a1`、`a36-4k-b1`、`a36-4k-a2`、`a36-4k-b2`。
+
+A1 已完整归档：**5208.52 tok/s，TTFT 4060.54 ms**。B1 运行至实例关机前仍未生成汇总；00:00 后连接认证失效，无法取回完整结果，A2/B2 与 MATH-500 未执行。B1 的启动配置、源码路径和日志已保存，但不据此计算提升。当前不合入；下次可用实例需重新完成至少两组当日交错 A/B 和精度验证。
 
 ## 文件
 
