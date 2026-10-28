@@ -32,3 +32,4 @@ A1 已完整归档：**5208.52 tok/s，TTFT 4060.54 ms**。B1 运行至实例关
 - `a36.patch`：相对 A31 的实验分支补丁；`official.patch`：远端官方验证树的实际差异。
 - `official-source-state.txt`：远端基线 SHA 与候选文件状态。
 - 官方 CSV、serve/bench 日志、机器状态将在各轮结束后归档。
+- `docs/verification/summarize_official_ab.py`：四个完整运行目录的中位数汇总；校验官方案例一致，并检查吞吐 ≥3% 与 TTFT ≤对照中位数 +1%。残缺 B1 已验证会被拒绝。
