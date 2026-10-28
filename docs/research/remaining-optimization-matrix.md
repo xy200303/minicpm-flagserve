@@ -5,7 +5,7 @@
 | 方向 | 已完成与结论 | 后续状态 |
 |---|---|---|
 | BI prefill attention | A1/A6 vendor ixAttnBkd、varlen、dual-gather，已形成主要收益 | 接近 vendor 上限；仅接受新实现证据 |
-| BI decode attention | A7 pin、A20 页对齐内核；A30 尾页拆分、A33 双页展开均否决 | 微基准仍有余量，但需解决组合后回退问题 |
+| BI decode attention | A7 pin、A20 页对齐内核；A30/A33 否决；A36 全页/尾页分离微基准 1.08–1.14× | A36 官方交错 A/B 进行中，完成前不合入 |
 | C500 attention | vendor prefill/decode 已达约 1.42 TB/s，接近实测纯读上限 | 不照搬 BI A20；等待最终栈新 profile |
 | GEMM | C500 nn/mcBLAS；BI pinned vendor config；W8 集成回退；A34 GROUP_M 两轮仅 0–2.87%，复测最高 1.73%，否决 | 不再重复 tile 顺序；仅接受新 epilogue/访存机制证据 |
 | 采样 | bf16 直读、温度折叠、免排序 top-p、Gumbel-Max 已采纳 | 当前占比较低，不优先 |
