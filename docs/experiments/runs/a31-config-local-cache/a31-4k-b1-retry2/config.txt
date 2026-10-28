@@ -1,0 +1,19 @@
+exp_id=a31-4k-b1-retry2
+date=2026-10-28T12:07:59+08:00
+case=[[4096,1024,64,256]]
+plugin_root=/workspace/audit-plugin
+plugin_commit=0207b7e10f93dfa6e912b00c372f268d618b4c2c
+plugin_branch=integration/vllm-plugin-fl
+plugin_diff= 396 files changed, 70378 insertions(+), 70378 deletions(-)
+gems_root=/workspace/a31-gems
+gems_commit=aff68555e266582f68c6554898f4c795c869578d
+gems_branch=
+gems_diff= 3 files changed, 4156 insertions(+), 4078 deletions(-)
+ixsys=0 delay=300 limit=120
+profile_only=0 bench_timeout=180
+uname=Linux 1e1c70a1eeb5 5.4.0-148-generic #165-Ubuntu SMP Tue Apr 18 08:53:12 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+LD_LIBRARY_PATH=/usr/local/corex/lib64:/usr/local/openmpi/lib:/usr/local/lib:/usr/local/lib:/usr/local/openmpi/lib:
+PYTHONPATH=/workspace/audit-plugin:/workspace/audit-gems/src
+VLLM_PLUGINS=fl
+VLLM_PLUGINS=fl
+PYTHONPATH=/workspace/audit-plugin:/workspace/a31-gems/src:/workspace/audit-plugin:/workspace/audit-gems/src
