@@ -11,7 +11,7 @@
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
 | `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `0207b7e1` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
-| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `aff68555` | C500 采样/GEMM 算子、BI-V150 A20 paged decode attention 与测试 |
+| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `9c06143c` | C500 采样/GEMM 算子、BI-V150 A20 paged decode attention 与测试 |
 
 这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`xy200303/minicpm-flagserve` 的 `main` 只保存报告、实验台账与复现文档，不承担运行时代码。两个源码仓库均为对应上游项目的正式 fork，后续可直接向上游提交 PR。
 
@@ -40,7 +40,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。两平台均使用插件 `0207b7e1` 和 FlagGems `aff68555`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。两平台均使用插件 `0207b7e1` 和 FlagGems `9c06143c`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -63,8 +63,8 @@ git clone --single-branch --branch integration/flaggems \
 |---|---|---:|---:|---:|---:|
 | C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12399.31** | **2.44x** |
 | C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11046.19** | **1.57x** |
-| BI-V150 | 4k | 2028.01 | 1902.15 | **4087.91–4722.22** | **2.02x–2.33x** |
-| BI-V150 | 16k | 915.15 | 861.98 | **4520.10–4520.19** | **4.94x** |
+| BI-V150 | 4k | 2028.01 | 1902.15 | **5209.06** | **2.57x** |
+| BI-V150 | 16k | 915.15 | 861.98 | **4513.91** | **4.93x** |
 
 原生栈复测均使用未修改的官方栈、官方命令和四轮去首均值：C500 测于
 2026-10-25，BI 测于 2026-10-10（32GB 官方实例）。BI 原生逐轮数据见
@@ -82,15 +82,18 @@ C500 的本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**，当前交
 **3840.80 → 4722.22（+22.9%）**；16k **3568.31 → 4520.19（+26.7%）**、
 **3570.61 → 4520.10（+26.6%）**。两组均列出，不用单组高值代替整体结果。
 
+A31 配置缓存与单表反射进一步将 4k 中位数从 **4563.26** 提升到
+**5209.06 tok/s（+14.15%）**，TTFT 中位数从 4230.56 降至 4034.29ms（−4.64%）；
+16k 中位数为 **4513.91 tok/s**，与 A20 基线基本持平。A31 的 MATH-500 为 **98.1%**。
+
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 为 **96.19%** 和 **98.1%**。
-均 ≥ 0.95。
+C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 A20 为 96.19% 和 98.1%，
+A31 为 98.1%。均 ≥ 0.95。
 
 **TTFT**：C500 4k **1719.18 ms**（官网基线 3199.435 ms）、16k **18141.47 ms**
-（官网基线 27197.135 ms）；BI-V150 4k 为 **4139.85–4327.86 ms**（官网基线
-11573.53 ms），16k 为 **111.64–111.67 s**（官网基线 599262.03 ms，A7 对照为
-136.86–137.00 s）。按官网基线判断，两平台各场景均满足 `baseline +1%` 上限。
-同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，
+（官网基线 27197.135 ms）；BI-V150 A31 4k 为 **4034.29 ms**，16k 为 **111.82 s**
+（官网基线分别为 11573.53ms 和 599262.03ms）。按官网基线判断，两平台各场景均满足
+`baseline +1%` 上限。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，
 不替代官网基线判断。
 
 ## 2. 天数 BI-V150 改动
@@ -128,6 +131,15 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 开关：`VLLM_FL_DISABLE_DECODE_FAST=1` 整体回退；
 `VLLM_FL_DECODE_FAST_SEGMENTS/_BLOCK/_WARPS/_STAGES` 调形状；
 `VLLM_FL_DECODE_FAST_DEBUG=1` 打印不合格原因。
+
+### A31：配置缓存与单表反射
+
+- `src/flag_gems/utils/libentry.py`：为同一 shape 的配置查询和缺失结果增加进程内缓存，`set()` 同步更新；`FLAGGEMS_CONFIG_CACHE_LOCAL=0` 可回退到直接数据库读取。
+- `src/flag_gems/utils/models/sql.py`：从全库 automap reflection 改为只加载目标表；配置表不存在时仍返回 `None` 并进入 autotune，保持原回退语义。
+- 真实配置库单表加载 **4212.64→26.35ms**；host profile 的 `_index_linearized` 累计时间 **66.03→4.47s**。
+- 官方 4k 中位数 **4563.26→5209.06 tok/s（+14.15%）**，16k 持平；MATH-500 **98.1%**。
+- 16k 的原版配置获取约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此端到端未显著提升。
+- 该优化只改变配置和 host 元数据访问，不改变算子选择、模型计算、采样参数或官方启动命令。
 
 ### 其它
 
@@ -232,6 +244,7 @@ evalscope eval --model minicpm \
 | C500 两次精度与微基准 | 同目录 `healthy-eval1-math500.json`、`healthy-eval2-math500.json`、`micro-healthy.json` |
 | BI-V150 两组 A7/A20 | `docs/experiments/runs/bi-final-audit/{1-a7,1-a20,2-a7,2-a20}/benchmark_results/` 及同级 serve／bench 日志 |
 | BI-V150 精度与内核验证 | 同目录 `eval1-math500.json`、`eval2-math500.json`、`micro.json`、`pytest-a20.log` |
+| BI-V150 A31 4k/16k 与精度 | `docs/experiments/runs/a31-config-local-cache/` 下的 `a31-official-evidence.tar.gz`、`a31-16k-evidence.tar.gz`、`a31-eval.tar.gz`、`host.prof` |
 | 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
 
 官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-10-27）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。

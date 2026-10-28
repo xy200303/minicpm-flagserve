@@ -508,10 +508,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12399.31 / 5089.645 - 1) * 100, (4087.91 / 2028.01 - 1) * 100],
-        [(11046.19 / 7029.675 - 1) * 100, (4520.10 / 915.15 - 1) * 100],
-        [(98.10 / 95.0 - 1) * 100, (96.19 / 95.0 - 1) * 100],
-        [(1 - 18.14147 / 27.197135) * 100, (1 - 111.66677 / 599.262) * 100],
+        [(12399.31 / 5089.645 - 1) * 100, (5209.06 / 2028.01 - 1) * 100],
+        [(11046.19 / 7029.675 - 1) * 100, (4513.91 / 915.15 - 1) * 100],
+        [(98.10 / 95.0 - 1) * 100, (98.10 / 95.0 - 1) * 100],
+        [(1 - 18.14147 / 27.197135) * 100, (1 - 111.81766 / 599.262) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
@@ -562,16 +562,16 @@ def fig_incremental_gains():
     ax.set_title("a  C500：历史版本记录（跨实例）", loc="left", fontsize=8, pad=6)
 
     ax = axes[1]
-    labels = ["A6", "A7", "A20"]
-    gains4 = np.array([5.83, 38.0, (6.033 + 22.949) / 2])
-    gains16 = np.array([1.01, 39.4, (26.676 + 26.592) / 2])
+    labels = ["A6", "A7", "A20", "A31"]
+    gains4 = np.array([5.83, 38.0, (6.033 + 22.949) / 2, 14.15])
+    gains16 = np.array([1.01, 39.4, (26.676 + 26.592) / 2, 0.0])
     x = np.arange(len(labels))
     width = 0.28
     b1 = ax.bar(x - width / 2, gains4, width, color=HERO, label="4k",
-                yerr=[[0, 0, 8.458], [0, 0, 8.458]], capsize=2,
+                yerr=[[0, 0, 8.458, 0], [0, 0, 8.458, 0]], capsize=2,
                 error_kw={"linewidth": 0.6})
     b2 = ax.bar(x + width / 2, gains16, width, color=HERO_SOFT, label="16k",
-                yerr=[[0, 0, 0.042], [0, 0, 0.042]], capsize=2,
+                yerr=[[0, 0, 0.042, 0], [0, 0, 0.042, 0]], capsize=2,
                 error_kw={"linewidth": 0.6})
     ax.scatter([1.82, 1.90], [6.033, 22.949], s=10, color=INK, zorder=4)
     ax.scatter([2.10, 2.18], [26.676, 26.592], s=10, marker="s", color=INK, zorder=4)
@@ -738,8 +738,8 @@ def fig_bi_three_way():
     labels = ["4k 场景", "16k 场景"]
     official = np.array([2028.01, 915.15])
     native = np.array([1902.15, 861.98])
-    current_low = np.array([4087.91, 4520.10])
-    current_high = np.array([4722.22, 4520.19])
+    current_low = np.array([5208.95, 4512.11])
+    current_high = np.array([5209.16, 4515.71])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [official, native, current_low],
