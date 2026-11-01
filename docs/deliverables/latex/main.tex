@@ -506,6 +506,7 @@ A31 在 \texttt{utils/libentry.py} 中为同一 shape 的配置和缺失结果�
 
 A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的提升来自减少配置和 host 开销。16k 的原版配置获取仍累计约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此官方吞吐基本持平，不把 4k 收益外推到 16k。原始证据见 \path{docs/experiments/runs/a31-config-local-cache/}。
 
+\section{跨平台结果与组合消融}
 \subsection{组合有效性与消融分析}
 采用论文常用的 \emph{full-model-minus-one} 形式：以完整交付栈为 Full，逐项移除组件，$\Delta$ 均为“变体减 Full”，负值表示性能下降。BI-V150 的变体来自同日交错 A/B；C500 每个变体执行一次完整四轮 benchmark，属于组合诊断，不代替新候选正式 A/B/A/B。
 
