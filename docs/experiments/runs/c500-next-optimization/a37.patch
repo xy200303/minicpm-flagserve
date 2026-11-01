@@ -1,0 +1,30 @@
+diff --git a/vllm_fl/dispatch/README.md b/vllm_fl/dispatch/README.md
+index 51fa6f4..9604eeb 100644
+--- a/vllm_fl/dispatch/README.md
++++ b/vllm_fl/dispatch/README.md
+@@ -367,7 +367,7 @@ Environment variables can override specific items from platform config. If not s
+ | Variable | Default | Description |
+ |----------|---------|-------------|
+ | `FLAGCX_PATH` | (none) | FlagCX library path (enables FlagCX communication backend) |
+-| `FLAGGEMS_ENABLE_OPLIST_PATH` | `/tmp/flaggems_enable_oplist.txt` | FlagGems enabled ops list file |
++| `FLAGGEMS_ENABLE_OPLIST_PATH` | (none) | Opt-in FlagGems ops list recording; if set without a value, uses `/tmp/flaggems_enable_oplist.txt` |
+ 
+ ### Examples
+ 
+diff --git a/vllm_fl/worker/worker.py b/vllm_fl/worker/worker.py
+index 24b9808..54d9c6e 100644
+--- a/vllm_fl/worker/worker.py
++++ b/vllm_fl/worker/worker.py
+@@ -249,9 +249,9 @@ class WorkerFL(WorkerBase):
+             # Get whitelist and blacklist from environment variables
+             whitelist, blacklist = get_flag_gems_whitelist_blacklist()
+ 
+-            # Only rank 0 records the oplist to avoid file truncation and
+-            # interleaved writes when tensor-parallel-size > 1.
+-            should_record = (rank == 0)
++            # Oplist recording is opt-in: even with once=True, per-call debug
++            # records are constructed before the deduplication filter runs.
++            should_record = rank == 0 and "FLAGGEMS_ENABLE_OPLIST_PATH" in os.environ
+ 
+             # Use whitelist if specified (takes precedence over blacklist)
+             if whitelist:

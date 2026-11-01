@@ -2,21 +2,24 @@
 set -u
 EXP_ID=$1
 CASE=$2
-source /data/c500-env.sh
+source "${ENV_FILE:-/data/c500-env.sh}"
 ROOT=/data/experiments/runs/$EXP_ID
+PLUGIN_ROOT=${PLUGIN_ROOT:-/data/src/vllm-plugin-FL}
+GEMS_ROOT=${GEMS_ROOT:-/data/src/FlagGems}
 mkdir -p "$ROOT"
 {
   date -Is
   uname -a
-  git -C /data/src/vllm-plugin-FL rev-parse HEAD
-  git -C /data/src/vllm-plugin-FL status --short
-  git -C /data/src/FlagGems rev-parse HEAD
-  git -C /data/src/FlagGems status --short
+  git -C "$PLUGIN_ROOT" rev-parse HEAD
+  git -C "$PLUGIN_ROOT" status --short
+  git -C "$GEMS_ROOT" rev-parse HEAD
+  git -C "$GEMS_ROOT" status --short
   python -m pip show vllm vllm-plugin-fl flag_gems torch
 } > "$ROOT/versions.txt" 2>&1
 mx-smi > "$ROOT/gpu-before.txt" 2>&1
 free -h > "$ROOT/memory-before.txt" 2>&1
-printf 'exp_id=%s\ncase=%s\n' "$EXP_ID" "$CASE" > "$ROOT/config.txt"
+printf 'exp_id=%s\ncase=%s\nplugin_root=%s\ngems_root=%s\n' \
+  "$EXP_ID" "$CASE" "$PLUGIN_ROOT" "$GEMS_ROOT" > "$ROOT/config.txt"
 START=$(date +%s)
 python -m vllm.entrypoints.openai.api_server \
   --model /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
