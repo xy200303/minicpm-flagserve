@@ -1,0 +1,168 @@
+         657562 function calls (646753 primitive calls) in 0.889 seconds
+
+   Ordered by: cumulative time
+   List reduced from 474 to 160 due to restriction <160>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      600    0.021    0.000    0.926    0.002 /data/src/vllm-plugin-FL/vllm_fl/worker/model_runner.py:4503(sample_tokens)
+      600    0.003    0.000    0.578    0.001 /data/src/vllm-plugin-FL/vllm_fl/worker/model_runner.py:3651(_sample)
+      600    0.004    0.000    0.576    0.001 /opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py:1769(_wrapped_call_impl)
+      600    0.003    0.000    0.571    0.001 /opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py:1777(_call_impl)
+      600    0.004    0.000    0.568    0.001 /data/src/vllm-plugin-FL/vllm_fl/dispatch/backends/vendor/metax/patches/sampler_tail_fusion.py:157(_forward_metax)
+      600    0.014    0.000    0.501    0.001 /data/src/FlagGems/src/flag_gems/fused/top_p_sample.py:306(fused_top_p_sample)
+     4200    0.025    0.000    0.454    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:346(<lambda>)
+     3664    0.062    0.000    0.391    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:617(run)
+      600    0.147    0.000    0.167    0.000 /data/src/vllm-plugin-FL/vllm_fl/worker/model_runner.py:3682(_bookkeeping_sync)
+      600    0.007    0.000    0.152    0.000 /data/src/vllm-plugin-FL/vllm_fl/worker/model_runner.py:300(__init__)
+       12    0.001    0.000    0.125    0.010 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:226(compile)
+      600    0.004    0.000    0.117    0.000 {method 'zero_' of 'torch._C.TensorBase' objects}
+      600    0.002    0.000    0.113    0.000 /data/src/FlagGems/src/flag_gems/runtime/backend/_metax/ops/zero.py:90(zero_)
+      600    0.005    0.000    0.109    0.000 /data/src/FlagGems/src/flag_gems/runtime/backend/_metax/ops/zero.py:71(_launch_zero)
+       12    0.000    0.000    0.101    0.008 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/compiler.py:471(hash)
+       12    0.000    0.000    0.101    0.008 /opt/conda/lib/python3.12/subprocess.py:417(check_output)
+       12    0.000    0.000    0.101    0.008 /opt/conda/lib/python3.12/subprocess.py:506(run)
+       12    0.001    0.000    0.093    0.008 /opt/conda/lib/python3.12/subprocess.py:1165(communicate)
+      600    0.014    0.000    0.084    0.000 /data/src/FlagGems/src/flag_gems/utils/libentry.py:1634(run)
+      600    0.012    0.000    0.061    0.000 {method 'to' of 'torch._C.TensorBase' objects}
+     4200    0.004    0.000    0.059    0.000 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/driver.py:312(__call__)
+      600    0.004    0.000    0.052    0.000 {method 'unsqueeze' of 'torch._C.TensorBase' objects}
+      600    0.007    0.000    0.048    0.000 /data/src/FlagGems/src/flag_gems/runtime/backend/_metax/ops/to_copy.py:81(to_copy)
+      600    0.003    0.000    0.048    0.000 /data/src/FlagGems/src/flag_gems/ops/unsqueeze.py:23(unsqueeze)
+     2412    0.008    0.000    0.046    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/_utils.py:334(_get_device_index)
+       24    0.042    0.002    0.042    0.002 {method 'read' of '_io.BufferedReader' objects}
+     1200    0.004    0.000    0.042    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1517(debug)
+ 1200/600    0.031    0.000    0.040    0.000 /opt/conda/lib/python3.12/site-packages/torch/_ops.py:833(redispatch)
+     1200    0.005    0.000    0.040    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:1175(current_stream)
+    28328    0.025    0.000    0.039    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:312(mangle_type)
+      601    0.003    0.000    0.038    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1660(_log)
+     2400    0.005    0.000    0.036    0.000 /opt/conda/lib/python3.12/site-packages/torch/_utils.py:831(_get_device_index)
+        9    0.035    0.004    0.035    0.004 /opt/conda/lib/python3.12/site-packages/zmq/sugar/poll.py:80(poll)
+     1800    0.002    0.000    0.030    0.000 /opt/conda/lib/python3.12/site-packages/torch/_utils.py:805(_get_current_device_index)
+26392/17920    0.019    0.000    0.030    0.000 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:384(__getattribute__)
+     1800    0.003    0.000    0.028    0.000 /opt/conda/lib/python3.12/site-packages/torch/_utils.py:789(_get_device_attr)
+      600    0.027    0.000    0.027    0.000 {method 'disable' of '_lsprof.Profiler' objects}
+    28328    0.016    0.000    0.026    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:296(compute_spec_key)
+      601    0.003    0.000    0.021    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1645(makeRecord)
+      600    0.005    0.000    0.021    0.000 /data/src/FlagGems/src/flag_gems/ops/copy.py:74(copy_)
+      600    0.002    0.000    0.019    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:670(__enter__)
+     1800    0.001    0.000    0.019    0.000 /opt/conda/lib/python3.12/site-packages/torch/_utils.py:772(_get_available_device_type)
+       10    0.000    0.000    0.019    0.002 /opt/conda/lib/python3.12/site-packages/vllm/v1/engine/core.py:855(preprocess_add_request)
+       10    0.000    0.000    0.019    0.002 /opt/conda/lib/python3.12/site-packages/vllm/v1/request.py:197(from_engine_core_request)
+       10    0.000    0.000    0.019    0.002 /opt/conda/lib/python3.12/site-packages/vllm/v1/request.py:60(__init__)
+     6624    0.007    0.000    0.018    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:1143(current_device)
+      601    0.009    0.000    0.018    0.000 /opt/conda/lib/python3.12/logging/__init__.py:298(__init__)
+       10    0.000    0.000    0.018    0.002 /opt/conda/lib/python3.12/site-packages/vllm/v1/request.py:237(update_block_hashes)
+       10    0.004    0.000    0.018    0.002 /opt/conda/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:687(request_block_hasher)
+     1800    0.004    0.000    0.018    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:167(is_available)
+      600    0.002    0.000    0.018    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:59(wait_stream)
+   112424    0.015    0.000    0.016    0.000 {built-in method builtins.isinstance}
+      536    0.004    0.000    0.014    0.000 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:409(runner)
+     4736    0.002    0.000    0.014    0.000 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:370(_init_handles)
+      600    0.001    0.000    0.013    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:699(stream)
+      600    0.001    0.000    0.012    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:656(__init__)
+      600    0.002    0.000    0.012    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:73(record_event)
+      600    0.004    0.000    0.011    0.000 /data/src/vllm-plugin-FL/vllm_fl/dispatch/backends/vendor/metax/patches/sampler_tail_fusion.py:71(_fast_path_ok)
+     1800    0.001    0.000    0.010    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:163(_nvml_based_avail)
+     1884    0.001    0.000    0.009    0.000 <frozen os>:808(getenv)
+     7836    0.004    0.000    0.009    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:389(_lazy_init)
+      600    0.006    0.000    0.009    0.000 /opt/conda/lib/python3.12/site-packages/torch/autograd/grad_mode.py:275(__enter__)
+     8460    0.006    0.000    0.009    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/driver.py:22(__getattr__)
+    26367    0.009    0.000    0.009    0.000 {method 'get' of 'dict' objects}
+       12    0.001    0.000    0.009    0.001 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:341(__init__)
+     2560    0.002    0.000    0.009    0.000 /opt/conda/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:577(hash_block_tokens)
+     1956    0.001    0.000    0.009    0.000 <frozen _collections_abc>:804(get)
+       12    0.000    0.000    0.008    0.001 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:104(hash)
+       12    0.000    0.000    0.008    0.001 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:777(cache_key)
+      600    0.001    0.000    0.008    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:183(record)
+      600    0.001    0.000    0.008    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:537(__init__)
+       12    0.000    0.000    0.007    0.001 /opt/conda/lib/python3.12/subprocess.py:807(__init__)
+     1956    0.003    0.000    0.007    0.000 <frozen os>:709(__getitem__)
+    32375    0.007    0.000    0.007    0.000 {method 'extend' of 'list' objects}
+      601    0.002    0.000    0.007    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1686(handle)
+     2560    0.002    0.000    0.007    0.000 /opt/conda/lib/python3.12/site-packages/vllm/utils/hashing.py:26(sha256)
+       12    0.000    0.000    0.007    0.001 /opt/conda/lib/python3.12/subprocess.py:1791(_execute_child)
+    35736    0.006    0.000    0.006    0.000 {built-in method builtins.hasattr}
+     1200    0.002    0.000    0.006    0.000 /opt/conda/lib/python3.12/site-packages/vllm/utils/torch_utils.py:682(_patched_set_stream)
+      600    0.006    0.000    0.006    0.000 {built-in method __triton_launcher.launch}
+      601    0.003    0.000    0.006    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1611(findCaller)
+      600    0.002    0.000    0.006    0.000 /data/src/FlagGems/src/flag_gems/fused/top_p_sample.py:277(_get_buffers)
+     7836    0.004    0.000    0.006    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:340(is_initialized)
+    18708    0.005    0.000    0.005    0.000 {method 'data_ptr' of 'torch._C.TensorBase' objects}
+      600    0.005    0.000    0.005    0.000 {function Event.record at 0x7f3fb107cfe0}
+   1234/6    0.001    0.000    0.005    0.001 /opt/conda/lib/python3.12/ast.py:403(visit)
+    479/6    0.001    0.000    0.005    0.001 /opt/conda/lib/python3.12/ast.py:409(generic_visit)
+        6    0.000    0.000    0.005    0.001 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:165(visit_FunctionDef)
+     1800    0.001    0.000    0.005    0.000 /opt/conda/lib/python3.12/site-packages/torch/_utils.py:807(<lambda>)
+    37869    0.005    0.000    0.005    0.000 {built-in method builtins.len}
+      600    0.003    0.000    0.005    0.000 /data/src/FlagGems/src/flag_gems/utils/libentry.py:1603(key)
+       12    0.000    0.000    0.005    0.000 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/driver.py:302(__init__)
+     1200    0.002    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:727(set_stream)
+     2560    0.003    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/vllm/v1/core/kv_cache_utils.py:539(generate_block_hash_extra_keys)
+      601    0.002    0.000    0.004    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1746(callHandlers)
+       12    0.002    0.000    0.004    0.000 /opt/conda/lib/python3.12/collections/__init__.py:355(namedtuple)
+      600    0.001    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/numpy/core/fromnumeric.py:1881(nonzero)
+     1200    0.003    0.000    0.004    0.000 /data/src/vllm-plugin-FL/vllm_fl/dispatch/backends/vendor/metax/patches/sampler_tail_fusion.py:61(_procs_inactive)
+     3600    0.003    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/vllm/v1/utils.py:734(record_function_or_nullcontext)
+     1200    0.002    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:34(__new__)
+      600    0.001    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:42(wait_event)
+       89    0.000    0.000    0.004    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:211(visit_Assign)
+     2544    0.004    0.000    0.004    0.000 {built-in method __new__ of type object at 0x55b86d346ae0}
+      600    0.001    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:685(__exit__)
+      704    0.003    0.000    0.003    0.000 {built-in method torch.empty}
+       12    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/driver.py:38(compile_module_from_src)
+      600    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:193(wait)
+     3910    0.003    0.000    0.003    0.000 {method 'join' of 'str' objects}
+     6624    0.003    0.000    0.003    0.000 {built-in method torch._C._cuda_getDevice}
+      601    0.001    0.000    0.003    0.000 <frozen posixpath>:117(splitext)
+      600    0.003    0.000    0.003    0.000 {method 'record' of 'torch.Event' objects}
+      600    0.003    0.000    0.003    0.000 {method 'reshape' of 'torch._C.TensorBase' objects}
+       12    0.003    0.000    0.003    0.000 {built-in method _posixsubprocess.fork_exec}
+      600    0.001    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/numpy/core/fromnumeric.py:53(_wrapfunc)
+      600    0.003    0.000    0.003    0.000 {function Event.wait at 0x7f3fb107d080}
+     1803    0.002    0.000    0.003    0.000 /opt/conda/lib/python3.12/logging/__init__.py:200(_is_internal_frame)
+     1956    0.002    0.000    0.003    0.000 <frozen os>:791(encode)
+       24    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/compiler.py:176(parse_options)
+       48    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/pathlib.py:1022(read_text)
+      601    0.001    0.000    0.003    0.000 /opt/conda/lib/python3.12/logging/__init__.py:1011(handle)
+    11739    0.003    0.000    0.003    0.000 {built-in method builtins.getattr}
+     1200    0.001    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:712(_set_stream_by_id)
+   102/78    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:120(visit_Call)
+        6    0.000    0.000    0.003    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:601(create_binder)
+      632    0.003    0.000    0.003    0.000 {built-in method builtins.any}
+       12    0.003    0.000    0.003    0.000 {built-in method maca_utils.load_binary}
+       84    0.001    0.000    0.002    0.000 {built-in method _io.open}
+        6    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:361(create_function_from_signature)
+        6    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py:827(parse)
+     3612    0.002    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:158(_is_compiled)
+        6    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/ast.py:34(parse)
+       24    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/backends/metax/compiler.py:134(__post_init__)
+     1800    0.002    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/vllm/v1/worker/gpu_input_batch.py:304(req_ids)
+     2560    0.002    0.000    0.002    0.000 {built-in method _pickle.dumps}
+      601    0.001    0.000    0.002    0.000 <frozen posixpath>:169(basename)
+     7836    0.002    0.000    0.002    0.000 {built-in method torch._C._cuda_isInBadFork}
+      600    0.001    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/torch/autograd/grad_mode.py:270(__new__)
+     1202    0.001    0.000    0.002    0.000 /opt/conda/lib/python3.12/logging/__init__.py:831(filter)
+       12    0.002    0.000    0.002    0.000 {built-in method builtins.eval}
+     1200    0.001    0.000    0.002    0.000 /data/src/FlagGems/src/flag_gems/utils/libentry.py:1604(spec_arg)
+     1812    0.001    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/__init__.py:1093(device_count)
+      600    0.001    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/torch/cuda/streams.py:167(__new__)
+      600    0.002    0.000    0.002    0.000 {method 'nonzero' of 'numpy.ndarray' objects}
+      536    0.001    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/compiler/compiler.py:406(__getitem__)
+       10    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/vllm/v1/serial_utils.py:340(decode)
+       60    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/pathlib.py:1005(open)
+       10    0.002    0.000    0.002    0.000 {method 'decode' of 'msgspec.msgpack.Decoder' objects}
+        6    0.002    0.000    0.002    0.000 {built-in method builtins.compile}
+     1800    0.002    0.000    0.002    0.000 {method 'stride' of 'torch._C.TensorBase' objects}
+     1200    0.002    0.000    0.002    0.000 {built-in method torch._C._cuda_setStream}
+       12    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap>:806(module_from_spec)
+        6    0.002    0.000    0.002    0.000 {built-in method builtins.exec}
+     1860    0.001    0.000    0.002    0.000 <frozen os>:795(decode)
+       96    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/pathlib.py:407(_load_parts)
+       12    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/cache.py:82(get_group)
+       12    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap_external>:1291(create_module)
+      600    0.002    0.000    0.002    0.000 {built-in method torch._C._is_alias_of}
+       24    0.000    0.000    0.002    0.000 /opt/conda/lib/python3.12/site-packages/triton/runtime/cache.py:250(get_cache_manager)
+       24    0.000    0.000    0.002    0.000 <frozen importlib._bootstrap>:480(_call_with_frames_removed)
+       12    0.001    0.000    0.001    0.000 {built-in method _imp.create_dynamic}
+
+

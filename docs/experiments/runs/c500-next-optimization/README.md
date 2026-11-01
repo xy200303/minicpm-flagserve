@@ -27,3 +27,10 @@
 官方 A/B/A/B 已完成，案例均为 `[[4096,1024,64,256]]`：A1/A2 为 12527.62/12554.57，B1/B2 为 12572.44/12552.06 tok/s。中位数 **12541.10→12562.25，仅 +0.17%**；TTFT 中位数 1621.56→1615.28ms，满足对照 +1%。提升低于 3% 门槛，A37 **否决、不合入**，不再执行 MATH-500。完整计算见 `a37-official-summary.json`。
 
 回滚：恢复 `vllm_fl/worker/worker.py` 中 `should_record = (rank == 0)`，或将 `ENV_FILE` 切回 `/data/c500-env.sh`。
+
+## 最终栈 GPU 与采样归因
+
+- 短负载 4k/512、64 请求的 rank0 trace 共 17323037 个事件。kernel span 23.27s，GPU busy 17.48s（75.1%），空闲 24.9%。该诊断负载不用于计算官方成绩。
+- decode `flash_fwd_splitkv_kernel` 为 4.642s/26838 次，平均 173.0µs，与 4k KV 读取带宽下限一致；不支持再次重写 vendor attention。
+- 采样相关 `_hist_zoom` 与 `_masked_sample_partial` 仅约 0.166s。对 `sample_tokens` 单独 cProfile：600 次累计 0.889s，平均约 **1.48ms/次**，其中 fused top-p 0.501s、bookkeeping 0.167s；采样不是 GPU 空闲的主要来源。
+- 因缺少可归因到具体可改路径的证据，暂不重复 A29/A32 或采样融合。原始摘要见 `torch-profile-analysis.txt`、`sampler-host.{prof,txt}`；大 trace 保留在实例 `/data/experiments/runs/c500-current-torch-profile/trace/`。
