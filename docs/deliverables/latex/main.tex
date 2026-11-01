@@ -507,44 +507,44 @@ A31 在 \texttt{utils/libentry.py} 中为同一 shape 的配置和缺失结果�
 A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的提升来自减少配置和 host 开销。16k 的原版配置获取仍累计约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此官方吞吐基本持平，不把 4k 收益外推到 16k。原始证据见 \path{docs/experiments/runs/a31-config-local-cache/}。
 
 \subsection{组合有效性与消融分析}
-单点内核加速并不保证组合后的端到端收益。为检查各优化在最终栈中的实际贡献，BI-V150 使用同日交错 A/B，C500 在当前交付提交上逐项关闭既有路径并执行完整四轮 benchmark。C500 的消融每个配置一次，属于组合诊断，不代替新候选正式 A/B/A/B。
+采用论文常用的 \emph{full-model-minus-one} 形式：以完整交付栈为 Full，逐项移除组件，$\Delta$ 均为“变体减 Full”，负值表示性能下降。BI-V150 的变体来自同日交错 A/B；C500 每个变体执行一次完整四轮 benchmark，属于组合诊断，不代替新候选正式 A/B/A/B。
 
 \begin{table}[!htbp]
 \centering\small
-\caption{BI-V150 主要优化的同日交错 A/B}
-\begin{tabularx}{\linewidth}{@{}l l r r Y@{}}
+\caption{C500 消融：完整模型与逐项移除组件（4k）}
+\begin{tabularx}{\linewidth}{@{}l r r r r@{}}
 \toprule
-对照 & 场景 & 对照吞吐（tok/s） & 优化吞吐（tok/s） & 变化 \\
+模型变体 & 总吞吐（tok/s） & $\Delta$（tok/s） & $\Delta$ & TTFT（ms） \\
 \midrule
-A7-1 → A20-1 & 4k & 3855.31 & 4087.91 & +6.03\% \\
-A7-2 → A20-2 & 4k & 3840.80 & 4722.22 & +22.95\% \\
-A7-1 → A20-1 & 16k & 3568.31 & 4520.19 & +26.68\% \\
-A7-2 → A20-2 & 16k & 3570.61 & 4520.10 & +26.59\% \\
-A20 → A31（中位数） & 4k & 4563.26 & 5209.06 & +14.15\% \\
-A20 → A31（中位数） & 16k & 4513.93 & 4513.91 & 基本持平 \\
+\textbf{Full（全部优化）} & \textbf{12527.62} & 0.00 & 0.00\% & 1623.73 \\
+\quad w/o 采样融合 & 11785.47 & −742.15 & −5.92\% & 1644.35 \\
+\quad w/o prefill mcBLAS & 9371.69 & −3155.93 & −25.19\% & 2072.08 \\
+\quad w/o lm\_head nn & 12458.35 & −69.27 & −0.55\% & 1635.81 \\
+\quad w/o mcBLAS 与采样融合 & 8946.83 & −3580.79 & −28.58\% & 2093.73 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-BI-V150 的两组 A20 结果均保留，避免用单日高值代替整体波动；A31 则进一步说明配置与 host 路径能在 4k 组合中继续产生收益，但同一机制在 16k 不再处于关键路径。
+采样融合与 prefill mcBLAS 的移除均造成可见损失，其中后者是 4k 组合中最大的单项贡献。lm\_head nn 的边际影响较小，但保留该路径不涉及额外运行参数或模型语义变化。双组件移除用于检验交互：独立乘法模型预期为 $11785.47\times9371.69/12527.62=8816.50$ tok/s，实测 8946.83 tok/s，较预期高 1.48\%，未发现两条主要路径组合后相互回退。C500 同机 16k Full 复核为 11143.77 tok/s、TTFT 17961.76 ms。
 
 \begin{table}[!htbp]
 \centering\small
-\caption{C500 当前交付栈的 4k 组合消融}
-\begin{tabularx}{\linewidth}{@{}l r r Y@{}}
+\caption{BI-V150 消融：Full 与移除 A20／A31 的同日交错对照}
+\begin{tabularx}{\linewidth}{@{}l l r r r@{}}
 \toprule
-配置 & 总吞吐（tok/s） & 相对当前组合 & 组合含义 \\
+消融对照 & 场景 & Full（tok/s） & 移除后（tok/s） & $\Delta$ \\
 \midrule
-当前组合 & 12527.62 & — & 全部既有优化开启 \\
-关闭采样融合 & 11785.47 & −5.92\% & 采样路径仍有实际贡献 \\
-关闭 prefill mcBLAS & 9371.69 & −25.19\% & prefill GEMM 路由是主要收益来源 \\
-关闭 lm\_head nn & 12458.35 & −0.55\% & 当前边际影响较小 \\
-同时关闭 mcBLAS 与采样 & 8946.83 & −28.58\% & 用于检查两条路径的交互 \\
+A20，第 1 组 & 4k & 4087.91 & 3855.31 & −5.69\% \\
+A20，第 2 组 & 4k & 4722.22 & 3840.80 & −18.67\% \\
+A20，第 1 组 & 16k & 4520.19 & 3568.31 & −21.06\% \\
+A20，第 2 组 & 16k & 4520.10 & 3570.61 & −21.01\% \\
+A31，两组中位数 & 4k & 5209.06 & 4563.26 & −12.40\% \\
+A31，两组中位数 & 16k & 4513.91 & 4513.93 & $\approx 0.00\%$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-若 mcBLAS 与采样收益相互独立，双关闭的乘法模型预期为 $11785.47\times9371.69/12527.62=8816.50$ tok/s；实测 8946.83 tok/s，较该模型高 1.48\%。在当前测量精度下，未发现两条主要路径组合后相互回退。C500 同机 16k 复核为 11143.77 tok/s、TTFT 17961.76 ms。原始数据见 \path{docs/experiments/runs/c500-next-optimization/c500-combination-ablation.md}。
+移除 A20 后，两组 16k 吞吐均下降约 21\%，说明页对齐 decode 内核是长上下文组合的关键组件；移除 A31 后，4k 下降 12.40\%，而 16k 基本持平，表明配置与 host 优化具有场景依赖性。两组 A20 结果均保留，不以单组高值代替整体波动。原始数据见 \path{docs/experiments/runs/bi-final-audit/}、\path{docs/experiments/runs/a31-config-local-cache/} 和 \path{docs/experiments/runs/c500-next-optimization/c500-combination-ablation.md}。
 
 \subsection{跨平台结果对照}
 图~\ref{fig:incremental} 对比两种芯片的历史收益构成。C500 的 opt1–opt6 包含跨实例版本记录，展示开发过程而非严格同机累计 A/B；BI-V150 的 A6、A7、A20 使用各自的当日对照，三组数据不作累计。
