@@ -702,3 +702,8 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 双关闭 mcBLAS+采样为 8946.83，乘法模型预期 8816.50，实际高 1.48%，未发现组合回退，两条主路径基本互补。
 - 当前组合没有通过撤销或重排既有组件获得的新收益。完整证据见 `runs/c500-next-optimization/c500-combination-ablation.md`。
 
+### A40/A41（2026-11-01，否决与诊断阻塞）：C500 16k attention 与后续 profile
+
+- 独立 attention 微基准在 4k/16k/32k 为 211.9/765.4/1500.1µs；16k 约为 1.6TB/s 理论下限的 88%。扫描 `num_splits=0/1/2/4/8/16/32/64` 后自动 0 最快（0.78464ms），手动配置均回退，A40 不合入。
+- rank0 torch profiler 因厂商线程回调错误失败；`execute_model` cProfile 首轮 EngineCore 退出，四轮 FAILED。失败诊断不用于性能结论，原始证据见 `runs/c500-next-optimization/a41-16k-diagnostics.md`。
+
