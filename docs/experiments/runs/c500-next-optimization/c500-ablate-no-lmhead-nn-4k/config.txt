@@ -1,0 +1,4 @@
+exp_id=c500-ablate-no-lmhead-nn-4k
+case=[[4096,1024,64,256]]
+plugin_root=/data/src/vllm-plugin-FL
+gems_root=/data/src/FlagGems
