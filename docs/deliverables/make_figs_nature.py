@@ -8,7 +8,7 @@ Flow (SKILL.md → backend fragment → api reference):
   4. QA         : audit_pdf_text.py and audit_figure_collisions.py on the PDFs
 
 Panels the API reference has no helper for (horizontal bars in the three
-"constraint" panels and the A7 gain panel) are drawn with plain Matplotlib but
+"constraint" panels and the BI-A7 gain panel) are drawn with plain Matplotlib but
 keep the same palette, tick and spine behaviour.
 
 Type: the skill mandate is Arial; this report's typographic standard is Times
@@ -93,7 +93,7 @@ def fig_c500_throughput():
     labels = ["4k 场景", "16k 场景"]
     official = np.array([5089.645, 7029.675])
     local = np.array([4210.20, 5867.59])
-    current = np.array([12399.31, 11046.19])
+    current = np.array([12527.62, 11143.77])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [official, local, current],
@@ -142,10 +142,10 @@ def fig_sampler():
 
 
 # --------------------------------------------------------------------------- #
-# 3. C500 optimisation ladder
+# 3. C500-optimisation ladder
 # --------------------------------------------------------------------------- #
 def fig_ladder():
-    labels = ["官方基线", "opt1–6", "opt7", "opt8", "opt10", "opt11"]
+    labels = ["官方基线", "C500-opt1–6", "C500-opt7", "C500-opt8", "C500-opt10", "C500-opt11"]
     vals = np.array([5089.645, 8135.29, 8273.58, 10946.86, 12145.31, 12529.39])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.6 * CM))
     cont = na.make_grouped_bar(
@@ -177,7 +177,7 @@ def fig_ladder():
 # 4. Decode attention bandwidth
 # --------------------------------------------------------------------------- #
 def fig_decode_bw():
-    labels = ["stock 3D", "A20 页对齐", "实测 copy 参考"]
+    labels = ["stock 3D", "BI-A20 页对齐", "实测 copy 参考"]
     vals = np.array([258, 457, 587])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
@@ -205,8 +205,8 @@ def fig_decode_bw():
 # --------------------------------------------------------------------------- #
 def fig_ab_same_day():
     groups = [
-        ("A7-1 → A20-1", [3855.31, 3568.31], [4087.91, 4520.19]),
-        ("A7-2 → A20-2", [3840.80, 3570.61], [4722.22, 4520.10]),
+        ("BI-A7-1 → BI-A20-1", [3855.31, 3568.31], [4087.91, 4520.19]),
+        ("BI-A7-2 → BI-A20-2", [3840.80, 3570.61], [4722.22, 4520.10]),
     ]
     fig, axes = plt.subplots(2, 2, figsize=(15.4 * CM, 8.6 * CM))
     for row, (name, base, ours) in enumerate(groups):
@@ -228,7 +228,7 @@ def fig_ab_same_day():
             ax.set_xlim(-0.4, 1.65)
             ax.set_ylim(base[col] * 0.82, ours[col] * 1.15)
             ax.set_xticks([0, 1])
-            ax.set_xticklabels(["A7 关闭 A20", "A20"], fontsize=7)
+            ax.set_xticklabels(["BI-A7 关闭 BI-A20", "BI-A20"], fontsize=7)
             ax.yaxis.set_major_locator(MaxNLocator(4))
             if col == 0:
                 ax.set_ylabel(f"{name}\n总吞吐（tokens/s）", fontsize=7.5)
@@ -266,7 +266,7 @@ def fig_decode_breakdown():
 
 
 # --------------------------------------------------------------------------- #
-# 7. A7 launch configuration (horizontal bars)
+# 7. BI-A7 launch configuration (horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_a7_config():
     labels = ["4k 场景", "16k 场景"]
@@ -313,8 +313,8 @@ def fig_accuracy():
 
 
 def fig_ttft():
-    labels = ["C500 官方基线", "C500 本提交", "BI A7（关闭 A20）", "BI A20"]
-    secs = [27.197, 18.141, 136.946, 111.652]
+    labels = ["C500 官方基线", "C500 本提交", "BI-A7（关闭 BI-A20）", "BI-A20"]
+    secs = [27.197, 17.962, 136.946, 111.652]
     colors = [BASE, HERO, BASE, HERO]
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(secs))[::-1]
@@ -383,7 +383,7 @@ def heat(data, name, unit, best_is_min=True, figsize=(7.3 * CM, 6.0 * CM),
 # 13. Decode bandwidth evolution
 # --------------------------------------------------------------------------- #
 def fig_decode_evolution():
-    labels = ["stock 2D", "stock 3D", "stock 3D\n+A7 pin", "A20\n自研内核",
+    labels = ["stock 2D", "stock 3D", "stock 3D\n+BI-A7 pin", "BI-A20\n自研内核",
               "硬件 copy\n上限"]
     vals = np.array([117, 153, 258, 457, 587])
     fig, ax = plt.subplots(figsize=(14.5 * CM, 6.8 * CM))
@@ -508,10 +508,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12399.31 / 5089.645 - 1) * 100, (5209.06 / 2028.01 - 1) * 100],
-        [(11046.19 / 7029.675 - 1) * 100, (4513.91 / 915.15 - 1) * 100],
+        [(12527.62 / 5089.645 - 1) * 100, (5209.06 / 2028.01 - 1) * 100],
+        [(11143.77 / 7029.675 - 1) * 100, (4513.91 / 915.15 - 1) * 100],
         [(98.10 / 95.0 - 1) * 100, (98.10 / 95.0 - 1) * 100],
-        [(1 - 18.14147 / 27.197135) * 100, (1 - 111.81766 / 599.262) * 100],
+        [(1 - 17.96176 / 27.197135) * 100, (1 - 111.81766 / 599.262) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
@@ -544,7 +544,7 @@ def fig_incremental_gains():
     fig, axes = plt.subplots(1, 2, figsize=(15.4 * CM, 7.0 * CM),
                              gridspec_kw={"width_ratios": [1.35, 1.0]})
     ax = axes[0]
-    labels = ["官网基线", "opt1–6", "opt7", "opt8", "opt10", "opt11"]
+    labels = ["官网基线", "C500-opt1–6", "C500-opt7", "C500-opt8", "C500-opt10", "C500-opt11"]
     vals = np.array([5089.645, 8135.29, 8273.58, 10946.86, 12145.31, 12529.39])
     x = np.arange(len(vals))
     colors = [BASE, HERO_SOFT, HERO_SOFT, HERO, HERO, HERO]
@@ -562,7 +562,7 @@ def fig_incremental_gains():
     ax.set_title("a  C500：历史版本记录（跨实例）", loc="left", fontsize=8, pad=6)
 
     ax = axes[1]
-    labels = ["A6", "A7", "A20", "A31"]
+    labels = ["BI-A6", "BI-A7", "BI-A20", "BI-A31"]
     gains4 = np.array([5.83, 38.0, (6.033 + 22.949) / 2, 14.15])
     gains16 = np.array([1.01, 39.4, (26.676 + 26.592) / 2, 0.0])
     x = np.arange(len(labels))
@@ -596,12 +596,12 @@ def fig_incremental_gains():
 # --------------------------------------------------------------------------- #
 def fig_speedup_benefit():
     records = [
-        ("C500 opt1\n采样", 5.4, (6573.22 / 5089.645 - 1) * 100,
+        ("C500-opt1\n采样", 5.4, (6573.22 / 5089.645 - 1) * 100,
          (8208.44 / 7029.675 - 1) * 100, HERO, (0, 7)),
-        ("C500 opt8\nGEMM", (1.36 + 1.56 + 1.35 + 1.67) / 4, 32.3, 14.7, HERO, (0, 7)),
-        ("BI-V150 A7\ndecode 配置", 1.76, 38.0, 39.4, P["violet"], (0, 7)),
-        ("BI A20-1", 0.938592 / 0.587688, 6.033, 26.676, P["violet"], (-48, 8)),
-        ("BI A20-2", 0.938592 / 0.587688, 22.949, 26.592, P["violet"], (10, -24)),
+        ("C500-opt8\nGEMM", (1.36 + 1.56 + 1.35 + 1.67) / 4, 32.3, 14.7, HERO, (0, 7)),
+        ("BI-V150 BI-A7\ndecode 配置", 1.76, 38.0, 39.4, P["violet"], (0, 7)),
+        ("BI BI-A20-1", 0.938592 / 0.587688, 6.033, 26.676, P["violet"], (-48, 8)),
+        ("BI BI-A20-2", 0.938592 / 0.587688, 22.949, 26.592, P["violet"], (10, -24)),
     ]
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.8 * CM))
     for name, speedup, gain4, gain16, color, offset in records:
@@ -637,7 +637,7 @@ def fig_efficiency():
     fig, axes = plt.subplots(1, 2, figsize=(15.4 * CM, 6.7 * CM),
                              gridspec_kw={"width_ratios": [0.9, 1.35]})
     ax = axes[0]
-    labels = ["BI stock", "BI A20", "C500 vendor"]
+    labels = ["BI stock", "BI BI-A20", "C500 vendor"]
     absolute = np.array([258, 457, 1466])
     reference = np.array([587, 587, 1610])
     utilization = absolute / reference * 100
@@ -723,7 +723,7 @@ def fig_biv150_bottleneck():
         ax.text(total + 12, yi, f"wall {total:.0f} ms", ha="left", va="center",
                 color=MID, fontsize=7)
     ax.set_yticks(y)
-    ax.set_yticklabels(["A1.5 后", "A3 同步修复后"])
+    ax.set_yticklabels(["BI-A1.5 后", "BI-A3 同步修复后"])
     ax.set_xlim(0, 770)
     ax.set_ylim(-0.65, 1.65)
     ax.set_xlabel("16k 混合步时间分解（ms）")
@@ -764,6 +764,8 @@ def fig_bi_three_way():
     save(fig, "fig20_bi_three_way")
 
 
+fig_op_hotpath()
+fig_compliance()
 fig_incremental_gains()
 fig_speedup_benefit()
 fig_efficiency()

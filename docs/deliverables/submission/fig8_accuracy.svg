@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="209.76378pt" height="170.07874pt" viewBox="0 0 209.76378 170.07874" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-01T15:40:26.293804</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 170.07874 
+L 209.76378 170.07874 
+L 209.76378 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 62.9 135.67874 
+L 200.76378 135.67874 
+L 200.76378 9 
+L 62.9 9 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M -1879.725984 39.965914 
+L 169.431102 39.965914 
+L 169.431102 28.705582 
+L -1879.725984 28.705582 
+z
+" clip-path="url(#p1790650f10)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_4">
+    <path d="M -1879.725984 68.116745 
+L 169.431102 68.116745 
+L 169.431102 56.856413 
+L -1879.725984 56.856413 
+z
+" clip-path="url(#p1790650f10)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_5">
+    <path d="M -1879.725984 96.267577 
+L 129.53416 96.267577 
+L 129.53416 85.007244 
+L -1879.725984 85.007244 
+z
+" clip-path="url(#p1790650f10)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="patch_6">
+    <path d="M -1879.725984 124.418408 
+L 169.431102 124.418408 
+L 169.431102 113.158075 
+L -1879.725984 113.158075 
+z
+" clip-path="url(#p1790650f10)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m6e9cc06ca9" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m6e9cc06ca9" x="83.788451" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="83.788451" y="147.539365" transform="rotate(-0 83.788451 147.539365)">94</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m6e9cc06ca9" x="125.565354" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="125.565354" y="147.539365" transform="rotate(-0 125.565354 147.539365)">96</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m6e9cc06ca9" x="167.342257" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="167.342257" y="147.539365" transform="rotate(-0 167.342257 147.539365)">98</text>
+     </g>
+    </g>
+    <g id="text_4">
+     <text style="font-size: 7.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="131.83189" y="158.434365" transform="rotate(-0 131.83189 158.434365)">MATH-500 Level 3 准确率（%）</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_4"/>
+     <g id="text_5">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="59.4" y="36.854654" transform="rotate(-0 59.4 36.854654)">C500 当前复测 1</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_5"/>
+     <g id="text_6">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="59.4" y="65.005485" transform="rotate(-0 59.4 65.005485)">C500 当前复测 2</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_6"/>
+     <g id="text_7">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="59.4" y="93.115301" transform="rotate(-0 59.4 93.115301)">BI 页对齐 1</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="59.4" y="121.266132" transform="rotate(-0 59.4 121.266132)">BI 页对齐 2</text>
+     </g>
+    </g>
+   </g>
+   <g id="line2d_8">
+    <path d="M 104.676903 135.67874 
+L 104.676903 9 
+" clip-path="url(#p1790650f10)" style="fill: none; stroke-dasharray: 2.8,2.1; stroke-dashoffset: 0; stroke: #b64342; stroke-opacity: 0.9; stroke-width: 0.7"/>
+   </g>
+   <g id="patch_7">
+    <path d="M 62.9 135.67874 
+L 62.9 9 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_8">
+    <path d="M 62.9 135.67874 
+L 200.76378 135.67874 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_9">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="171.728832" y="36.017389" transform="rotate(-0 171.728832 36.017389)">98.10</text>
+   </g>
+   <g id="text_10">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="171.728832" y="64.16822" transform="rotate(-0 171.728832 64.16822)">98.10</text>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="131.83189" y="92.319051" transform="rotate(-0 131.83189 92.319051)">96.19</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="171.728832" y="120.469882" transform="rotate(-0 171.728832 120.469882)">98.10</text>
+   </g>
+   <g id="text_13">
+    <g id="patch_9">
+     <path d="M 109.119016 20.683717 
+L 150.218313 20.683717 
+L 150.218313 13.080748 
+L 109.119016 13.080748 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 6.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #b64342" x="109.899016" y="18.513326" transform="rotate(-0 109.899016 18.513326)">赛题门槛 95%</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p1790650f10">
+   <rect x="62.9" y="9" width="137.86378" height="126.67874"/>
+  </clipPath>
+ </defs>
+</svg>

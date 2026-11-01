@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="436.535433pt" height="147.401575pt" viewBox="0 0 436.535433 147.401575" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-01T15:40:24.554768</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 147.401575 
+L 436.535433 147.401575 
+L 436.535433 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 45.88 112.607825 
+L 427.535433 112.607825 
+L 427.535433 9 
+L 45.88 9 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M 45.88 40.082347 
+L 348.023885 40.082347 
+L 348.023885 29.721565 
+L 45.88 29.721565 
+z
+" clip-path="url(#p62a59d6071)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 45.88 91.88626 
+L 359.155501 91.88626 
+L 359.155501 81.525477 
+L 45.88 81.525477 
+z
+" clip-path="url(#p62a59d6071)" style="fill: #0f4d92"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m901447e63c" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m901447e63c" x="45.88" y="112.607825" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="45.88" y="124.46845" transform="rotate(-0 45.88 124.46845)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m901447e63c" x="125.391549" y="112.607825" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="125.391549" y="124.46845" transform="rotate(-0 125.391549 124.46845)">10</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m901447e63c" x="204.903097" y="112.607825" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="204.903097" y="124.46845" transform="rotate(-0 204.903097 124.46845)">20</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#m901447e63c" x="284.414646" y="112.607825" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="284.414646" y="124.46845" transform="rotate(-0 284.414646 124.46845)">30</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#m901447e63c" x="363.926194" y="112.607825" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="363.926194" y="124.46845" transform="rotate(-0 363.926194 124.46845)">40</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="font-size: 8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="236.707717" y="135.660794" transform="rotate(-0 236.707717 135.660794)">相对 stock 的端到端吞吐提升（%）</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_6">
+      <defs>
+       <path id="mb09d95dfe5" d="M 0 0 
+L -3.5 0 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#mb09d95dfe5" x="45.88" y="34.901956" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_7">
+      <text style="font-size: 8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="38.88" y="37.679456" transform="rotate(-0 38.88 37.679456)">4k 场景</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_7">
+      <g>
+       <use xlink:href="#mb09d95dfe5" x="45.88" y="86.705869" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_8">
+      <text style="font-size: 8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="38.88" y="89.483369" transform="rotate(-0 38.88 89.483369)">16k 场景</text>
+     </g>
+    </g>
+   </g>
+   <g id="patch_5">
+    <path d="M 45.88 112.607825 
+L 45.88 9 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_6">
+    <path d="M 45.88 112.607825 
+L 427.535433 112.607825 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_9">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #0f4d92" x="354.384808" y="36.919222" transform="rotate(-0 354.384808 36.919222)">+38.0%</text>
+   </g>
+   <g id="text_10">
+    <text style="font-weight: 700; font-size: 9px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #0f4d92" x="365.516425" y="88.723134" transform="rotate(-0 365.516425 88.723134)">+39.4%</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p62a59d6071">
+   <rect x="45.88" y="9" width="381.655433" height="103.607825"/>
+  </clipPath>
+ </defs>
+</svg>

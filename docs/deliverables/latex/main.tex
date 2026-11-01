@@ -112,7 +112,7 @@
 \large ——面向天数 BI-V150 与沐曦曦云 C500 的算子、内核与调度优化}
 \author{赛道：FlagOS 开放计算全球大赛（赛季二）赛道二\\[2pt]
 队伍：XLANG2026　队员：邓乾（GitHub：xy200303，单人组队）}
-\date{2026 年 10 月 24 日}
+\date{2026 年 11 月 1 日}
 
 \setlength{\emergencystretch}{2em}
 \begin{document}
@@ -123,7 +123,7 @@
 \setlength{\parindent}{2em}
 本报告面向国产芯片上的大模型推理吞吐优化任务，在官方指定的 FlagOS 栈（vllm-plugin-FL 分支 flagos-2026-s2、FlagGems 标签 v5.3.5）上，对 MiniCPM5-2B 在天数 BI-V150 与沐曦曦云 C500 两款芯片开展算子、内核与调度优化，保持 \texttt{vllm serve} 启动参数、模型与精度要求不变。
 
-当前交付版本的 C500 复测中，4k 场景总吞吐为 12399.31 tok/s，是官网基线的 2.44 倍；16k 场景为 11046.19 tok/s，是基线的 1.57 倍。天数 BI-V150 的官方开发与评测环境均为 32GB：A31 配置缓存与单表反射在 4k 场景将同日对照中位数从 4563.26 提升到 5209.06 tok/s（+14.15\%），TTFT 从 4230.56 降至 4034.29 ms；16k 中位数为 4513.91 tok/s，与对照基本持平。A31 的 MATH-500 Level 3 为 98.1\%，C500 两次复测也均为 98.1\%，均高于 95\% 的赛题要求。
+在当前交付版本的同机复测中，C500 的 4k 与 16k 总吞吐分别为 12527.62 和 11143.77 tok/s，达到官网基线的 2.46 倍和 1.59 倍。天数 BI-V150 的官方开发与评测环境均为 32GB：BI-A31 配置缓存与单表反射将 4k 同日对照中位数从 4563.26 提升至 5209.06 tok/s（+14.15\%），TTFT 从 4230.56 降至 4034.29 ms；16k 中位数为 4513.91 tok/s，与对照基本持平。BI-A31 与 C500 的 MATH-500 Level 3 均为 98.1\%，高于 95\% 的赛题要求。
 
 主要优化包括：按输入形状选择 GEMM 与 attention 的实现或执行配置；用 1024-bin 质量直方图实现免排序 top-p 采样；针对 PV 矩阵乘的布局转换开销重写 paged decode attention；通过进程内配置缓存和单表反射减少 host 配置查询与数据库反射开销；减少 prefill 阶段的隐式同步与冗余内核发射。
 
@@ -160,9 +160,9 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \end{tabularx}
 \end{table}
 
-性能数字均由官方 \texttt{vllm bench serve} 产生。当前 C500 复测与历史 opt 系列均采用同一服务连续四轮、去首轮后三轮均值；连续运行不保证每轮冷缓存，prefix cache 命中情况逐次查日志。精度数字来自 evalscope 官方原命令的 MATH-500 Level 3 子集（105 题）。
+性能数字均由官方 \texttt{vllm bench serve} 产生。当前 C500 复测与历史 C500-opt 系列均采用同一服务连续四轮、去首轮后三轮均值；连续运行不保证每轮冷缓存，prefix cache 命中情况逐次查日志。精度数字来自 evalscope 官方原命令的 MATH-500 Level 3 子集（105 题）。
 
-\section{总体成绩}
+\section{总体结果}
 当前 C500 数据来自同一健康实例、同一交付提交的完整复测，并同时保留官网基线和本机原生基线。天数 BI-V150 的官方开发与评测环境均为 32GB；相对收益采用同日交错 A/B，避免跨时段漂移的影响。
 
 \subsection{交付版本与启动验证}
@@ -175,7 +175,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \toprule
 组件 & 仓库 / 分支 & 固定提交与内容 \\
 \midrule
-插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{0207b7e1}；C500 opt1–opt11、BI-V150 A1–A7、A20 框架 hook \\
+插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{0207b7e1}；C500-opt1–opt11、BI-A1–BI-A7、BI-A20 框架 hook \\
 算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{9c06143c}；采样、GEMM、paged decode attention、配置缓存与测试 \\
 文档 & \path{xy200303/minicpm-flagserve}\newline \texttt{main} & 报告、实验台账、复现脚本；不承担运行时代码 \\
 \bottomrule
@@ -191,8 +191,8 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \toprule
 平台 & 场景 & 官网基线 & 原生栈复测 & 当前交付 & 相对官网 \\
 \midrule
-沐曦 C500 & 4k & 5089.645 & 4210.20 & 12399.31 & 2.44$\times$\\
-沐曦 C500 & 16k & 7029.675 & 5867.59 & 11046.19 & 1.57$\times$\\
+沐曦 C500 & 4k & 5089.645 & 4210.20 & 12527.62 & 2.46$\times$\\
+沐曦 C500 & 16k & 7029.675 & 5867.59 & 11143.77 & 1.59$\times$\\
 天数 BI-V150 & 4k & 2028.01 & 1902.15 & 5209.06 & 2.57$\times$\\
 天数 BI-V150 & 16k & 915.15 & 861.98 & 4513.91 & 4.93$\times$\\
 \bottomrule
@@ -203,10 +203,10 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 注意，total tok/s 同时计入输入与输出，且 4k／16k 的请求数分别为 256／128，不能用该指标直接比较单请求速度。以 BI-V150 第一组为例，两场景总 token 分别为 1.31M／2.23M，因此 16k 总吞吐可接近 4k；同组 decode 输出吞吐则由 817.58 降至 265.89 tok/s，TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
-C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.95$\times$ 和 1.88$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-V150 A31 为 98.1\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1719.18 ms（官网基线 3199.435 ms），16k TTFT 为 18141.47 ms（官网基线 27197.135 ms）；BI-V150 A31 的 4k TTFT 中位数为 4034.29 ms，16k TTFT 中位数为 111.82 s（官网基线分别为 11573.53 ms 和 599262.03 ms）。按官网基线判断，两平台各场景均满足 TTFT 不超过 baseline +1\% 的约束。
+C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.98$\times$ 和 1.90$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-A31 为 98.1\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1623.73 ms（官网基线 3199.435 ms），16k TTFT 为 17961.76 ms（官网基线 27197.135 ms）；BI-A31 的 4k TTFT 中位数为 4034.29 ms，16k TTFT 中位数为 111.82 s（官网基线分别为 11573.53 ms 和 599262.03 ms）。按官网基线判断，两平台各场景均满足 TTFT 不超过 baseline +1\% 的约束。
 
 \subsection{性能与约束对照}
-图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +143.6\%／+57.1\%／+3.3\%／+33.3\%，BI-V150 为 +156.9\%／+393.1\%／+3.3\%／+81.4\%。
+图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +146.1\%／+58.5\%／+3.3\%／+34.0\%，BI-V150 为 +156.9\%／+393.1\%／+3.3\%／+81.4\%。
 
 \begin{figure}[!htbp]
 \centering
@@ -260,15 +260,15 @@ vLLM & 0.24.0 & 0.24.0 \\
 Triton & 3.6.0 & 3.0.0+metax3.7.0.7 \\
 芯片软件栈 & IX-ML 4.4.0；驱动 4.5.0 & MACA 3.7.0.38；驱动 3.8.30 \\
 evalscope & 1.11.1 & 1.11.1 \\
-插件 / FlagGems & 0207b7e1 / 9c06143c & 0207b7e1 / aff68555 \\
-最终复测日期 & 2026-10-26 至 2026-10-28 & 2026-10-25 \\
+插件 / FlagGems & 0207b7e1 / 9c06143c & 0207b7e1 / 9c06143c \\
+最终复测日期 & 2026-10-26 至 2026-10-28 & 2026-10-25 至 2026-11-01 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-C500 的 CPU 内存是本队实例的实测复现条件，不是官网公布的评测规格；CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段。64GB CPU 内存实例上原生镜像也曾发生启动期 OOM，因此复现说明单独保留这一现象与内存建议。BI-V150 的 32GB 指 GPU 显存，不能与 CPU 内存混淆。
+C500 的 CPU 内存是本团队实例的实测复现条件，不是官网公布的评测规格；CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段。64GB CPU 内存实例上原生镜像也曾发生启动期 OOM，因此复现说明单独保留这一现象与内存建议。BI-V150 的 32GB 指 GPU 显存，不能与 CPU 内存混淆。
 
-\subsection{关键优化点}
+\subsection{主要技术贡献}
 本提交的技术路线由以下四部分组成，详细实现和实验分别见第 4、5 章。
 
 \textbf{（1）面向芯片与输入形状的执行路径选择。} 不假定同一 GEMM 或 attention 配置在所有形状上最优，而是在保留原实现的前提下，按 M、KV 页尺寸和 prefill／decode 类型选择 vendor 库或 Triton 内核。C500 侧重 lm\_head 与 prefill GEMM 的布局、库调用和 host 元数据路径；BI-V150 侧重 warp 级发射配置与 attention 实现。路由之外还包含权重复本、布局转换、同步消除和页对齐访问等代码改动。
@@ -279,7 +279,10 @@ C500 的 CPU 内存是本队实例的实测复现条件，不是官网公布的�
 
 \textbf{（4）面向配置与 host 路径的开销消除。} 对同一 shape 的算子配置查询和缺失结果做进程内缓存，避免重复访问配置数据库；将新配置模型的全库 automap reflection 改为只加载目标表。该路径不改变算子选择、数值语义或启动参数，直接减少执行线程中的配置与元数据开销。
 
-\section{优化流程}
+\section{研究方法与实验设计}
+\subsection{实验标识与证据组织}
+全文统一采用“平台前缀＋实验编号”标识：\texttt{C500-optN} 表示沐曦 C500 的第 N 项优化，\texttt{BI-Axx} 表示天数 BI-V150 的第 xx 项实验。编号仅用于对应代码、日志和原始证据，不表示两个平台之间存在一一对应关系，也不直接代表累计收益。表格中的 A1/A2、B1/B2 仅表示同日交错对照的重复轮次，不属于上述实验编号。
+
 两种芯片采用相同的分析与验证流程，测试脚本、profile、日志和 benchmark CSV 按实验编号保存。
 
 \begin{figure}[!htbp]
@@ -301,26 +304,27 @@ C500 的 CPU 内存是本队实例的实测复现条件，不是官网公布的�
 \caption{插件、算子实现与测试记录之间的关系}
 \end{figure}
 
-算子本体位于 FlagGems，框架接入位于 vllm-plugin-FL。性能测试使用官方 benchmark，精度测试使用 evalscope，内核测试与实现文件按附录索引对应。A20、vendor prefill 和不支持的采样特征保留回退路径；mcBLAS 返回码采用断言检查，不属于异常自动回退。
+算子本体位于 FlagGems，框架接入位于 vllm-plugin-FL。性能测试使用官方 benchmark，精度测试使用 evalscope，内核测试与实现文件按附录索引对应。BI-A20、vendor prefill 和不支持的采样特征保留回退路径；mcBLAS 返回码采用断言检查，不属于异常自动回退。
 
+\subsection{分析与验证流程}
 （1）Profile 定位：结合 serve 时序日志（PagedAttention 式分页 KV 管理见文献\cite{vllm}）、设备计时与 host 打点，区分 GPU 内核、host 发射和隐式同步开销；（2）独立测试：新内核先检查目标形状的数值结果，再接入 serve；（3）Shape-aware dispatch：按输入形状选择等价实现或执行配置；（4）端到端测试：保持官方 serve 参数，检查吞吐、TTFT 和 MATH-500 精度。
 
-A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由检查分布和数值误差，并复测 MATH-500。不满足精度要求的改动不进入交付分支。
+BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM 路由检查分布和数值误差，并复测 MATH-500。不满足精度要求的改动不进入交付分支。
 
 \section{沐曦 C500：采样链、GEMM 路由与 host 同步消除}
-\subsection{瓶颈画像}
+\subsection{瓶颈分析}
 初始 profile 显示，C500 的主要开销集中在采样、GEMM 和 attention。采样尾部采用 eager PyTorch 实现，包括 bf16$\rightarrow$fp32 cast、温度缩放、130560 词表排序和 gumbel-argmax；部分 GEMM 存在布局与路由失配；prefill 的隐式 DtoH 同步则造成 GPU 空闲。
 
-图~\ref{fig:hotpath} 将 opt1 前后同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）。采样族由 14.61 s 降至 1.24 s，占内核时间的比例由 38.8\% 降至 5.1\%；GEMM 与 attention 的绝对时间分别为 13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s。该图不代表 opt11 最终 profile，后续优化分别针对 GEMM 路由、attention 和 prefill 同步展开。
+图~\ref{fig:hotpath} 将 C500-opt1 前后同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）。采样族由 14.61 s 降至 1.24 s，占内核时间的比例由 38.8\% 降至 5.1\%；GEMM 与 attention 的绝对时间分别为 13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s。该图不代表 C500-opt11 最终 profile，后续优化分别针对 GEMM 路由、attention 和 prefill 同步展开。
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig14_op_hotpath.pdf}
-\caption{C500 opt1 前后热路径的算子族构成：按内核时间占比（右列为绝对时间变化）\label{fig:hotpath}}
+\caption{C500-opt1 前后热路径的算子族构成：按内核时间占比（右列为绝对时间变化）\label{fig:hotpath}}
 \end{figure}
 
-\subsection{免排序的采样链（opt1／opt3／opt7／opt11）}
-自研 Triton 内核（\texttt{FlagGems/fused/sampler\_fused.py}、\texttt{top\_p\_sample.py}）做三件事：其一，直接以 bf16 读取 lm\_head 输出，把温度折叠进 Gumbel-Max\cite{gumbel}（$\arg\max(x/T+g)$ 与 $\arg\max(x+T\cdot g)$ 等价，$T<10^{-5}$ 时退化为 $\arg\max$）；其二，top-p 用质量直方图 zoom，单轮 1024-bin 直方图定位阈值 $\tau$ 所在 bin 并取其下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下，保留集质量不小于 $p\cdot Z$；其三，官方 B=64 形状采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在当前交付代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，约 10.7$\times$。
+\subsection{免排序的采样链（C500-opt1／C500-opt3／C500-opt7／C500-opt11）}
+采样链由自研 Triton 内核 \texttt{FlagGems/fused/sampler\_fused.py} 与 \texttt{top\_p\_sample.py} 实现，包括三项优化：（1）直接读取 bf16 logits，将温度折叠进 Gumbel-Max\cite{gumbel}，利用 $\arg\max(x/T+g)=\arg\max(x+Tg)$，并在 $T<10^{-5}$ 时退化为 $\arg\max$；（2）以单轮 1024-bin 质量直方图定位 top-p 阈值 $\tau$ 所在 bin，并保守取 bin 下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下保证保留集质量不小于 $p\cdot Z$；（3）在官方 B=64 形状下采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在当前交付代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，加速约 10.7 倍。
 
 \begin{figure}[!htbp]
 \centering
@@ -361,7 +365,7 @@ A6 双 gather、A7 发射配置要求逐位一致；采样融合与 GEMM 路由�
 \caption{当前交付 top-p 采样与同语义 PyTorch 对照（B=64，30 次中位数，对数坐标）}
 \end{figure}
 
-\subsection{GEMM 布局与路由（opt2／opt4／opt6／opt8／opt11）}
+\subsection{GEMM 布局与路由（C500-opt2／C500-opt4／C500-opt6／C500-opt8／C500-opt11）}
 MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
 只有已经生成 nn 副本且形状满足条件的线性层才进入新路径。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
@@ -376,8 +380,8 @@ ctypes 绑定把行主序的 $C=A B$ 转写成列主序的 $C^T=B^T A^T$，因�
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=85,lastline=103]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
 \end{reportcode}
 
-\subsection{消除 prefill 每层 DtoH 同步（opt10）}
-prefill trace 中，相邻 GPU 内核间隔大于 20 $\mu$s 的 gap 占 18.1\%；元凶之一是 vendor flash\_attn 每层每步执行 \path{prefill_seq_lens.tolist()}（DtoH 强同步，42 层各一次）。改为纯 GPU cumsum 并缓存到当步 \texttt{attn\_metadata}，42 层只算一次：4k 提升 10.9\%、16k 提升 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
+\subsection{消除 prefill 每层 DtoH 同步（C500-opt10）}
+prefill trace 中，相邻 GPU 内核间隔大于 20 $\mu$s 的 gap 占 18.1\%。主要原因之一是 vendor flash\_attn 在每层每步调用 \path{prefill_seq_lens.tolist()}，引入 DtoH 强制同步（42 层各一次）。C500-opt10 改为在 GPU 上计算 cumsum，并将结果缓存到当前步的 \texttt{attn\_metadata}，使 42 层共享一次计算。4k 与 16k 吞吐分别提升 10.9\% 和 9.9\%，16k TTFT 由 20.8 s 降至 18.0 s。
 
 \begin{reportcode}{\texttt{flash\_attn.py:797--811}：把每层一次的 DtoH + cumsum 改成当步缓存}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=797,lastline=811]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py}
@@ -392,10 +396,10 @@ prefill trace 中，相邻 GPU 内核间隔大于 20 $\mu$s 的 gap 占 18.1\%�
 \end{figure}
 
 \section{天数 BI-V150：vendor 接入、发射配置与自研 decode 内核}
-\subsection{瓶颈画像}
+\subsection{瓶颈分析}
 BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通用 Triton \path{kernel_unified_attention} 占 GPU 忙时的 91.8\%，每层每 2048-token chunk 耗时 36.8 ms；此时 GPU busy 为 99.1\%，主要开销来自 attention 内核本身。iluvatar 后端缺少 flash\_attn 包，是这条慢路径的直接原因。
 
-接入 vendor attention 后，混合步的主要开销转移到 host 侧。A1.5 的 16k 混合步 wall 约为 677 ms，GPU busy 为 41.3\%，按此折算 GPU 工作约 280 ms、host 等待约 397 ms。builder 中两处 GPU 张量高级索引触发阻塞式 HtoD 和全流同步，每次中位耗时 78.6 ms。A3 将 metadata 构建移到 CPU 侧并减少重复发射后，wall 降至 353 ms，GPU busy 提升到 76.3\%。decode 侧则另有发射配置与 PV 布局转换开销，分别在后续两节展开。
+接入 vendor attention 后，混合步的主要开销转移到 host 侧。BI-A1.5 的 16k 混合步 wall 约为 677 ms，GPU busy 为 41.3\%，按此折算 GPU 工作约 280 ms、host 等待约 397 ms。builder 中两处 GPU 张量高级索引触发阻塞式 HtoD 和全流同步，每次中位耗时 78.6 ms。BI-A3 将 metadata 构建移到 CPU 侧并减少重复发射后，wall 降至 353 ms，GPU busy 提升到 76.3\%。decode 侧则另有发射配置与 PV 布局转换开销，分别在后续两节展开。
 
 \begin{figure}[!htbp]
 \centering
@@ -403,7 +407,7 @@ BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通
 \caption{BI-V150 的 prefill 内核构成与接入 vendor 后的混合步时间分解\label{fig:biv150_bottleneck}}
 \end{figure}
 
-\subsection{prefill attention 与 host 路径（A1／A3／A6）}
+\subsection{prefill attention 与 host 路径（BI-A1／BI-A3／BI-A6）}
 针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
 \begin{reportcode}{\texttt{vendor\_flash\_attn.py:46--57}：同一 Triton program 收集一页 K 与 V}
@@ -412,7 +416,7 @@ BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通
 
 其中 \texttt{E=bs*hkv*d} 是一页 K 的元素数，V 的源地址位于 K 之后的连续区域。内核利用这一布局在同一 program 中收集 K 和 V，数值测试与两次 \texttt{index\_select} 逐位一致。
 
-\subsection{decode unified-attention 发射配置重构（A7）}
+\subsection{decode unified-attention 发射配置重构（BI-A7）}
 stock Triton 默认 \texttt{num\_warps=4, num\_stages=3}。扫描结果表明，该配置在 BI-V150 上并不合适，软件流水线在各 warp 档上均未带来收益。对 3D 主内核与 reduce\_segments 全链路扫描后，将 3D flash-decoding 路径固定为 w1 s1，保持 TILE=16、SEG=16，2D 路径不变；输出与 stock 逐位一致。
 
 \begin{reportcode}{\texttt{decode\_attn\_pin.py:35--47}：只包住 3D 内核的发射配置，2D 路径不变}
@@ -422,11 +426,11 @@ stock Triton 默认 \texttt{num\_warps=4, num\_stages=3}。扫描结果表明，
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig7_a7_config.pdf}
-\caption{A7 发射配置重构带来的端到端吞吐提升}
+\caption{BI-A7 发射配置重构带来的端到端吞吐提升}
 \end{figure}
 
-\subsection{自研 paged decode attention 内核（A20）}
-A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下逐段测量 stock kernel（B=64／kv=4096／16q-2kv／d=128／block=16／bf16）：loads+QK 的有效带宽为 509 GB/s，PV 的 \texttt{tl.dot} 耗时 0.36 ms。PV 需要将 p 从 MMA 累加器布局转换为 A 操作数布局，每个 KV block 都产生共享内存往返，因此本阶段的主要开销是布局转换。
+\subsection{自研 paged decode attention 内核（BI-A20）}
+BI-A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下逐段测量 stock kernel（B=64／kv=4096／16q-2kv／d=128／block=16／bf16）：loads+QK 的有效带宽为 509 GB/s，PV 的 \texttt{tl.dot} 耗时 0.36 ms。PV 需要将 p 从 MMA 累加器布局转换为 A 操作数布局，每个 KV block 都产生共享内存往返，因此本阶段的主要开销是布局转换。
 
 据此重写内核（算子位于 \texttt{FlagGems/fused/paged\_decode\_attention.py}，插件侧为薄封装与派发）：一个 CTA＝1 warp＝一个（seq, kv\_head, 段），使布局转换留在 warp 内；BLOCK\_N=16，p tile 不超过一个 MMA 形状；base-2 在线 softmax，scale 预折 $\log_2(e)$ 走 MUFU；主循环不加 mask，仅 ragged 尾部单独一个带 mask 的 block；段数固定、段长由 device 端 seq\_lens 现算（CUDA-graph 安全），段缓存 slab 在 \texttt{apply()} 即捕获前一次性预分配；段边界按整页对齐，进一步消去逐 token 除模与向量页 gather。混合步中的 decode 行也通过 \texttt{try\_fast\_decode} 进入同一内核。
 
@@ -442,7 +446,7 @@ A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下
   \draw[flowarrow] (warp) -- (combine);
   \node[flownote] at (6.0,-1.15) {主循环无 mask；仅 ragged 尾块 mask；段长 device 端计算，slab 在图捕获前预分配};
 \end{tikzpicture}
-\caption{A20 paged decode attention 的分段执行与归并流程}
+\caption{BI-A20 paged decode attention 的分段执行与归并流程}
 \end{figure}
 
 下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 按 $\exp2(m_i-m)$ 加权归并。
@@ -461,7 +465,7 @@ A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下
 \caption{stock 3D decode 内核的耗时分解：瓶颈在 PV 的 MMA 布局转换}
 \end{figure}
 
-当前交付的页对齐微基准中，stock 为 0.939 ms/层、286 GB/s，A20 为 0.588 ms/层、457 GB/s，加速比 1.60$\times$；等长与 ragged 的最大误差分别为 $3.05\times10^{-5}$ 和 $6.10\times10^{-5}$。两组官方 A/B 的 4k 结果为：A7 3855.31→A20 4087.91（+6.0\%），A7 3840.80→A20 4722.22（+22.9\%）；16k 结果为：A7 3568.31→A20 4520.19（+26.7\%），A7 3570.61→A20 4520.10（+26.6\%）。两组 16k TTFT 分别为 111.64 s 和 111.67 s，较 A7 降低 18.5\% 和 18.4\%。当前交付两次 MATH-500 Level 3 为 96.19\% 和 98.1\%。
+当前交付的页对齐微基准中，stock 为 0.939 ms/层、286 GB/s，BI-A20 为 0.588 ms/层、457 GB/s，加速比 1.60$\times$；等长与 ragged 的最大误差分别为 $3.05\times10^{-5}$ 和 $6.10\times10^{-5}$。两组官方 A/B 的 4k 结果为：BI-A7 3855.31→BI-A20 4087.91（+6.0\%），BI-A7 3840.80→BI-A20 4722.22（+22.9\%）；16k 结果为：BI-A7 3568.31→BI-A20 4520.19（+26.7\%），BI-A7 3570.61→BI-A20 4520.10（+26.6\%）。两组 16k TTFT 分别为 111.64 s 和 111.67 s，较 BI-A7 降低 18.5\% 和 18.4\%。当前交付两次 MATH-500 Level 3 为 96.19\% 和 98.1\%。
 
 \begin{figure}[!htbp]
 \centering
@@ -472,7 +476,7 @@ A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig5_iluvatar_ab.pdf}
-\caption{BI-V150 两组官方 A/B：A7 栈关闭 A20 与当前 A20 的对比}
+\caption{BI-V150 两组官方 A/B：BI-A7 栈关闭 BI-A20 与当前 BI-A20 的对比}
 \end{figure}
 
 \subsection{批量一致性与路径检查}
@@ -484,27 +488,27 @@ A7 之后，decode attention 仍占整步的主要时间。在同一 harness 下
 
 满足形状与特征条件时进入新内核；遇到不支持的特征或异常则回到原实现。used 在内核执行前递增，表示通过资格检查并尝试 fast path；本次同时检查了 fallback 日志，未出现 decode fast-path 异常回退。
 
-\subsection{配置缓存与单表反射（A31）}
+\subsection{配置缓存与单表反射（BI-A31）}
 设备 trace 显示，部分反复间隙出现在 \texttt{\_index\_linearized\_jit\_function} 之前。进一步对 \texttt{ModelRunnerFL.execute\_model} 做 cProfile，发现这些间隙主要来自算子配置读取和 SQLAlchemy 模型反射，而不是 index kernel 本身：原版 \texttt{get\_config} 累计约 65.14s，全库 reflection 约 53.76s。该问题属于执行线程中的配置与元数据开销，不能通过单纯加快 attention kernel 解决。
 
-A31 在 \texttt{utils/libentry.py} 中为同一 shape 的配置和缺失结果增加进程内缓存，\texttt{set()} 同步更新；\texttt{FLAGGEMS\_CONFIG\_CACHE\_LOCAL=0} 可恢复直接数据库读取。在 \texttt{utils/models/sql.py} 中，将新模型的全库 automap reflection 改为只加载目标表；配置表不存在时仍返回 \texttt{None} 并进入 autotune，保持原回退语义。真实配置库的单表加载由 4212.64 ms 降至 26.35 ms，候选版 \texttt{\_index\_linearized} 累计时间由 66.03s 降至 4.47s。配置缓存与缺失表两项针对性测试均通过。
+BI-A31 在 \texttt{utils/libentry.py} 中为同一 shape 的配置和缺失结果增加进程内缓存，\texttt{set()} 同步更新；\texttt{FLAGGEMS\_CONFIG\_CACHE\_LOCAL=0} 可恢复直接数据库读取。在 \texttt{utils/models/sql.py} 中，将新模型的全库 automap reflection 改为只加载目标表；配置表不存在时仍返回 \texttt{None} 并进入 autotune，保持原回退语义。真实配置库的单表加载由 4212.64 ms 降至 26.35 ms，候选版 \texttt{\_index\_linearized} 累计时间由 66.03s 降至 4.47s。配置缓存与缺失表两项针对性测试均通过。
 
 \begin{table}[!htbp]
 \centering\small
-\caption{A31 官方四轮去首均值与同日交错对照}
+\caption{BI-A31 官方四轮去首均值与同日交错对照}
 \begin{tabularx}{\linewidth}{@{}l l r r Y@{}}
 \toprule
 场景 & 对照 & 总吞吐（tok/s） & TTFT（ms） & 变化 \\
 \midrule
-4k A1/A2 & A20 & 4667.18 / 4459.34 & 4196.06 / 4265.06 & — \\
-4k B2/B1 & A31 & 5209.16 / 5208.95 & 4043.57 / 4025.01 & +14.15\% \\
-4k 中位数 & A20 → A31 & 4563.26 → 5209.06 & 4230.56 → 4034.29 & 吞吐 +14.15\%；TTFT −4.64\% \\
-16k 中位数 & A20 → A31 & 4513.93 → 4513.91 & 111831.96 → 111817.66 & 基本持平 \\
+4k A1/A2 & BI-A20 & 4667.18 / 4459.34 & 4196.06 / 4265.06 & — \\
+4k B2/B1 & BI-A31 & 5209.16 / 5208.95 & 4043.57 / 4025.01 & +14.15\% \\
+4k 中位数 & BI-A20 → BI-A31 & 4563.26 → 5209.06 & 4230.56 → 4034.29 & 吞吐 +14.15\%；TTFT −4.64\% \\
+16k 中位数 & BI-A20 → BI-A31 & 4513.93 → 4513.91 & 111831.96 → 111817.66 & 基本持平 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的提升来自减少配置和 host 开销。16k 的原版配置获取仍累计约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此官方吞吐基本持平，不把 4k 收益外推到 16k。原始证据见 \path{docs/experiments/runs/a31-config-local-cache/}。
+BI-A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的提升来自减少配置和 host 开销。16k 的原版配置获取仍累计约 48.47s，但 BI-A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此官方吞吐基本持平，不把 4k 收益外推到 16k。原始证据见 \path{docs/experiments/runs/a31-config-local-cache/}。
 
 \section{跨平台结果与组合消融}
 \subsection{组合有效性与消融分析}
@@ -530,25 +534,25 @@ A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的�
 
 \begin{table}[!htbp]
 \centering\small
-\caption{BI-V150 消融：Full 与移除 A20／A31 的同日交错对照}
+\caption{BI-V150 消融：Full 与移除 BI-A20／BI-A31 的同日交错对照}
 \begin{tabularx}{\linewidth}{@{}l l r r r@{}}
 \toprule
 消融对照 & 场景 & Full（tok/s） & 移除后（tok/s） & $\Delta$ \\
 \midrule
-A20，第 1 组 & 4k & 4087.91 & 3855.31 & −5.69\% \\
-A20，第 2 组 & 4k & 4722.22 & 3840.80 & −18.67\% \\
-A20，第 1 组 & 16k & 4520.19 & 3568.31 & −21.06\% \\
-A20，第 2 组 & 16k & 4520.10 & 3570.61 & −21.01\% \\
-A31，两组中位数 & 4k & 5209.06 & 4563.26 & −12.40\% \\
-A31，两组中位数 & 16k & 4513.91 & 4513.93 & $\approx 0.00\%$ \\
+BI-A20，第 1 组 & 4k & 4087.91 & 3855.31 & −5.69\% \\
+BI-A20，第 2 组 & 4k & 4722.22 & 3840.80 & −18.67\% \\
+BI-A20，第 1 组 & 16k & 4520.19 & 3568.31 & −21.06\% \\
+BI-A20，第 2 组 & 16k & 4520.10 & 3570.61 & −21.01\% \\
+BI-A31，两组中位数 & 4k & 5209.06 & 4563.26 & −12.40\% \\
+BI-A31，两组中位数 & 16k & 4513.91 & 4513.93 & $\approx 0.00\%$ \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-移除 A20 后，两组 16k 吞吐均下降约 21\%，说明页对齐 decode 内核是长上下文组合的关键组件；移除 A31 后，4k 下降 12.40\%，而 16k 基本持平，表明配置与 host 优化具有场景依赖性。两组 A20 结果均保留，不以单组高值代替整体波动。原始数据见 \path{docs/experiments/runs/bi-final-audit/}、\path{docs/experiments/runs/a31-config-local-cache/} 和 \path{docs/experiments/runs/c500-next-optimization/c500-combination-ablation.md}。
+移除 BI-A20 后，两组 16k 吞吐均下降约 21\%，说明页对齐 decode 内核是长上下文组合的关键组件；移除 BI-A31 后，4k 下降 12.40\%，而 16k 基本持平，表明配置与 host 优化具有场景依赖性。两组 BI-A20 结果均保留，不以单组高值代替整体波动。原始数据见 \path{docs/experiments/runs/bi-final-audit/}、\path{docs/experiments/runs/a31-config-local-cache/} 和 \path{docs/experiments/runs/c500-next-optimization/c500-combination-ablation.md}。
 
 \subsection{跨平台结果对照}
-图~\ref{fig:incremental} 对比两种芯片的历史收益构成。C500 的 opt1–opt6 包含跨实例版本记录，展示开发过程而非严格同机累计 A/B；BI-V150 的 A6、A7、A20 使用各自的当日对照，三组数据不作累计。
+图~\ref{fig:incremental} 对比两种芯片的历史收益构成。C500 的 C500-opt1–opt6 包含跨实例版本记录，展示开发过程而非严格同机累计 A/B；BI-V150 的 BI-A6、BI-A7、BI-A20 使用各自的当日对照，三组数据不作累计。
 
 \begin{figure}[!htbp]
 \centering
@@ -556,7 +560,7 @@ A31，两组中位数 & 16k & 4513.91 & 4513.93 & $\approx 0.00\%$ \\
 \caption{优化阶段的吞吐收益：C500 为跨实例历史版本记录，BI-V150 为各实验的当日对照\label{fig:incremental}}
 \end{figure}
 
-局部加速与端到端收益的关系见图~\ref{fig:speedup}。其中 opt8 的横坐标为四种 prefill GEMM 形状加速比的算术平均值，A20 为 stock 0.939 ms 与页对齐版本 0.588 ms 之比。由于各内核在完整模型中的时间占比不同，局部加速比与端到端提升之间不存在固定的线性换算关系。
+局部加速与端到端收益的关系见图~\ref{fig:speedup}。其中 C500-opt8 的横坐标为四种 prefill GEMM 形状加速比的算术平均值，BI-A20 为 stock 0.939 ms 与页对齐版本 0.588 ms 之比。由于各内核在完整模型中的时间占比不同，局部加速比与端到端提升之间不存在固定的线性换算关系。
 
 \begin{figure}[!htbp]
 \centering
@@ -582,8 +586,8 @@ A31，两组中位数 & 16k & 4513.91 & 4513.93 & $\approx 0.00\%$ \\
 \toprule
 验证层 & 对象与方法 & 开发记录与状态 \\
 \midrule
-bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select} 逐位一致；A7 与 stock 的 \texttt{max\_diff}=0.0 \\
-数值误差 & A20 vs stock，含 ragged 形状 & 等长最大 $3.05\times10^{-5}$，ragged 最大 $6.10\times10^{-5}$ \\
+bit-exact & BI-A6 双 gather、BI-A7 发射配置 & BI-A6 与两次 \texttt{index\_select} 逐位一致；BI-A7 与 stock 的 \texttt{max\_diff}=0.0 \\
+数值误差 & BI-A20 vs stock，含 ragged 形状 & 等长最大 $3.05\times10^{-5}$，ragged 最大 $6.10\times10^{-5}$ \\
 批量不变性 & 单条／两条／半批／全批／逆序全批，对照 fp32 & BI-V150 实测 9 passed \\
 采样等价 & greedy、top-p、Gumbel 与 TV 距离 & greedy 与 \texttt{torch.argmax} 完全一致；保留集 IoU $\geq 0.999$；TV 与参考实现同档 \\
 端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 两次均为 98.1\%；BI-V150 为 96.19\% 和 98.1\% \\
@@ -603,12 +607,12 @@ bit-exact & A6 双 gather、A7 发射配置 & A6 与两次 \texttt{index\_select
 约束 & 本提交做法 \\
 \midrule
 \texttt{vllm serve} 参数与基线一致 & 两张卡均按官网原命令启动，未增删任何参数；C500 不额外添加 \texttt{--compilation-config}\\
-禁止 benchmark 脚本调优 & 未修改官方脚本；当前 C500 与历史 opt 采用四轮去首后三轮均值，其他单次测量单独标明\\
+禁止 benchmark 脚本调优 & 未修改官方脚本；当前 C500 与历史 C500-opt 采用四轮去首后三轮均值，其他单次测量单独标明\\
 禁止直接 merge 上游分支 & 基线为 flagos-2026-s2 与 FlagGems v5.3.5，全部改动以补丁形式叠加\\
 算子优化须有开发量 & 新增 Triton 内核（paged decode attention、采样链、dual-gather）与路由/同步改造，均可独立 A/B\\
 禁止改超参开启量化、投机采样 & 保持官方模型精度与生成配置，不启用量化或投机采样\\
 精度 $\geq 0.95$ & C500 两次均为 98.1\%；BI-V150 为 96.19\% 和 98.1\%\\
-TTFT 上限为官网 baseline +1\% & 两平台各场景均满足：BI 4k 为 4.14–4.33 s，低于官网 11.57 s；BI 16k 为 111.64–111.67 s，低于官网 599.26 s。同日 A/B 中 BI 4k 的 A20-1 相对 A7-1 为 +2.1\%，另一组为 −1.9\%；该对照用于分离 A20 收益，不替代官网基线判断\\
+TTFT 上限为官网 baseline +1\% & 两平台各场景均满足：BI 4k 为 4.14–4.33 s，低于官网 11.57 s；BI 16k 为 111.64–111.67 s，低于官网 599.26 s。同日 A/B 中 BI 4k 的 BI-A20-1 相对 BI-A7-1 为 +2.1\%，另一组为 −1.9\%；该对照用于分离 BI-A20 收益，不替代官网基线判断\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -675,12 +679,12 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 （3）启动耗时：C500 需执行 GEMM autotune 预热。当前交付复测启动为 293 秒，原生基线为 161 秒；预热时间随实例和缓存状态变化，不能用固定秒数估计。
 
-（4）测量波动：C500 当前交付 4k 后三轮吞吐极差为 0.80\%，16k 为 0.29\%。BI-V150 两组 A20 的 4k 绝对值差异较大，因此两组均列出，不用单组高值代替整体结果；16k 两组基本一致。C500 同时保留官网与本机原生基线，避免跨实例参照混淆。
+（4）测量波动：C500 当前交付 4k 后三轮吞吐极差为 0.80\%，16k 为 0.29\%。BI-V150 两组 BI-A20 的 4k 绝对值差异较大，因此两组均列出，不用单组高值代替整体结果；16k 两组基本一致。C500 同时保留官网与本机原生基线，避免跨实例参照混淆。
 
 \section{结论}
-本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整、paged decode attention 重写和配置/host 开销消除。当前交付的 C500 复测中，4k 与 16k 吞吐分别为官网基线的 2.44 倍和 1.57 倍，为本机原生基线的 2.95 倍和 1.88 倍。BI-V150 A31 在 4k 将同日对照中位数从 4563.26 提升到 5209.06 tok/s（+14.15\%），16k 为 4513.91 tok/s，与对照基本持平。C500 两次 MATH-500 均为 98.1\%，A31 为 98.1\%。
+本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整、paged decode attention 重写和配置/host 开销消除。当前交付的 C500 复测中，4k 与 16k 吞吐分别为官网基线的 2.46 倍和 1.59 倍，为本机原生基线的 2.98 倍和 1.90 倍。BI-A31 在 4k 将同日对照中位数从 4563.26 提升到 5209.06 tok/s（+14.15\%），16k 为 4513.91 tok/s，与对照基本持平。C500 两次 MATH-500 均为 98.1\%，BI-A31 为 98.1\%。
 
-当前交付复测的 C500 4k TTFT 为 1719.18 ms，16k TTFT 为 18141.47 ms，均优于官网和本机原生基线；BI-V150 A31 的 4k TTFT 中位数为 4034.29 ms，16k 为 111.82 s，均满足官网 TTFT 上限。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
+当前交付复测的 C500 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均优于官网和本机原生基线；BI-A31 的 4k TTFT 中位数为 4034.29 ms，16k 为 111.82 s，均满足官网 TTFT 上限。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
 
 \begin{thebibliography}{9}
 \bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.
@@ -694,7 +698,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 \appendix
 \section{代码与实验记录索引}
-代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（C500 opt1–opt11、天数 A1–A7 与 A20，至 0207b7e1）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（采样融合内核、GEMM、paged\_decode\_attention、A31 配置缓存与测试，至 9c06143c）。两者均为对应上游项目的正式 fork；历史开发线归档于 \texttt{archive/*}，官方基线保留于 \texttt{baseline/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
+代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（C500-opt1–opt11、天数 BI-A1–BI-A7 与 BI-A20，至 0207b7e1）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（采样融合内核、GEMM、paged\_decode\_attention、BI-A31 配置缓存与测试，至 9c06143c）。两者均为对应上游项目的正式 fork；历史开发线归档于 \texttt{archive/*}，官方基线保留于 \texttt{baseline/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
 
 \begin{table}[!htbp]
 \centering\small
@@ -709,17 +713,17 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \path{vllm_fl/dispatch/backends/vendor/metax/impl/attention/flash_attn.py} & prefill metadata 的当步 cumsum 缓存，§4.4 \\
 \path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py} & vendor prefill、混合步拆分、双 gather，§5.2 \\
 \path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py} & 3D decode 发射配置，§5.3 \\
-\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py} & A20 资格检查、slab、混合步回退，§5.4–5.5 \\
+\path{vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py} & BI-A20 资格检查、slab、混合步回退，§5.4–5.5 \\
 \path{src/flag_gems/fused/top_p_sample.py} & 直方图 top-p 与 Gumbel-Max，§4.2 \\
-\path{src/flag_gems/fused/paged_decode_attention.py} & A20 分段内核与 combine，§5.4 \\
-\path{src/flag_gems/utils/libentry.py} & A31 配置查询与缺失结果进程内缓存，§5.6 \\
-\path{src/flag_gems/utils/models/sql.py} & A31 目标表加载与缺失回退，§5.6 \\
+\path{src/flag_gems/fused/paged_decode_attention.py} & BI-A20 分段内核与 combine，§5.4 \\
+\path{src/flag_gems/utils/libentry.py} & BI-A31 配置查询与缺失结果进程内缓存，§5.6 \\
+\path{src/flag_gems/utils/models/sql.py} & BI-A31 目标表加载与缺失回退，§5.6 \\
 \path{tests/test_paged_decode_attention.py} & 精度与批量不变性测试，§5.5、§6 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 opt1–opt11 逐项记录）、\path{docs/baselines/iluvatar-biv150/}（天数 A1–A9 记录）、\texttt{docs/experiments/}（后续实验、台账 \texttt{tracking.md} 与 \texttt{runs/} 原始数据）。目录中包含配置、serve 日志、benchmark CSV 和机器状态。
+实验记录：\path{docs/baselines/metax-c500/}（C500 基线与 C500-opt1–opt11 逐项记录）、\path{docs/baselines/iluvatar-biv150/}（天数 BI-A1–A9 记录）、\texttt{docs/experiments/}（后续实验、台账 \texttt{tracking.md} 与 \texttt{runs/} 原始数据）。目录中包含配置、serve 日志、benchmark CSV 和机器状态。
 
 \subsection{结果与原始证据对应表}
 以下路径均相对于文档仓库 \href{https://github.com/xy200303/minicpm-flagserve}{xy200303/minicpm-flagserve} 的根目录。汇总 CSV 可由同目录原始 CSV 复算，精度取 JSON 的 \texttt{metrics[0].score}；日志同时保留启动参数、实际加载路径和逐轮运行过程。
@@ -734,10 +738,10 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 C500 交付性能 & 插件 0207b7e1；算子 aff68555 & \path{docs/experiments/runs/c500-final-audit/healthy-final-raw.csv}；\texttt{healthy-final-summary.csv}；\texttt{healthy-final-serve.log} \\
 C500 原生基线 & 插件 13eb9be；FlagGems v5.3.5 & 同目录 \texttt{healthy-baseline-raw.csv}、\texttt{healthy-baseline-summary.csv}、\texttt{healthy-baseline-serve.log} \\
 C500 精度与微基准 & 当前交付提交 & 同目录 \texttt{healthy-eval1-math500.json}、\texttt{healthy-eval2-math500.json}、\texttt{micro-healthy.json}；环境见 \texttt{healthy-final-manifest.txt} \\
-BI-V150 两组 A/B & A7 对照与 A20；同一交付提交内开关切换 & \path{docs/experiments/runs/bi-final-audit/1-a7/benchmark_results/}、\texttt{1-a20/}、\texttt{2-a7/}、\texttt{2-a20/} 下的 \texttt{benchmark\_results/}；同级 serve／bench 日志 \\
+BI-V150 两组 A/B & BI-A7 对照与 BI-A20；同一交付提交内开关切换 & \path{docs/experiments/runs/bi-final-audit/1-a7/benchmark_results/}、\texttt{1-a20/}、\texttt{2-a7/}、\texttt{2-a20/} 下的 \texttt{benchmark\_results/}；同级 serve／bench 日志 \\
 BI-V150 精度 & 当前交付提交 & 同目录 \texttt{eval1-math500.json}、\texttt{eval2-math500.json}、\texttt{eval-serve.log} \\
-BI-V150 内核验证 & A20 与 stock & 同目录 \texttt{micro.json}、\texttt{pytest-a20.log}、\texttt{manifest.txt}；测试脚本为 \path{docs/verification/bi_micro_audit.py} \\
-BI-V150 A31 & A20 与 A31（cf11897a） & \path{docs/experiments/runs/a31-config-local-cache/}：\texttt{a31-official-evidence.tar.gz}、\texttt{a31-16k-evidence.tar.gz}、\texttt{a31-eval.tar.gz}、\texttt{host.prof} \\
+BI-V150 内核验证 & BI-A20 与 stock & 同目录 \texttt{micro.json}、\texttt{pytest-a20.log}、\texttt{manifest.txt}；测试脚本为 \path{docs/verification/bi_micro_audit.py} \\
+BI-A31 & BI-A20 与 BI-A31（cf11897a） & \path{docs/experiments/runs/a31-config-local-cache/}：\texttt{a31-official-evidence.tar.gz}、\texttt{a31-16k-evidence.tar.gz}、\texttt{a31-eval.tar.gz}、\texttt{host.prof} \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -752,7 +756,7 @@ BI-V150 A31 & A20 与 A31（cf11897a） & \path{docs/experiments/runs/a31-config
 \caption{官网天数 BI-V150（上）与沐曦 C500（下）基线原图\label{fig:official-baselines}}
 \end{figure}
 
-原始图片地址分别为 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/QlVfSLuI/image.png}{天数基线}和 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/1a2hydOd/image.png}{沐曦基线}。官网基线用于统一赛题参照；本机原生基线和 A7 当日对照用于分析实际代码收益，三种参照在正文中分别标明，不相互替代。
+原始图片地址分别为 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/QlVfSLuI/image.png}{天数基线}和 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/1a2hydOd/image.png}{沐曦基线}。官网基线用于统一赛题参照；本机原生基线和 BI-A7 当日对照用于分析实际代码收益，三种参照在正文中分别标明，不相互替代。
 
 \section{内核形状扫描与测量波动}
 本附录给出 paged decode attention 在 NSEG $\times$ 并发度上的实测分布，以及官方 benchmark 连续 4 次 run 的吞吐波动。数据来源分别为 \texttt{docs/experiments/a26/a26\_sweep.log}（20 次重复取均值）和 \texttt{docs/baselines/metax-c500/raw\_runs\_baseline.csv}。
@@ -792,6 +796,6 @@ BI-V150 A31 & A20 与 A31（cf11897a） & \path{docs/experiments/runs/a31-config
 \caption{官方 benchmark 连续 4 次 run 的吞吐波动}
 \end{figure}
 
-官方 benchmark 对 4k 与 16k 均执行四轮，去掉首轮后取后三轮均值；历史 opt 系列采用这一口径。C500 区间端点及个别旧 16k 记录为单次 \texttt{vllm bench serve} 输出，已另行说明，不与四轮聚合混称。优化项使用同日交错 A/B 比较，减少实例时段漂移的影响。
+官方 benchmark 对 4k 与 16k 均执行四轮，去掉首轮后取后三轮均值；历史 C500-opt 系列采用这一口径。C500 区间端点及个别旧 16k 记录为单次 \texttt{vllm bench serve} 输出，已另行说明，不与四轮聚合混称。优化项使用同日交错 A/B 比较，减少实例时段漂移的影响。
 
 \end{document}
