@@ -1,0 +1,51 @@
+2026-11-01T17:06:56+08:00
+Linux 41c16e0286c7 5.15.0-58-generic #64~20.04.1-Ubuntu SMP Fri Jan 6 16:42:31 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+0207b7e10f93dfa6e912b00c372f268d618b4c2c
+ M vllm_fl/worker/scheduler_fl.py
+?? tests/unit_tests/worker/test_scheduler_fl.py
+9c06143c7f8dedbf5bae7605228eb4f74da4f0b7
+Name: vllm
+Version: 0.24.0+empty
+Summary: A high-throughput and memory-efficient inference and serving engine for LLMs
+Home-page: https://github.com/vllm-project/vllm
+Author: vLLM Team
+Author-email: 
+License: 
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: aiohttp, anthropic, blake3, cachetools, cbor2, cloudpickle, compressed-tensors, depyf, diskcache, einops, fastapi, filelock, ijson, jsonschema, lark, llguidance, lm-format-enforcer, mcp, mistral_common, model-hosting-container-standards, msgspec, ninja, numpy, openai, openai-harmony, opencv-python-headless, opentelemetry-api, opentelemetry-exporter-otlp, opentelemetry-sdk, opentelemetry-semantic-conventions-ai, outlines_core, partial-json-parser, pillow, prometheus-fastapi-instrumentator, prometheus_client, protobuf, psutil, py-cpuinfo, pybase64, pydantic, python-json-logger, pyyaml, pyzmq, regex, requests, safetensors, sentencepiece, setproctitle, setuptools, six, starlette, tiktoken, tokenizers, tqdm, transformers, typing_extensions, watchfiles, xgrammar
+Required-by: 
+---
+Name: vllm-plugin-fl
+Version: 0.0.0+g0207b7e10
+Summary: A vLLM plugin built on the FlagOS unified multi-chip backend
+Home-page: https://github.com/flagos-ai/vllm-plugin-FL
+Author: 
+Author-email: 
+License: 
+Location: /opt/conda/lib/python3.12/site-packages
+Editable project location: /data/src/vllm-plugin-FL
+Requires: pyyaml
+Required-by: 
+---
+Name: flag_gems
+Version: 0.0.post1.dev3403+g9c06143c7
+Summary: FlagGems is a function library written in Triton language.
+Home-page: 
+Author: 
+Author-email: Zhixin Li <strongspoon@outlook.com>, Tongxin Bai <waffle.bai@gmail.com>, Yuming Huang <jokmingwong@gmail.com>, Feiyu Chen <iclementine@outlook.com>, Ruilin Yang <rlyanger01@gmail.com>, Zhen Wang <516310189@qq.com>, Hui Guo <sunnycase@live.cn>, Xiaoyan Liu <18811205590@163.com>, Chunlie Men <menchunlei@163.com>, Hang Xiao <vincent.xiao.me@gmail.com>, Yiqun Huang <huangyiqun@mail.bnu.edu.cn>, Jinjin Tian <kiddyjinjin@gmail.com>, Yang Zheng <zhengyang_pku@163.com>, Jinjie Liu <sgjzfzzf@gmail.com>
+License: Apache Software License
+Location: /opt/conda/lib/python3.12/site-packages
+Editable project location: /data/src/FlagGems
+Requires: numpy, packaging, PyYAML, sqlalchemy
+Required-by: 
+---
+Name: torch
+Version: 2.8.0+metax3.7.0.7
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org/
+Author: Metax PyTorch Team
+Author-email: 
+License: BSD-3-Clause
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: filelock, fsspec, jinja2, networkx, setuptools, sympy, typing-extensions
+Required-by: causal_conv1d, compressed-tensors, deep_gemm, flash_attn, flash_mla, flashinfer, hstu_attn, mamba_ssm, mcoplib, mctlassEx, nixl, sageattention, spargeattention, spconv, torch_c_dlpack_ext, xgrammar

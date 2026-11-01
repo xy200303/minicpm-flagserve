@@ -1,0 +1,4 @@
+exp_id=c500-a42-16k-b1
+case=[[16384,1024,64,128]]
+plugin_root=/data/src/vllm-plugin-A42
+gems_root=/data/src/FlagGems
