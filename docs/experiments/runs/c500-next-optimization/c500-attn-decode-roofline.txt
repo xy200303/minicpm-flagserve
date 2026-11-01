@@ -1,0 +1,3 @@
+ctx=4096      211.9 us/layer   KV=268MB  roofline@1.6TB/s=168us  efficiency=79%
+ctx=16384     765.4 us/layer   KV=1074MB  roofline@1.6TB/s=671us  efficiency=88%
+ctx=32768    1500.1 us/layer   KV=2147MB  roofline@1.6TB/s=1342us  efficiency=89%
