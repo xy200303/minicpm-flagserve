@@ -33,4 +33,5 @@
 - 短负载 4k/512、64 请求的 rank0 trace 共 17323037 个事件。kernel span 23.27s，GPU busy 17.48s（75.1%），空闲 24.9%。该诊断负载不用于计算官方成绩。
 - decode `flash_fwd_splitkv_kernel` 为 4.642s/26838 次，平均 173.0µs，与 4k KV 读取带宽下限一致；不支持再次重写 vendor attention。
 - 采样相关 `_hist_zoom` 与 `_masked_sample_partial` 仅约 0.166s。对 `sample_tokens` 单独 cProfile：600 次累计 0.889s，平均约 **1.48ms/次**，其中 fused top-p 0.501s、bookkeeping 0.167s；采样不是 GPU 空闲的主要来源。
-- 因缺少可归因到具体可改路径的证据，暂不重复 A29/A32 或采样融合。原始摘要见 `torch-profile-analysis.txt`、`sampler-host.{prof,txt}`；大 trace 保留在实例 `/data/experiments/runs/c500-current-torch-profile/trace/`。
+- 剔除前 5s 启动/JIT 后，span 18.27s、GPU busy 14.55s（79.6%），总间隙 3.72s。较大的成对间隙为 prefill copy→GEMM 0.690s、DtoH→HtoD 0.478s、sample_reduce→DtoH 0.203s；其余分散在 metadata/copy 和微秒级 launch。没有单项能合理支撑 3% 端到端目标，不能把这 20.4% 全当作可消除开销。
+- 因缺少可归因到具体可改路径的证据，暂不重复 A29/A32 或采样融合。原始摘要见 `torch-profile-analysis.txt`、`torch-profile-gaps-steady.txt`、`sampler-host.{prof,txt}`；大 trace 保留在实例 `/data/experiments/runs/c500-current-torch-profile/trace/`。

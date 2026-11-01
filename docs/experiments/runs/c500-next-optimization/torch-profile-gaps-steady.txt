@@ -1,0 +1,186 @@
+skip: 5.0s, span: 18.27s, GPU busy: 14.55s (79.6%)
+gap count: 369393, total: 3.72s
+
+=== TOP GAPS BY PAIR ===
+    689959 us n=3751  avg=   183.9 us
+  PREV _copy_kernel_kernel_rank_3
+  NEXT mcblas__Mck_bf16gemm_nn_128x128x128_8m1n8k_256t_4stage_bf16_bf16_fp32_sb_0_0
+    478406 us n=111   avg=  4310.0 us
+  PREV Memcpy DtoH (Device -> Pinned)
+  NEXT Memcpy HtoD (Pinned -> Device)
+    203158 us n=97    avg=  2094.4 us
+  PREV _sample_reduce
+  NEXT Memcpy DtoH (Device -> Pinned)
+    195121 us n=1200  avg=   162.6 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+    150267 us n=600   avg=   250.4 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+    149022 us n=403   avg=   369.8 us
+  PREV sub_func_tensor_scalar_kernel_rank_1
+  NEXT triton_red_fused__to_copy_embedding_mcblas_mm_rms_norm_0
+    137015 us n=3849  avg=    35.6 us
+  PREV void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat
+  NEXT _copy_kernel_kernel_rank_3
+    119410 us n=600   avg=   199.0 us
+  PREV _index_jit_function
+  NEXT _to_copy_func_kernel_rank_1
+    118385 us n=3751  avg=    31.6 us
+  PREV triton_red_fused_fused_add_rms_norm_mcblas_mm_0
+  NEXT mcblas__Mck_bf16gemm_nn_256x256x64_8m1n8k_512t_4stage_bf16_bf16_fp32_sb_0_0
+    109706 us n=89    avg=  1232.7 us
+  PREV sub_func_tensor_scalar_kernel_rank_1
+  NEXT sub_func_kernel_rank_1
+     86574 us n=632   avg=   137.0 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT _index_jit_function
+     74028 us n=600   avg=   123.4 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+     70719 us n=3172  avg=    22.3 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT Memcpy HtoD (Pinned -> Device)
+     70328 us n=568   avg=   123.8 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT sub_func_tensor_scalar_kernel_rank_1
+     70124 us n=19362 avg=     3.6 us
+  PREV void flash_fwd_splitkv_combine_kernel<Flash_fwd_kernel_traits<128, 16, 16, 1, true, true, mctlass::bfloat
+  NEXT _copy_kernel_kernel_rank_3
+     52084 us n=89    avg=   585.2 us
+  PREV sub_func_kernel_rank_1
+  NEXT triton_red_fused__to_copy_embedding_mcblas_mm_rms_norm_0
+     40569 us n=108   avg=   375.6 us
+  PREV fill_scalar_func_kernel_rank_1
+  NEXT zero_persistent_kernel
+     38024 us n=108   avg=   352.1 us
+  PREV zero_persistent_kernel
+  NEXT triton_red_fused__to_copy_embedding_mcblas_mm_rms_norm_0
+     37955 us n=91    avg=   417.1 us
+  PREV _index_jit_function
+  NEXT mcblas__Mck_bf16gemm_nn_256x64x128_8m1n8k_256t_bf16_bf16_fp32_sb_0_0
+     36310 us n=121   avg=   300.1 us
+  PREV _compute_slot_mapping_kernel
+  NEXT Memcpy HtoD (Pinned -> Device)
+     34363 us n=600   avg=    57.3 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT fill_scalar_func_kernel_rank_1
+     32835 us n=600   avg=    54.7 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT fill_scalar_func_kernel_rank_1
+     30256 us n=24445 avg=     1.2 us
+  PREV triton_poi_fused_cat_4
+  NEXT void vllm::reshape_and_cache_flash_kernel<__maca_bfloat16, __maca_bfloat16, (vllm::Fp8KVCacheDataType)0>(
+     29941 us n=515   avg=    58.1 us
+  PREV _row_stats_reduce
+  NEXT zero_persistent_kernel
+     29837 us n=504   avg=    59.2 us
+  PREV _sample_reduce
+  NEXT Memcpy HtoD (Pinned -> Device)
+
+=== LARGEST INDIVIDUAL GAPS ===
+t=  16.204s gap=  22889.0 us
+  PREV _index_jit_function
+  NEXT _scatter_jit_function
+t=   9.598s gap=  13691.1 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT _index_jit_function
+t=   2.235s gap=  12213.5 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   5.785s gap=  11324.7 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   9.438s gap=  11292.7 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT _index_jit_function
+t=   9.622s gap=  10857.2 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=  16.180s gap=  10807.6 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=  18.225s gap=  10761.0 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=  17.314s gap=  10712.8 us
+  PREV Memcpy HtoD (Pinned -> Device)
+  NEXT _index_jit_function
+t=   2.480s gap=  10655.2 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   9.449s gap=  10621.2 us
+  PREV _index_jit_function
+  NEXT _to_copy_func_kernel_rank_1
+t=  17.291s gap=  10585.3 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   2.491s gap=  10581.5 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  16.367s gap=  10575.4 us
+  PREV fill_scalar_func_kernel_rank_1
+  NEXT zero_persistent_kernel
+t=   2.259s gap=  10550.0 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT sub_func_tensor_scalar_kernel_rank_1
+t=  17.757s gap=  10547.7 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   5.808s gap=  10538.2 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT sub_func_tensor_scalar_kernel_rank_1
+t=  16.238s gap=  10493.2 us
+  PREV fill_scalar_func_kernel_rank_1
+  NEXT fill_scalar_func_kernel_rank_1
+t=   9.459s gap=  10477.3 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=   2.247s gap=  10413.8 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  17.376s gap=  10368.3 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=   6.122s gap=  10285.8 us
+  PREV _row_stats_reduce
+  NEXT zero_persistent_kernel
+t=   2.503s gap=  10273.5 us
+  PREV _copy_kernel_kernel_rank_1
+  NEXT sub_func_tensor_scalar_kernel_rank_1
+t=   9.577s gap=  10222.1 us
+  PREV triton_red_fused_fused_add_rms_norm_2
+  NEXT _index_jit_function
+t=  17.807s gap=  10220.8 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=  17.302s gap=  10192.1 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  16.170s gap=  10168.6 us
+  PREV _index_jit_function
+  NEXT _to_copy_func_kernel_rank_1
+t=   9.611s gap=  10138.1 us
+  PREV _index_jit_function
+  NEXT _to_copy_func_kernel_rank_1
+t=  16.191s gap=  10132.2 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  18.099s gap=  10115.1 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=   9.632s gap=  10088.4 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  16.248s gap=  10068.7 us
+  PREV fill_scalar_func_kernel_rank_1
+  NEXT zero_persistent_kernel
+t=   5.796s gap=   9978.4 us
+  PREV add_func_kernel_rank_1
+  NEXT _copy_kernel_kernel_rank_1
+t=  17.981s gap=   9931.5 us
+  PREV _to_copy_func_kernel_rank_1
+  NEXT add_func_kernel_rank_1
+t=  16.228s gap=   9927.4 us
+  PREV sub_func_tensor_scalar_kernel_rank_1
+  NEXT fill_scalar_func_kernel_rank_1
