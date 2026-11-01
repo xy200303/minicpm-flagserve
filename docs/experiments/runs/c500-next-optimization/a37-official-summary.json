@@ -1,0 +1,43 @@
+{
+  "case": "[[4096,1024,64,256]]",
+  "baseline": [
+    {
+      "run": "c500-current-4k-a1",
+      "summary": "docs\\experiments\\runs\\c500-next-optimization\\c500-current-4k-a1\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 12527.62,
+      "mean_ttft_ms": 1623.73
+    },
+    {
+      "run": "c500-a37-4k-a2",
+      "summary": "docs\\experiments\\runs\\c500-next-optimization\\c500-a37-4k-a2\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 12554.57,
+      "mean_ttft_ms": 1619.38
+    }
+  ],
+  "candidate": [
+    {
+      "run": "c500-a37-4k-b1",
+      "summary": "docs\\experiments\\runs\\c500-next-optimization\\c500-a37-4k-b1\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 12572.44,
+      "mean_ttft_ms": 1605.28
+    },
+    {
+      "run": "c500-a37-4k-b2",
+      "summary": "docs\\experiments\\runs\\c500-next-optimization\\c500-a37-4k-b2\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 12552.06,
+      "mean_ttft_ms": 1625.27
+    }
+  ],
+  "baseline_median_total_tok_s": 12541.095000000001,
+  "candidate_median_total_tok_s": 12562.25,
+  "throughput_change_pct": 0.16868542978103473,
+  "baseline_median_ttft_ms": 1621.555,
+  "candidate_median_ttft_ms": 1615.275,
+  "ttft_limit_ms": 1637.7705500000002,
+  "throughput_at_least_3pct": false,
+  "ttft_within_baseline_plus_1pct": true
+}
