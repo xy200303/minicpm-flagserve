@@ -739,5 +739,5 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 
 - 与 A43 的 `tl.split` 错误路线不同，A48 用两个独立 FP32 累加器分别计算 gate/up，共享 A tile 加载，直接写出 `gate*sigmoid(gate)*up`，不做累加器切片。FlagGems `f9085b6d`，插件初版 `061753d`。
 - 探针全部通过数值检查，decode/prefill 最大绝对差 1.53e-05/3.05e-05；最佳总路径分别为 0.11474→0.09616ms（1.193×）和 1.76628→1.48752ms（1.188×）。官方形状测试 2 passed。
-- 模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库另有 `MiniCPMMLP`。初版未记录命中，旧 B1 不作结论；`3e029ef` 只覆盖 MiniCPMMLP，v2 同样无效。`a8349b5` 同时覆盖两个类并记录首次命中，路由测试 3 passed；修正后的官方 4k A/B/A/B 正在进行，不将微基准外推为端到端成绩。证据见 `runs/a48-dual-acc-silu-mul/`。
+- 模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库另有 `MiniCPMMLP`，`a8349b5` 同时覆盖两类，路由测试 3 passed。旧 AOT 缓存不含补丁，候选改用独立缓存重编译；`4ea4a6e` 移除 Dynamo 副作用后，生成代码已确认含 `fl::mm_silu_mul`。冷运行与缓存稳态分开验证，官方 4k A/B/A/B 正在进行，不将微基准外推为端到端成绩。证据见 `runs/a48-dual-acc-silu-mul/`。
 

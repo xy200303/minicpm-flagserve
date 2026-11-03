@@ -26,6 +26,8 @@ A43 在单个 GEMM 累加器上使用 `tl.split`/切片，Iluvatar 后端实际�
 
 FlagGems 的 `mm_silu_mul` 使用上述双累加器内核，两个官方形状测试 **2 passed**。插件将 MiniCPM 的 MLP 在未量化、指定权重视图和官方 token 形状下路由到 `fl::mm_silu_mul` 自定义算子，其余场景回退原路径；`VLLM_FL_DISABLE_MLP_FUSION=1` 可一键恢复原路径，恢复 `GEMS_ROOT=/workspace/a31-gems` 和 `PLUGIN_ROOT=/workspace/audit-plugin` 可完整回滚。
 
-模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库同时存在独立的 `MiniCPMMLP`。初版 `061753d` 未记录命中，旧 B1 不作为正式结果；`3e029ef` 只覆盖 `MiniCPMMLP`，也未命中当前模型，v2 同样标记无效。`a8349b5` 同时覆盖两个类并记录首次命中，路由测试 **3 passed**。只有看到首次命中日志的候选轮次才用于性能结论。
+模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库同时存在独立的 `MiniCPMMLP`。`a8349b5` 同时覆盖两个类，路由测试 **3 passed**。初版未记录命中，旧 B1 不作为正式结果。
 
-修正后的官方 4k A1/B1/A2/B2 已启动：A 为 `/workspace/audit-plugin + /workspace/a31-gems`，B 为 `/workspace/a48-plugin + /workspace/a48-gems`。尚未产生端到端结果；达到 3% 且 TTFT 合格后才执行 MATH-500 和合入。
+后续诊断发现 vLLM 直接复用了不含补丁的 AOT 缓存。候选改用独立的 `VLLM_CACHE_ROOT=/workspace/a48-compile-cache-v2` 强制重新编译；`4ea4a6e` 移除了 Dynamo 不支持的日志和全局计数副作用。新图已通过编译和 CUDA graph 捕获，生成代码中可检索到 `fl::mm_silu_mul`，因此确认不是回退。首次冷运行出现回退后，使用已生成缓存重新执行完整 4k A1/B1/A2/B2 以区分冷编译与稳态性能，结果尚未产生。
+
+补充的转置权重探针保留在 `results-transposed.json`：decode 基线/A48 为 0.12065/0.10421ms，prefill 为 1.91356/1.56034ms，仍分别为 1.158×/1.226×。它只用于说明布局影响，不替代官方成绩。
