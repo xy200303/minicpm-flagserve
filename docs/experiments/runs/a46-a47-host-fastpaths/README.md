@@ -8,14 +8,26 @@ A31 的 16k host profile 中，`LibEntry.run`、key 构造和动态 copy 包装�
 
 - A31 对照：`9c06143c`，远端 `/workspace/a31-gems`。
 - A46：`1be4ae77`，预计算参数名、复用 key helper、减少 descriptor 判断、普通 dict 保序、缓存命中少一次哈希、grid 参数少一次字典重建。远端 `/workspace/a46-gems`。
-- A47：`59a73960`，在 A46 上为连续、同形状、同 dtype 的 `copy_` 增加 1D Triton 内核，跳过通用动态形状包装；广播、类型转换、非连续和异常路径不变。`f20e89d3` 增加同形状非连续输入的回退测试。远端 `/workspace/a47-gems`。
+- A47：`59a73960`，在 A46 上为连续、同形状、同 dtype 的 `copy_` 增加 1D Triton 内核，跳过通用动态形状包装；广播、类型转换、非连续和异常路径不变。`f20e89d3` 增加同形状非连续输入的回退测试，`bd3ff824` 采用实测 `BLOCK=256、num_warps=2`。远端 `/workspace/a47-gems`。
 
 回滚：恢复 `GEMS_ROOT=/workspace/a31-gems`；只撤销 copy 可 checkout `1be4ae77`，撤销全部实验可 checkout `9c06143c`。
 
-## 验证计划
+## 正确性与微基准
 
-`run_micro.sh` 先对 A31/A46/A47 运行完整 `test_copy.py`，并对 A46/A47 运行 LibEntry key、decorator cascade 和默认参数测试，再按 A31/A46/A47/A47/A46/A31 顺序运行真实 `copy_` 探针。探针记录实际导入路径、9 组原始时序和数值相等检查。
+`run_micro.sh` 对 A31/A46/A47 运行完整 `test_copy.py`，并对 A46/A47 运行 LibEntry key、decorator cascade 和默认参数测试。A31/A46/A47 分别为 **46/51/51 passed**；最佳配置复测 copy 为 **47 passed**。
 
-任务排在 A45 官方 A/B 完全退出后执行，避免 GPU 干扰。结果尚未产生；只有正确性通过且组合微基准有明确收益，才进入官方 4k/16k 交错 A/B。若组合达标，再分别保留 A46 与 A47 做消融。
+真实 `copy_` 探针按 A31/A46/A47/A47/A46/A31 执行两次，每个进程保留 9 组原始时序：
 
-A45 与 A46/A47 作用路径独立。如果 A45 的正式中位数为正向但不足 3%，且 A47 也通过筛选，官方候选优先使用 `/workspace/a45-plugin + /workspace/a47-gems` 的 host 组合栈，并以 A20+A31 为共同基线做消融；不把各实验的百分比直接相加作为预期成绩。
+| 变体 | 两次中位数（ms） | 汇总中位数（ms） | 相对 A31 |
+|---|---:|---:|---:|
+| A31 | 0.09713 / 0.09739 | 0.09726 | 1.000× |
+| A46 | 0.09149 / 0.09263 | 0.09206 | 1.056× |
+| A47 | 0.03067 / 0.03111 | 0.03089 | 3.149× |
+
+直接内核扫描覆盖 `BLOCK=256/512/1024/2048` 与 `num_warps=1/2/4`，最佳为 256/2（0.02193ms），原 1024/4 为 0.02249ms。所有配置均通过数值相等检查。原始 JSON、测试日志与自动汇总见 `a46-a47-micro/` 和 `summary.json`。
+
+## 官方验证
+
+A47 单独首先进入官方 4k `[4096,1024,64,256]` A1/B1/A2/B2：A 为 `/workspace/audit-plugin + /workspace/a31-gems`，B 为 `/workspace/audit-plugin + /workspace/a47-gems`。启动参数不变，结果尚未产生。
+
+A45 与 A46/A47 作用路径独立。若 A47 正向但不足 3%，再评估 `/workspace/a45-plugin + /workspace/a47-gems` 组合；不把各实验百分比直接相加作为预期成绩。若达到门槛，再保留 A46/A47 做必要消融并执行 MATH-500。

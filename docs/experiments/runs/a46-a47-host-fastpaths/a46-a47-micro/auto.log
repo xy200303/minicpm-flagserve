@@ -1,0 +1,108 @@
+    super().__init__(*args, **kwargs)
+
+src/flag_gems/utils/libentry.py:421
+  /workspace/a31-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+46 passed, 2 warnings in 6.30s
+    super().__init__(*args, **kwargs)
+
+src/flag_gems/utils/libentry.py:421
+  /workspace/a46-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+51 passed, 2 warnings in 4.00s
+    super().__init__(*args, **kwargs)
+
+src/flag_gems/utils/libentry.py:421
+  /workspace/a47-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+51 passed, 2 warnings in 3.91s
+  "median_ms": 0.09712519915774465,
+  "samples_ms": [
+    0.09748102771118283,
+    0.09682454215362668,
+    0.09689070144668221,
+    0.0971759157255292,
+    0.09712519915774465,
+    0.09687821241095662,
+    0.0972644854336977,
+    0.09735474502667785,
+    0.09686131495982409
+  ],
+  "correct": true
+}
+  "median_ms": 0.09149466222152114,
+  "samples_ms": [
+    0.09172939090058208,
+    0.09175758855417371,
+    0.0915278303436935,
+    0.09150715498253703,
+    0.09146926878020167,
+    0.09144147438928485,
+    0.09149466222152114,
+    0.0913908607326448,
+    0.09146184893324971
+  ],
+  "correct": true
+}
+        0.02254073927178979,
+        0.022599968127906322,
+        0.022464998997747898,
+        0.022522769402712584,
+        0.02249659225344658,
+        0.022483650594949722,
+        0.022724058479070663,
+        0.022505363449454308,
+        0.022729082964360714
+      ],
+      "correct": true
+    }
+  ]
+}
+        0.022520030848681927,
+        0.022450347431004047,
+        0.02253891807049513,
+        0.02264354657381773,
+        0.022531766444444656,
+        0.022490556351840496,
+        0.022511512972414494,
+        0.022394921630620956,
+        0.02252306416630745
+      ],
+      "correct": true
+    }
+  ]
+}
+  "median_ms": 0.09262754768133163,
+  "samples_ms": [
+    0.09289396181702614,
+    0.09238448599353433,
+    0.09262754768133163,
+    0.09256144007667899,
+    0.09256732044741511,
+    0.09232206735759974,
+    0.09310112474486232,
+    0.09322263300418854,
+    0.0930519844405353
+  ],
+  "correct": true
+}
+  "median_ms": 0.09739141771569848,
+  "samples_ms": [
+    0.09767601685598493,
+    0.09738779440522194,
+    0.09739141771569848,
+    0.09771971125155687,
+    0.09734238684177399,
+    0.09749532910063863,
+    0.0977136492729187,
+    0.0972007061354816,
+    0.09714631689712405
+  ],
+  "correct": true
+}

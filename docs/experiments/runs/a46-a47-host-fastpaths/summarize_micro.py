@@ -3,7 +3,7 @@ import statistics
 from pathlib import Path
 
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent / "a46-a47-micro"
 
 
 def read(tag):

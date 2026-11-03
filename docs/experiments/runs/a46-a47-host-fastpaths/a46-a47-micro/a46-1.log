@@ -1,0 +1,26 @@
+/workspace/a46-gems/src/flag_gems/utils/libentry.py:738: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/workspace/a46-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+{
+  "module": "/workspace/a46-gems/src/flag_gems/__init__.py",
+  "shape": [
+    64,
+    256
+  ],
+  "dtype": "bfloat16",
+  "inner": 2000,
+  "median_ms": 0.09149466222152114,
+  "samples_ms": [
+    0.09172939090058208,
+    0.09175758855417371,
+    0.0915278303436935,
+    0.09150715498253703,
+    0.09146926878020167,
+    0.09144147438928485,
+    0.09149466222152114,
+    0.0913908607326448,
+    0.09146184893324971
+  ],
+  "correct": true
+}
