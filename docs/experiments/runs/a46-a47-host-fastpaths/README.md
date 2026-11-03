@@ -14,7 +14,7 @@ A31 的 16k host profile 中，`LibEntry.run`、key 构造和动态 copy 包装�
 
 ## 验证计划
 
-`run_micro.sh` 先对 A46/A47 运行 LibEntry key、decorator cascade、默认参数和完整 `test_copy.py`，再按 A31/A46/A47/A47/A46/A31 顺序运行真实 `copy_` 探针。探针记录实际导入路径、9 组原始时序和数值相等检查。
+`run_micro.sh` 先对 A31/A46/A47 运行完整 `test_copy.py`，并对 A46/A47 运行 LibEntry key、decorator cascade 和默认参数测试，再按 A31/A46/A47/A47/A46/A31 顺序运行真实 `copy_` 探针。探针记录实际导入路径、9 组原始时序和数值相等检查。
 
 任务排在 A45 官方 A/B 完全退出后执行，避免 GPU 干扰。结果尚未产生；只有正确性通过且组合微基准有明确收益，才进入官方 4k/16k 交错 A/B。若组合达标，再分别保留 A46 与 A47 做消融。
 

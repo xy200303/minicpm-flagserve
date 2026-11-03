@@ -3,6 +3,10 @@ set -euo pipefail
 export VLLM_PLUGINS=fl
 ROOT=/workspace/experiments/runs/a46-a47-micro
 mkdir -p "$ROOT"
+export PYTHONPATH=/workspace/audit-plugin:/workspace/a31-gems/src
+cd /workspace/a31-gems
+/workspace/audit-venv/bin/python -m pytest -q tests/test_copy.py > "$ROOT/a31-pytest.log" 2>&1
+tail -8 "$ROOT/a31-pytest.log"
 for variant in a46 a47; do
   root=/workspace/${variant}-gems
   export PYTHONPATH=/workspace/audit-plugin:$root/src
