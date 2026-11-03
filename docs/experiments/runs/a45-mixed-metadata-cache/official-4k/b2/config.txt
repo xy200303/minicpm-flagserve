@@ -1,0 +1,4 @@
+exp_id=a45-official-4k/b2
+case=[[4096,1024,64,256]]
+plugin_root=/workspace/a45-plugin
+gems_root=/workspace/a31-gems

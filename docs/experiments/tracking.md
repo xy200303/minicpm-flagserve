@@ -722,3 +722,9 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 在完整 A20 decode 内核上同步测量分段归并：4k 总耗时 0.58315ms，其中 combine 0.02859ms，占 4.90%；16k 总耗时 2.11856ms，其中 combine 0.02848ms，占 1.34%。
 - 即使完全消除 combine，16k 单内核理论上限也低于 3%，完整模型收益还会进一步摊薄；4k 的孤立上限不足以证明端到端可达门槛。停止该方向，原始时序见 `runs/a44-combine.json`。
 
+### A45（2026-11-03，否决）：混合批 attention metadata 索引缓存
+
+- 分支 `exp/a45-mixed-metadata-cache`（`16aa58d`）。缓存 decode 行号的 GPU 索引张量，将 `query_start_loc`、`seq_lens`、`block_table` 的 Python 列表高级索引改为 `index_select`；两项切分与缓存测试通过。
+- B=64 混合批 `_build_split` 微基准在三个 prefill 行位置均由约 0.50ms 降至 0.39ms（约 1.25×），只用于候选筛选。
+- 官方 4k A1/A2 为 5090.41/5148.34，B1/B2 为 5151.92/5166.25 tok/s；中位数 **5119.38→5159.09（+0.78%）**，TTFT 中位数 **4126.51→4103.36ms（−0.56%）**。低于 3% 门槛，不合入、不执行 MATH-500。原始证据和自动汇总见 `runs/a45-mixed-metadata-cache/`。
+
