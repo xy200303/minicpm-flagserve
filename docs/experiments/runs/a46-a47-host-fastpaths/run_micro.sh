@@ -19,7 +19,9 @@ for spec in a31-1:a31 a46-1:a46 a47-1:a47 a47-2:a47 a46-2:a46 a31-2:a31; do
   tag=${spec%%:*}
   variant=${spec#*:}
   export PYTHONPATH=/workspace/audit-plugin:/workspace/${variant}-gems/src
+  sweep=()
+  if [ "$variant" = a47 ]; then sweep=(--sweep); fi
   /workspace/audit-venv/bin/python /workspace/bi_a46_libentry_probe.py \
-    --output "$ROOT/$tag.json" > "$ROOT/$tag.log" 2>&1
+    --output "$ROOT/$tag.json" "${sweep[@]}" > "$ROOT/$tag.log" 2>&1
   tail -14 "$ROOT/$tag.log"
 done
