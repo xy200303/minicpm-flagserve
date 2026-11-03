@@ -1,0 +1,14 @@
+{
+  "case": "[[16384,1024,64,128]]",
+  "baseline_runs": ["a1"],
+  "candidate_runs": ["b1"],
+  "baseline_total_tok_s": 4522.60,
+  "candidate_total_tok_s": 4552.70,
+  "throughput_change_pct": 0.66548,
+  "baseline_mean_ttft_ms": 111592.39,
+  "candidate_mean_ttft_ms": 110351.20,
+  "ttft_change_pct": -1.11239,
+  "throughput_at_least_3pct": false,
+  "decision": "reject; no A2/B2 or MATH-500 because both official scenarios show less than 1% gain",
+  "note": "Single complete A/B pair for candidate rejection only, not acceptance evidence requiring two pairs and medians."
+}
