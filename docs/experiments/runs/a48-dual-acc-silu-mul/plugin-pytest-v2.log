@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.11, pytest-9.1.1, pluggy-1.6.0
+rootdir: /workspace/a48-plugin
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collected 3 items
+
+tests/unit_tests/models/test_mm_silu_mul.py ...                          [100%]
+
+=============================== warnings summary ===============================
+../a48-gems/src/flag_gems/utils/libentry.py:421
+  /workspace/a48-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 3 passed, 1 warning in 12.87s =========================
