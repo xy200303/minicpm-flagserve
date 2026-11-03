@@ -1,0 +1,43 @@
+{
+  "case": "[[4096,1024,64,256]]",
+  "baseline": [
+    {
+      "run": "a36r-4k-a1",
+      "summary": "docs\\experiments\\runs\\a36-fullpage-loop\\a36r-4k-a1\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 5114.0,
+      "mean_ttft_ms": 4116.93
+    },
+    {
+      "run": "a36r-4k-a2",
+      "summary": "docs\\experiments\\runs\\a36-fullpage-loop\\a36r-4k-a2\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 5164.83,
+      "mean_ttft_ms": 4067.91
+    }
+  ],
+  "candidate": [
+    {
+      "run": "a36r-4k-b1",
+      "summary": "docs\\experiments\\runs\\a36-fullpage-loop\\a36r-4k-b1\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 4497.7,
+      "mean_ttft_ms": 4098.9
+    },
+    {
+      "run": "a36r-4k-b2",
+      "summary": "docs\\experiments\\runs\\a36-fullpage-loop\\a36r-4k-b2\\summary.csv",
+      "case": "[[4096,1024,64,256]]",
+      "total_tok_s": 4500.68,
+      "mean_ttft_ms": 4095.75
+    }
+  ],
+  "baseline_median_total_tok_s": 5139.415,
+  "candidate_median_total_tok_s": 4499.1900000000005,
+  "throughput_change_pct": -12.457157088890458,
+  "baseline_median_ttft_ms": 4092.42,
+  "candidate_median_ttft_ms": 4097.325,
+  "ttft_limit_ms": 4133.3442000000005,
+  "throughput_at_least_3pct": false,
+  "ttft_within_baseline_plus_1pct": true
+}
