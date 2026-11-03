@@ -1,0 +1,43 @@
+{
+  "case": "[[16384,1024,64,128]]",
+  "baseline": [
+    {
+      "run": "a1",
+      "summary": "docs\\experiments\\runs\\a46-a47-host-fastpaths\\official-16k\\a1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4514.12,
+      "mean_ttft_ms": 111798.38
+    },
+    {
+      "run": "a2",
+      "summary": "docs\\experiments\\runs\\a46-a47-host-fastpaths\\official-16k\\a2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4509.72,
+      "mean_ttft_ms": 111924.13
+    }
+  ],
+  "candidate": [
+    {
+      "run": "b1",
+      "summary": "docs\\experiments\\runs\\a46-a47-host-fastpaths\\official-16k\\b1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4520.03,
+      "mean_ttft_ms": 111641.51
+    },
+    {
+      "run": "b2",
+      "summary": "docs\\experiments\\runs\\a46-a47-host-fastpaths\\official-16k\\b2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4514.41,
+      "mean_ttft_ms": 111823.2
+    }
+  ],
+  "baseline_median_total_tok_s": 4511.92,
+  "candidate_median_total_tok_s": 4517.219999999999,
+  "throughput_change_pct": 0.11746662174858535,
+  "baseline_median_ttft_ms": 111861.255,
+  "candidate_median_ttft_ms": 111732.355,
+  "ttft_limit_ms": 112979.86755000001,
+  "throughput_at_least_3pct": false,
+  "ttft_within_baseline_plus_1pct": true
+}
