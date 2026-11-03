@@ -28,6 +28,21 @@ FlagGems 的 `mm_silu_mul` 使用上述双累加器内核，两个官方形状�
 
 模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库同时存在独立的 `MiniCPMMLP`。`a8349b5` 同时覆盖两个类，路由测试 **3 passed**。初版未记录命中，旧 B1 不作为正式结果。
 
-后续诊断发现 vLLM 直接复用了不含补丁的 AOT 缓存。候选改用独立的 `VLLM_CACHE_ROOT=/workspace/a48-compile-cache-v2` 强制重新编译；`4ea4a6e` 移除了 Dynamo 不支持的日志和全局计数副作用。新图已通过编译和 CUDA graph 捕获，生成代码中可检索到 `fl::mm_silu_mul`，因此确认不是回退。首次冷运行出现回退后，使用已生成缓存重新执行完整 4k A1/B1/A2/B2 以区分冷编译与稳态性能，结果尚未产生。
+后续诊断发现 vLLM 直接复用了不含补丁的 AOT 缓存。候选改用独立的 `VLLM_CACHE_ROOT=/workspace/a48-compile-cache-v2` 强制重新编译；`4ea4a6e` 移除了 Dynamo 不支持的日志和全局计数副作用。新图已通过编译和 CUDA graph 捕获，生成代码中可检索到 `fl::mm_silu_mul`，因此确认不是回退。最终提交的路由测试复测为 **3 passed**，日志见 `plugin-pytest-final.log`。
+
+## 官方 4k 交错结果
+
+使用已生成缓存执行完整 A1/B1/A2/B2。B2 另一次运行与 A49 探针重叠，明确标记为污染且不参与统计；下表 B2 来自无其他 GPU 任务的 `b2-clean`。
+
+| 运行 | 总吞吐（tok/s） | 平均 TTFT（ms） |
+|---|---:|---:|
+| A1 | 5199.15 | 4034.83 |
+| A2 | 5204.80 | 4062.66 |
+| B1 | 5236.55 | 3975.23 |
+| B2-clean | 5238.08 | 3916.63 |
+| A 中位数 | 5201.98 | 4048.75 |
+| B 中位数 | 5237.32 | 3945.93 |
+
+吞吐变化 **+0.679%**，TTFT 变化 **−2.54%**。吞吐低于 3% 采纳门槛，A48 不合入、不以该场景执行 MATH-500。自动汇总见 `official-4k-v4/summary.json`；16k 继续按同日交错 A/B 检验 prefill 融合的实际收益。
 
 补充的转置权重探针保留在 `results-transposed.json`：decode 基线/A48 为 0.12065/0.10421ms，prefill 为 1.91356/1.56034ms，仍分别为 1.158×/1.226×。它只用于说明布局影响，不替代官方成绩。
