@@ -8,7 +8,7 @@ A31 的 16k host profile 中，`LibEntry.run`、key 构造和动态 copy 包装�
 
 - A31 对照：`9c06143c`，远端 `/workspace/a31-gems`。
 - A46：`1be4ae77`，预计算参数名、复用 key helper、减少 descriptor 判断、普通 dict 保序、缓存命中少一次哈希、grid 参数少一次字典重建。远端 `/workspace/a46-gems`。
-- A47：`59a73960`，在 A46 上为连续、同形状、同 dtype 的 `copy_` 增加 1D Triton 内核，跳过通用动态形状包装；广播、类型转换、非连续和异常路径不变。远端 `/workspace/a47-gems`。
+- A47：`59a73960`，在 A46 上为连续、同形状、同 dtype 的 `copy_` 增加 1D Triton 内核，跳过通用动态形状包装；广播、类型转换、非连续和异常路径不变。`f20e89d3` 增加同形状非连续输入的回退测试。远端 `/workspace/a47-gems`。
 
 回滚：恢复 `GEMS_ROOT=/workspace/a31-gems`；只撤销 copy 可 checkout `1be4ae77`，撤销全部实验可 checkout `9c06143c`。
 
