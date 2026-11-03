@@ -1,0 +1,142 @@
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Key cache tensor must be 3-dimensional [total_entries, kv_num_heads, head_size]
+Exception raised from batch_paged_attention at /home/corex/sw_home/apps/ixformer/src/ixformer/infer/paged_attention.cu:592 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x7f17faef6806 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 0x68 (0x7f17fae89839 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: ixformer::infer::batch_paged_attention(at::Tensor&, at::Tensor&, std::optional<std::tuple<at::Tensor, at::Tensor> >, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, unsigned int, unsigned int, unsigned int, unsigned int, double, bool) + 0x1681 (0x7f166ff237d1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #3: <unknown function> + 0xd0aaf1 (0x7f166ff2daf1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #4: <unknown function> + 0xd0a12f (0x7f166ff2d12f in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #5: <unknown function> + 0xd0a08e (0x7f166ff2d08e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #6: <unknown function> + 0xb85788 (0x7f166fda8788 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+<omitting python frames>
+frame #18: <unknown function> + 0x2a1ca (0x7f184ef831ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #19: __libc_start_main + 0x8b (0x7f184ef8328b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #20: _start + 0x25 (0x56210599d095 in /workspace/audit-venv/bin/python)
+
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Key cache first dimension must equal max_page_num * page_size
+Exception raised from batch_paged_attention at /home/corex/sw_home/apps/ixformer/src/ixformer/infer/paged_attention.cu:604 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x7ff544b91806 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 0x68 (0x7ff544b24839 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: ixformer::infer::batch_paged_attention(at::Tensor&, at::Tensor&, std::optional<std::tuple<at::Tensor, at::Tensor> >, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, unsigned int, unsigned int, unsigned int, unsigned int, double, bool) + 0x1681 (0x7ff3b9bba7d1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #3: <unknown function> + 0xd0aaf1 (0x7ff3b9bc4af1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #4: <unknown function> + 0xd0a12f (0x7ff3b9bc412f in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #5: <unknown function> + 0xd0a08e (0x7ff3b9bc408e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #6: <unknown function> + 0xb85788 (0x7ff3b9a3f788 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+<omitting python frames>
+frame #18: <unknown function> + 0x2a1ca (0x7ff598c1e1ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #19: __libc_start_main + 0x8b (0x7ff598c1e28b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #20: _start + 0x25 (0x55883fa04095 in /workspace/audit-venv/bin/python)
+
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: LSE tensor must be 2-dimensional or empty
+Exception raised from batch_paged_attention at /home/corex/sw_home/apps/ixformer/src/ixformer/infer/paged_attention.cu:646 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x7fbf001c0806 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 0x68 (0x7fbf00153839 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: ixformer::infer::batch_paged_attention(at::Tensor&, at::Tensor&, std::optional<std::tuple<at::Tensor, at::Tensor> >, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, unsigned int, unsigned int, unsigned int, unsigned int, double, bool) + 0x1643 (0x7fbd751ef793 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #3: <unknown function> + 0xd0aaf1 (0x7fbd751f9af1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #4: <unknown function> + 0xd0a12f (0x7fbd751f912f in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #5: <unknown function> + 0xd0a08e (0x7fbd751f908e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #6: <unknown function> + 0xb85788 (0x7fbd75074788 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+<omitting python frames>
+frame #18: <unknown function> + 0x2a1ca (0x7fbf5424d1ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #19: __libc_start_main + 0x8b (0x7fbf5424d28b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #20: _start + 0x25 (0x561010671095 in /workspace/audit-venv/bin/python)
+
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: LSE tensor must be 2-dimensional or empty
+Exception raised from batch_paged_attention at /home/corex/sw_home/apps/ixformer/src/ixformer/infer/paged_attention.cu:646 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x7f39a8899806 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 0x68 (0x7f39a882c839 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: ixformer::infer::batch_paged_attention(at::Tensor&, at::Tensor&, std::optional<std::tuple<at::Tensor, at::Tensor> >, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, unsigned int, unsigned int, unsigned int, unsigned int, double, bool) + 0x1643 (0x7f381d8c5793 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #3: <unknown function> + 0xd0aaf1 (0x7f381d8cfaf1 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #4: <unknown function> + 0xd0a12f (0x7f381d8cf12f in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #5: <unknown function> + 0xd0a08e (0x7f381d8cf08e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #6: <unknown function> + 0xb85788 (0x7f381d74a788 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+<omitting python frames>
+frame #18: <unknown function> + 0x2a1ca (0x7f39fc9261ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #19: __libc_start_main + 0x8b (0x7f39fc92628b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #20: _start + 0x25 (0x559300fff095 in /workspace/audit-venv/bin/python)
+
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError
+Traceback (most recent call last):
+  File "/workspace/bi_a50_batch_paged_probe.py", line 57, in <module>
+    main()
+  File "/workspace/bi_a50_batch_paged_probe.py", line 38, in main
+    ixformer.batch_paged_attention(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/paged_attention.py", line 175, in batch_paged_attention
+    return ops.infer.batch_paged_attention(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError

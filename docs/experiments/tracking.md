@@ -746,3 +746,9 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 针对 A31 未覆盖的 `M=64、K=2048、N=130560` 形状，使用同一原始 Triton kernel 扫描 8 组配置，全部数值检查通过。
 - 通用 `mm` 为 1.01296ms，最佳配置为 1.00948ms，仅加速 0.34%，不进入官方 benchmark、不合入。原始证据见 `runs/a49-lm-head-gemm/`。
 
+### A50（2026-11-04，接口阻塞）：厂商 batch paged attention
+
+- 为消除 prefill dual-gather 的 KV 连续化拷贝，调查此前未使用的 `ixformer.batch_paged_attention`。确认三维 KV 可由当前页缓存重塑，不需要全局布局改造。
+- 按运行时错误逐项满足 KV 形状、全缓存页数和二维/空 LSE 约束后，内核仍在输出前返回无详情 `RuntimeError`。`q_len=1/4`、BF16/FP16、causal 开关、合法页表填充均失败，未取得有效数值结果。
+- 不做性能计时或集成，不执行官方 benchmark；这是当前镜像的厂商接口可用性阻塞，不写成性能负收益。探针、日志和机器版本见 `runs/a50-batch-paged-attention/`。
+
