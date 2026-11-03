@@ -508,7 +508,7 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12527.62 / 5089.645 - 1) * 100, (5209.06 / 2028.01 - 1) * 100],
+        [(12527.62 / 5089.645 - 1) * 100, (5139.415 / 2028.01 - 1) * 100],
         [(11143.77 / 7029.675 - 1) * 100, (4513.91 / 915.15 - 1) * 100],
         [(98.10 / 95.0 - 1) * 100, (98.10 / 95.0 - 1) * 100],
         [(1 - 17.96176 / 27.197135) * 100, (1 - 111.81766 / 599.262) * 100],
@@ -738,8 +738,8 @@ def fig_bi_three_way():
     labels = ["4k 场景", "16k 场景"]
     official = np.array([2028.01, 915.15])
     native = np.array([1902.15, 861.98])
-    current_low = np.array([5208.95, 4512.11])
-    current_high = np.array([5209.16, 4515.71])
+    current_low = np.array([5114.00, 4512.11])
+    current_high = np.array([5164.83, 4515.71])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [official, native, current_low],
