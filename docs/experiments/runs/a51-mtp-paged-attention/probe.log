@@ -1,0 +1,20 @@
+Traceback (most recent call last):
+  File "/workspace/bi_a51_mtp_paged_probe.py", line 52, in <module>
+    main()
+  File "/workspace/bi_a51_mtp_paged_probe.py", line 33, in main
+    ixformer.vllm_paged_attention_mtp(
+  File "/usr/local/lib/python3.12/site-packages/ixformer/inference/functions/vllm.py", line 575, in vllm_paged_attention_mtp
+    ops.infer.vllm_paged_attention_mtp(
+RuntimeError: Key cache requires stride(-2) == head_size
+Exception raised from vllm_paged_attention_mtp at /home/corex/sw_home/apps/ixformer/src/ixformer/infer/paged_attention.cu:794 (most recent call first):
+frame #0: c10::Error::Error(c10::SourceLocation, std::string) + 0x96 (0x7f76c7d27806 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #1: c10::detail::torchCheckFail(char const*, char const*, unsigned int, char const*) + 0x68 (0x7f76c7cba839 in /usr/local/lib/python3.12/site-packages/torch/lib/libc10.so)
+frame #2: ixformer::infer::vllm_paged_attention_mtp(at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, at::Tensor&, long, double, at::Tensor&, at::Tensor&, long, long, long, std::optional<at::Tensor> const&, bool, int, int, double, bool, bool, std::optional<at::Tensor> const&) + 0x17ba (0x7f753cd5520a in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #3: <unknown function> + 0xd0ac9e (0x7f753cd5dc9e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #4: <unknown function> + 0xd0ab5e (0x7f753cd5db5e in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+frame #5: <unknown function> + 0xb85788 (0x7f753cbd8788 in /usr/local/lib/python3.12/site-packages/ixformer/libixformer.so)
+<omitting python frames>
+frame #17: <unknown function> + 0x2a1ca (0x7f771bdb41ca in /lib/x86_64-linux-gnu/libc.so.6)
+frame #18: __libc_start_main + 0x8b (0x7f771bdb428b in /lib/x86_64-linux-gnu/libc.so.6)
+frame #19: _start + 0x25 (0x55fbbc5e6095 in /workspace/audit-venv/bin/python)
+
