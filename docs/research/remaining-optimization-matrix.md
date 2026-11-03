@@ -1,13 +1,13 @@
 # 剩余加速方案研究矩阵
 
-更新时间：2026-10-28。目标不是穷举参数，而是为每个方向保留可复核的采纳、否决或阻塞依据。
+更新时间：2026-11-03。目标不是穷举参数，而是为每个方向保留可复核的采纳、否决或阻塞依据。
 
 | 方向 | 已完成与结论 | 后续状态 |
 |---|---|---|
 | BI prefill attention | A1/A6 vendor ixAttnBkd、varlen、dual-gather，已形成主要收益 | 接近 vendor 上限；仅接受新实现证据 |
-| BI decode attention | A7 pin、A20 页对齐内核；A30/A33 否决；A36 微基准正收益但官方 −12.46%，否决 | 组合回退已证实，不再采用全页/尾页分离 |
+| BI decode attention | A7 pin、A20 页对齐内核；A30/A33 否决；A36 微基准正收益但官方 −12.46%，否决；A44 combine 在 16k 仅占 1.34%，收益上限不足 | 组合回退已证实，不再采用全页/尾页分离或 combine 消除 |
 | C500 attention | vendor prefill/decode 已达约 1.42 TB/s，接近实测纯读上限 | 不照搬 BI A20；等待最终栈新 profile |
-| GEMM | C500 nn/mcBLAS；BI pinned vendor config；A34 GROUP_M、A38 mcBLAS algo 均复测否决 | 不再重复 tile/algorithm 扫描；仅接受新 epilogue/访存机制证据 |
+| GEMM | C500 nn/mcBLAS；BI pinned vendor config；A34 GROUP_M、A38 mcBLAS algo 均复测否决；A43 epilogue 探针布局错误 | 不再重复 tile/algorithm 扫描；同一后端布局假设下不重试 A43 |
 | 采样 | bf16 直读、温度折叠、免排序 top-p、Gumbel-Max 已采纳 | 当前占比较低，不优先 |
 | KV Cache / 布局 | 页对齐、静态 slab、dual-gather、混合步 decode 已采纳 | int8/fp16 无收益；不再重复 |
 | Norm / RoPE / elementwise | 走现有融合路径；A21 IR 融合因破坏 Inductor 融合而否决；A34 确认 BI 无 FlagGems IR 注册实现 | 停止 opaque custom op；仅研究原生可融合改动 |
@@ -20,9 +20,9 @@
 
 ## 当前优先研究项
 
-1. BI decode 页内核的分支、寄存器和中间结果流量；A34 已关闭 GEMM tile 顺序方向。
-2. A31 后 `libentry.run` 与 metadata/copy 的剩余关键路径，避免 A32 式无效优化。
-3. C500 最终栈的图内归因，当前缺少可用实例，不能用旧 profile 代替。
+1. A31 后 `libentry.run` 与 metadata/copy 的剩余关键路径，避免 A32 式无效优化；A45 正在做官方交错验证。
+2. 编译器原生融合与图内归因，只接受能解释完整模型收益的改动，不再以孤立微基准外推。
+3. A34/A43 已关闭当前 GEMM tile 与 epilogue 实现路线；A44 已确认 combine 收益上限不足。
 
 ## 实验纪律
 

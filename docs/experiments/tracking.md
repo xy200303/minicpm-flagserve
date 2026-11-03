@@ -707,3 +707,18 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 独立 attention 微基准在 4k/16k/32k 为 211.9/765.4/1500.1µs；16k 约为 1.6TB/s 理论下限的 88%。扫描 `num_splits=0/1/2/4/8/16/32/64` 后自动 0 最快（0.78464ms），手动配置均回退，A40 不合入。
 - rank0 torch profiler 因厂商线程回调错误失败；`execute_model` cProfile 首轮 EngineCore 退出，四轮 FAILED。失败诊断不用于性能结论，原始证据见 `runs/c500-next-optimization/a41-16k-diagnostics.md`。
 
+### A42（2026-11-03，否决）：C500 动态 mixed-batch budget
+
+- 首轮组合测量仅约 +0.09%，低于 3% 准入门槛；验证期间实例失效，不补写未经完成的对照。候选不合入，记录见 `runs/c500-next-optimization/a42-mixed-budget.md`。
+
+### A43（2026-11-03，否决）：BI GEMM＋SiLU 乘法门控融合
+
+- 尝试把 gate/up GEMM 与 SiLU 乘法合并到单个 Triton 内核，减少中间张量读写。实验补丁保留于 `runs/a43-gemm-silu-experimental.patch`。
+- 当前 Iluvatar Triton 后端的 `tl.split`/切片数据布局与预期不一致，decode64 和 prefill 探针的 `max_diff` 分别为 28544 和 45056；孤立计时即使较快也属于错误结果，不能用于性能结论。原始无效探针明确标记为 `a43-mm-silu-mul-invalid.json`。
+- 未通过数值正确性，不执行官方 benchmark、不合入。后续不以同一后端布局假设重复此实现。
+
+### A44（2026-11-03，否决）：A20 中间结果 combine 消除
+
+- 在完整 A20 decode 内核上同步测量分段归并：4k 总耗时 0.58315ms，其中 combine 0.02859ms，占 4.90%；16k 总耗时 2.11856ms，其中 combine 0.02848ms，占 1.34%。
+- 即使完全消除 combine，16k 单内核理论上限也低于 3%，完整模型收益还会进一步摊薄；4k 的孤立上限不足以证明端到端可达门槛。停止该方向，原始时序见 `runs/a44-combine.json`。
+

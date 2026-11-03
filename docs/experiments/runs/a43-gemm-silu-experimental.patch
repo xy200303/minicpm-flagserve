@@ -1,0 +1,113 @@
+diff --git a/src/flag_gems/runtime/backend/_iluvatar/ops/mm.py b/src/flag_gems/runtime/backend/_iluvatar/ops/mm.py
+index a7cfab4b..1930c98a 100644
+--- a/src/flag_gems/runtime/backend/_iluvatar/ops/mm.py
++++ b/src/flag_gems/runtime/backend/_iluvatar/ops/mm.py
+@@ -102,6 +102,8 @@ def mm_kernel(
+     UPGRADE_A_OFFS: tl.constexpr,
+     UPGRADE_B_OFFS: tl.constexpr,
+     UPGRADE_C_OFFS: tl.constexpr,
++    EPILOGUE_SILU: tl.constexpr,
++    EPILOGUE_SILU_MUL: tl.constexpr,
+ ):
+     # matrix multiplication
+     if UPGRADE:
+@@ -185,8 +187,12 @@ def mm_kernel(
+         else:
+             acc += tl.dot(a, b, out_dtype=acc_dtype, input_precision=input_precision)
+ 
+-    acc = acc.to(C.dtype.element_ty)
++    if EPILOGUE_SILU or EPILOGUE_SILU_MUL:
++        acc = acc.to(tl.float32)
++    if EPILOGUE_SILU:
++        acc = acc / (1 + tl.exp(-acc))
+     # rematerialize rm and rn to save registers
++    C_base = C
+     if UPGRADE_C_OFFS:
+         rm = (pid_m * BLOCK_M + tl.arange(0, BLOCK_M)).to(tl.int64)
+         rn = (pid_n * BLOCK_N + tl.arange(0, BLOCK_N)).to(tl.int64)
+@@ -195,12 +201,23 @@ def mm_kernel(
+         rm = pid_m * BLOCK_M + tl.arange(0, BLOCK_M)
+         rn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N)
+         C = C + (rm[:, None] * stride_cm + rn[None, :] * stride_cn)
++    if EPILOGUE_SILU_MUL:
++        left = acc[:, : BLOCK_N // 2]
++        right = acc[:, BLOCK_N // 2 :]
++        acc = left / (1 + tl.exp(-left)) * right
++        rn = pid_n * BLOCK_N + tl.arange(0, BLOCK_N // 2)
++        C_out = C_base + (rm[:, None] * stride_cm + rn[None, :] * stride_cn)
++    else:
++        C_out = C
++    acc = acc.to(C.dtype.element_ty)
+     mask = (rm < M)[:, None] & (rn < N)[None, :]
++    if EPILOGUE_SILU_MUL:
++        mask = mask & (rn < N // 2)[None, :]
+     # handles write-back with reduction-splitting
+     if SPLIT_K == 1:
+-        tl.store(C, acc, mask=mask)
++        tl.store(C_out, acc, mask=mask)
+     else:
+-        tl.atomic_add(C, acc, mask=mask)
++        tl.atomic_add(C_out, acc, mask=mask)
+ 
+ 
+ def _launch_mm(a, b, c, M, N, K):
+@@ -233,6 +250,8 @@ def _launch_mm(a, b, c, M, N, K):
+             fp8_fast_accum=True,
+             GROUP_M=8,
+             AB_DTYPE=ab_dtype_tl,
++            EPILOGUE_SILU=False,
++            EPILOGUE_SILU_MUL=False,
+         )
+     return c
+ 
+@@ -268,7 +287,7 @@ def _pinned_cfg(M, K, N):
+     return None
+ 
+ 
+-def _launch_pinned(a, b, c, M, N, K, cfg):
++def _launch_pinned(a, b, c, M, N, K, cfg, silu=False, silu_mul=False):
+     BM, BN, BK, SK, warps, stages = cfg
+     if SK > 1:
+         # SPLIT_K accumulates into C via tl.atomic_add
+@@ -300,6 +319,8 @@ def _launch_pinned(a, b, c, M, N, K, cfg):
+             SPLIT_K=SK,
+             num_warps=warps,
+             num_stages=stages,
++            EPILOGUE_SILU=silu,
++            EPILOGUE_SILU_MUL=silu_mul,
+         )
+     return c
+ 
+@@ -332,3 +353,32 @@ def mm_out(a, b, *, out):
+     M, K = a.shape
+     _, N = b.shape
+     return _launch_mm(a, b, out, M, N, K)
++
++
++def mm_silu(a, b):
++    if a.stride(0) > 1 and a.stride(1) > 1:
++        a = a.contiguous()
++    if b.stride(0) > 1 and b.stride(1) > 1:
++        b = b.contiguous()
++    assert a.shape[1] == b.shape[0], "incompatible dimensions"
++    M, K = a.shape
++    _, N = b.shape
++    cfg = _pinned_cfg(M, K, N)
++    assert cfg is not None and cfg[3] == 1, "mm_silu requires pinned SPLIT_K=1"
++    c = torch.empty((M, N), device=a.device, dtype=get_higher_dtype(a.dtype, b.dtype))
++    return _launch_pinned(a, b, c, M, N, K, cfg, silu=True)
++
++
++def mm_silu_mul(a, b):
++    if a.stride(0) > 1 and a.stride(1) > 1:
++        a = a.contiguous()
++    if b.stride(0) > 1 and b.stride(1) > 1:
++        b = b.contiguous()
++    assert a.shape[1] == b.shape[0], "incompatible dimensions"
++    M, K = a.shape
++    _, N = b.shape
++    assert N % 2 == 0, "mm_silu_mul requires an even output width"
++    cfg = _pinned_cfg(M, K, N)
++    assert cfg is not None and cfg[3] == 1, "mm_silu_mul requires pinned SPLIT_K=1"
++    c = torch.empty((M, N // 2), device=a.device, dtype=get_higher_dtype(a.dtype, b.dtype))
++    return _launch_pinned(a, b, c, M, N, K, cfg, silu_mul=True)
