@@ -26,6 +26,6 @@ A43 在单个 GEMM 累加器上使用 `tl.split`/切片，Iluvatar 后端实际�
 
 FlagGems 的 `mm_silu_mul` 使用上述双累加器内核，两个官方形状测试 **2 passed**。插件将 MiniCPM 的 MLP 在未量化、指定权重视图和官方 token 形状下路由到 `fl::mm_silu_mul` 自定义算子，其余场景回退原路径；`VLLM_FL_DISABLE_MLP_FUSION=1` 可一键恢复原路径，恢复 `GEMS_ROOT=/workspace/a31-gems` 和 `PLUGIN_ROOT=/workspace/audit-plugin` 可完整回滚。
 
-初版 `061753d` 错把补丁应用到 `LlamaMLP`，而实际模型使用独立的 `MiniCPMMLP`，因此旧 B1 未命中融合，属于无效诊断，不用于性能结论。`3e029ef` 改为补丁 `MiniCPMMLP`，增加首次命中日志，路由测试 **3 passed**。
+模型配置为 `LlamaForCausalLM`，实际走 `LlamaMLP`；仓库同时存在独立的 `MiniCPMMLP`。初版 `061753d` 未记录命中，旧 B1 不作为正式结果；`3e029ef` 只覆盖 `MiniCPMMLP`，也未命中当前模型，v2 同样标记无效。`a8349b5` 同时覆盖两个类并记录首次命中，路由测试 **3 passed**。只有看到首次命中日志的候选轮次才用于性能结论。
 
 修正后的官方 4k A1/B1/A2/B2 已启动：A 为 `/workspace/audit-plugin + /workspace/a31-gems`，B 为 `/workspace/a48-plugin + /workspace/a48-gems`。尚未产生端到端结果；达到 3% 且 TTFT 合格后才执行 MATH-500 和合入。
