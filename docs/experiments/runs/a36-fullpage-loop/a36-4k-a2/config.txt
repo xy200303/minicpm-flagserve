@@ -1,0 +1,3 @@
+exp_id=a36-4k-a2
+case=[[4096,1024,64,256]]
+gems_root=/workspace/a31-gems
