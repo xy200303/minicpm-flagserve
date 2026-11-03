@@ -11,8 +11,8 @@
 | 采样 | bf16 直读、温度折叠、免排序 top-p、Gumbel-Max 已采纳 | 当前占比较低，不优先 |
 | KV Cache / 布局 | 页对齐、静态 slab、dual-gather、混合步 decode 已采纳 | int8/fp16 无收益；不再重复 |
 | Norm / RoPE / elementwise | 走现有融合路径；A21 IR 融合因破坏 Inductor 融合而否决；A34 确认 BI 无 FlagGems IR 注册实现 | 停止 opaque custom op；仅研究原生可融合改动 |
-| Host / metadata 同步 | C500 GPU cumsum、BI builder 修复已采纳；A37 日志记录关闭官方仅 +0.17%，否决 | A32/A37 均证明 host 累计时间不等于关键路径，需图内证据 |
-| 配置与 JIT | A31 配置缓存、单表反射已采纳，4k +14.15% | 继续分析 `libentry.run` 的剩余 CPU 成本 |
+| Host / metadata 同步 | C500 GPU cumsum、BI builder 修复已采纳；A37 +0.17%、A45 +0.78%，均否决 | host 累计时间不等于关键路径；A47 连续 copy 专用内核进入官方验证 |
+| 配置与 JIT | A31 配置缓存、单表反射已采纳，4k +14.15%；A46 LibEntry 微基准 1.056× | A46 与 A47 捆绑做端到端归因，不单独外推 |
 | CUDA graph | 图安全 NSEG、device seq_lens、预分配 slab 已采纳 | A28/A29 无收益；只接受新图内证据 |
 | 调度 / 混合批 | prefill/decode 拆分、KV 容量分析、路径回退已覆盖 | 不改 serve 超参；投机调度不可用 |
 | 量化 / 投机采样 | W8、int8 KV、投机均实测否决 | 不重复，除非出现新的芯片特化证据 |
@@ -20,7 +20,7 @@
 
 ## 当前优先研究项
 
-1. A31 后 `libentry.run` 与 metadata/copy 的剩余关键路径，避免 A32 式无效优化；A45 正在做官方交错验证。
+1. A47 连续 copy 专用内核正在做官方交错验证；A45 已因 +0.78% 否决。
 2. 编译器原生融合与图内归因，只接受能解释完整模型收益的改动，不再以孤立微基准外推。
 3. A34/A43 已关闭当前 GEMM tile 与 epilogue 实现路线；A44 已确认 combine 收益上限不足。
 
