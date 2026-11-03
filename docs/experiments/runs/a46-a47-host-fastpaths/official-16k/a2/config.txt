@@ -1,0 +1,4 @@
+exp_id=a47-official-16k/a2
+case=[[16384,1024,64,128]]
+plugin_root=/workspace/audit-plugin
+gems_root=/workspace/a31-gems
