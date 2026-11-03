@@ -28,6 +28,10 @@ A31 的 16k host profile 中，`LibEntry.run`、key 构造和动态 copy 包装�
 
 ## 官方验证
 
-A47 单独首先进入官方 4k `[4096,1024,64,256]` A1/B1/A2/B2：A 为 `/workspace/audit-plugin + /workspace/a31-gems`，B 为 `/workspace/audit-plugin + /workspace/a47-gems`。启动参数不变，结果尚未产生。
+A47 的官方 4k `[4096,1024,64,256]` A1/B1/A2/B2 已完成：A 为 `/workspace/audit-plugin + /workspace/a31-gems`，B 为 `/workspace/audit-plugin + /workspace/a47-gems`，启动参数不变。
 
-A45 与 A46/A47 作用路径独立。若 A47 正向但不足 3%，再评估 `/workspace/a45-plugin + /workspace/a47-gems` 组合；不把各实验百分比直接相加作为预期成绩。若达到门槛，再保留 A46/A47 做必要消融并执行 MATH-500。
+- A1/A2：5211.79 / 5195.62 tok/s；B1/B2：5205.34 / 5202.58 tok/s。
+- 基线中位数：5203.71 tok/s、TTFT 4091.40ms；候选中位数：5203.96 tok/s、TTFT 4047.31ms。
+- 吞吐 **+0.0049%**，TTFT **−1.08%**。4k 无有效吞吐收益，不执行 MATH-500，不与 A45 叠加刷取组合数字。原始证据与自动汇总见 `official-4k/` 和 `official-4k-summary.json`。
+
+A31 的 16k profile 中 copy/host 占比更高，因此继续执行官方 16k `[16384,1024,64,128]` A1/B1/A2/B2，当前正在运行。只有任一场景达到 3% 吞吐门槛且 TTFT 合格，才执行 MATH-500 和必要消融。
