@@ -10,8 +10,8 @@
 
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
-| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `0207b7e1` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
-| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `9c06143c` | C500 采样/GEMM 算子、BI-V150 A20 paged decode attention 与测试 |
+| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `58bae94` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
+| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `3642366c` | C500 采样/GEMM 算子、BI-V150 A20 paged decode attention 与测试 |
 
 这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`xy200303/minicpm-flagserve` 的 `main` 只保存报告、实验台账与复现文档，不承担运行时代码。两个源码仓库均为对应上游项目的正式 fork，后续可直接向上游提交 PR。
 
@@ -40,7 +40,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。两平台均使用插件 `0207b7e1` 和 FlagGems `9c06143c`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。两平台均使用插件 `58bae94` 和 FlagGems `3642366c`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -63,8 +63,8 @@ git clone --single-branch --branch integration/flaggems \
 |---|---|---:|---:|---:|---:|
 | C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12399.31** | **2.44x** |
 | C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11046.19** | **1.57x** |
-| BI-V150 | 4k | 2028.01 | 1902.15 | **5209.06** | **2.57x** |
-| BI-V150 | 16k | 915.15 | 861.98 | **4513.91** | **4.93x** |
+| BI-V150 | 4k | 2028.01 | 1902.15 | **5237.32** | **2.58x** |
+| BI-V150 | 16k | 915.15 | 861.98 | **4556.53** | **4.98x** |
 
 原生栈复测均使用未修改的官方栈、官方命令和四轮去首均值：C500 测于
 2026-10-25，BI 测于 2026-10-10（32GB 官方实例）。BI 原生逐轮数据见
@@ -86,12 +86,18 @@ A31 配置缓存与单表反射进一步将 4k 中位数从 **4563.26** 提升�
 **5209.06 tok/s（+14.15%）**，TTFT 中位数从 4230.56 降至 4034.29ms（−4.64%）；
 16k 中位数为 **4513.91 tok/s**，与 A20 基线基本持平。A31 的 MATH-500 为 **98.1%**。
 
+A48 双累加器门控融合在两组同日交错 A/B 中继续取得小幅正收益：4k 中位数
+**5201.98 → 5237.32 tok/s（+0.679%）**，TTFT **4048.75 → 3945.93ms**；
+16k 中位数 **4524.55 → 4556.53 tok/s（+0.707%）**，TTFT
+**111534.41 → 110251.38ms**。A48 的 MATH-500 为 **98.1%**，105/105 成功、0 错误。
+原始数据见 `docs/experiments/runs/a48-dual-acc-silu-mul/`。
+
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
 C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 A20 为 96.19% 和 98.1%，
-A31 为 98.1%。均 ≥ 0.95。
+A31 与 A48 均为 98.1%。均 ≥ 0.95。
 
 **TTFT**：C500 4k **1719.18 ms**（官网基线 3199.435 ms）、16k **18141.47 ms**
-（官网基线 27197.135 ms）；BI-V150 A31 4k 为 **4034.29 ms**，16k 为 **111.82 s**
+（官网基线 27197.135 ms）；BI-V150 A48 4k 为 **3945.93 ms**，16k 为 **110.25 s**
 （官网基线分别为 11573.53ms 和 599262.03ms）。按官网基线判断，两平台各场景均满足
 `baseline +1%` 上限。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，
 不替代官网基线判断。
@@ -140,6 +146,12 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 - 官方 4k 中位数 **4563.26→5209.06 tok/s（+14.15%）**，16k 持平；MATH-500 **98.1%**。
 - 16k 的原版配置获取约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此端到端未显著提升。
 - 该优化只改变配置和 host 元数据访问，不改变算子选择、模型计算、采样参数或官方启动命令。
+
+### A48：双累加器 gate/up GEMM＋SiLU 门控融合
+
+- `FlagGems/src/flag_gems/runtime/backend/_iluvatar/fused/mm_silu_mul.py` 使用两个独立 FP32 累加器分别计算 gate/up，共享输入 A tile，直接输出 `gate*sigmoid(gate)*up`，避免中间激活的额外读写。
+- 插件 `impl/mm_silu_mul.py` 同时覆盖实际命中的 `LlamaMLP` 与仓库独立的 `MiniCPMMLP`，只在未量化、指定权重和 token 形状下启用，其余场景回退原路径；`VLLM_FL_DISABLE_MLP_FUSION=1` 可关闭。
+- 官方形状测试 2 passed、插件路由测试 3 passed。4k/16k 两组中位数分别提升 **0.679%/0.707%**，TTFT 均改善；MATH-500 **98.1%**。
 
 ### 其它
 
