@@ -1,14 +1,43 @@
 {
   "case": "[[16384,1024,64,128]]",
-  "baseline_runs": ["a1"],
-  "candidate_runs": ["b1"],
-  "baseline_total_tok_s": 4522.60,
-  "candidate_total_tok_s": 4552.70,
-  "throughput_change_pct": 0.66548,
-  "baseline_mean_ttft_ms": 111592.39,
-  "candidate_mean_ttft_ms": 110351.20,
-  "ttft_change_pct": -1.11239,
+  "baseline": [
+    {
+      "run": "a1",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a48-dual-acc-silu-mul\\official-16k\\a1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4523.83,
+      "mean_ttft_ms": 111553.8
+    },
+    {
+      "run": "a2",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a48-dual-acc-silu-mul\\official-16k\\a2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4525.26,
+      "mean_ttft_ms": 111515.01
+    }
+  ],
+  "candidate": [
+    {
+      "run": "b1",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a48-dual-acc-silu-mul\\official-16k\\b1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4552.7,
+      "mean_ttft_ms": 110351.2
+    },
+    {
+      "run": "b2",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a48-dual-acc-silu-mul\\official-16k\\b2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4560.36,
+      "mean_ttft_ms": 110151.55
+    }
+  ],
+  "baseline_median_total_tok_s": 4524.545,
+  "candidate_median_total_tok_s": 4556.53,
+  "throughput_change_pct": 0.7069219114850256,
+  "baseline_median_ttft_ms": 111534.405,
+  "candidate_median_ttft_ms": 110251.375,
+  "ttft_limit_ms": 112649.74905,
   "throughput_at_least_3pct": false,
-  "decision": "reject; no A2/B2 or MATH-500 because both official scenarios show less than 1% gain",
-  "note": "Single complete A/B pair for candidate rejection only, not acceptance evidence requiring two pairs and medians."
+  "ttft_within_baseline_plus_1pct": true
 }
