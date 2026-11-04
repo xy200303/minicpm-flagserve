@@ -1,0 +1,130 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_____ test_flagtree_policy_uses_cost_model_by_default_for_adapted_operator _____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x7d549a914620>
+
+    @requires_flagtree_flagtune
+    def test_flagtree_policy_uses_cost_model_by_default_for_adapted_operator(monkeypatch):
+        """Use the model-backed proposer by default for an adapted operator."""
+    
+        class FakeVariantInfo:
+            """Convert one synthetic feature/config schema for proposer testing."""
+    
+            param_names = ["BLOCK"]
+    
+            @staticmethod
+            def normalize_inputs(_nargs):
+                """Return the stable shape consumed by the fake proposer."""
+                return {"M": 16, "N": 16, "K": 16}
+    
+            @staticmethod
+            def to_config(config_dict):
+                """Convert a proposed dictionary into a Triton Config."""
+                return triton.Config({"BLOCK": int(config_dict["BLOCK"])})
+    
+        class FakeTuner:
+            """Provide routing metadata and normalized arguments to the policy."""
+    
+            _flagtune_expand_op_name = "mm_general_tma"
+            _flagtune_op_name = "mm"
+            _flagtune_op_id = "flaggems/mm"
+            _flagtune_variant = "general_tma"
+            _flagtune_pre_hook = None
+            _flagtune_dtype_resolver = staticmethod(
+                lambda _arguments: (
+                    "bfloat16",
+                    "bfloat16",
+                    "bfloat16",
+                )
+            )
+            arg_names = ["M", "N", "K"]
+            nargs = {"M": 16, "N": 16, "K": 16}
+    
+        proposer_called = False
+    
+        def fake_proposer(_bench, _shape, _initial, _meta):
+            """Record invocation and return one lower-latency synthetic config."""
+            nonlocal proposer_called
+            proposer_called = True
+            return [{"BLOCK": 1}]
+    
+        monkeypatch.delenv("USE_FLAGTUNE", raising=False)
+        monkeypatch.delenv("USE_FLAGTUNE_COST_MODEL", raising=False)
+        monkeypatch.delenv("FLAGTUNE_INCLUDE", raising=False)
+        monkeypatch.setattr(flagtune_runtime_mod, "_include_ops", None)
+        monkeypatch.setattr(libentry_mod, "_flagtune_available", lambda: (True, None))
+        observed_identity = {}
+    
+        def fake_ensure(identity):
+            observed_identity["value"] = identity
+            return fake_proposer, FakeVariantInfo()
+    
+        monkeypatch.setattr(libentry_mod, "_ensure_flagtune_proposer", fake_ensure)
+    
+>       best_config, timings = LibTuner.get("flagtune").policy(
+            FakeTuner(),
+            lambda cfg: [cfg.kwargs["BLOCK"]],
+            [triton.Config({"BLOCK": 8})],
+            (),
+            {},
+        )
+
+tests/test_libentry.py:941: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/flag_gems/utils/libentry.py:747: in policy
+    return policy_impl(self, fn, configs, args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+src/flag_gems/utils/libentry.py:1311: in flagtune_policy
+    gpu = discover_gpu_metadata()
+          ^^^^^^^^^^^^^^^^^^^^^^^
+/usr/local/lib/python3.12/site-packages/triton/flagtune/contract/identity.py:227: in discover_gpu_metadata
+    descriptor = probe_flagtune_device()
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+device_index = None
+
+    def probe_flagtune_device(device_index: int | None = None) -> DeviceDescriptor:
+        """Return strict metadata for one device on the active Triton target.
+    
+        Args:
+            device_index: Optional process-visible logical ordinal.  When omitted,
+                the active Triton device interface supplies its current device.
+    
+        Raises:
+            UnsupportedFlagTuneDeviceError: If no adapter is registered for the
+                active Triton backend.
+            DeviceProbeError: If a supported backend cannot provide a product name,
+                native architecture, or logical device index.
+        """
+        try:
+            active = _active_driver()
+            target = active.get_current_target()
+        except Exception as exc:
+            raise DeviceProbeError(f"cannot query the active Triton target: {exc}") from exc
+    
+        backend = str(getattr(target, "backend", "")).strip().lower()
+        driver_module = type(active).__module__
+        descriptor = _DRIVER_OVERRIDES.get(driver_module, _BACKENDS.get(backend))
+        if descriptor is None:
+            supported = ", ".join(registered_device_backends())
+            shown = backend or "<unknown>"
+>           raise UnsupportedFlagTuneDeviceError(f"FlagTune does not support Triton backend {shown!r}; "
+                                                 f"registered backends: {supported}")
+E           triton.flagtune.runtime.device.UnsupportedFlagTuneDeviceError: FlagTune does not support Triton backend 'corex'; registered backends: cuda, hip, maca, musa
+
+/usr/local/lib/python3.12/site-packages/triton/flagtune/runtime/device.py:180: UnsupportedFlagTuneDeviceError
+=============================== warnings summary ===============================
+src/flag_gems/utils/libentry.py:738
+  /workspace/a48-gems/src/flag_gems/utils/libentry.py:738: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+    super().__init__(*args, **kwargs)
+
+src/flag_gems/utils/libentry.py:421
+  /workspace/a48-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_libentry.py::test_flagtree_policy_uses_cost_model_by_default_for_adapted_operator
+1 failed, 2 warnings in 0.49s
