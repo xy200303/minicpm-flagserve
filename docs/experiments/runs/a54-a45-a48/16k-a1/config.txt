@@ -1,0 +1,4 @@
+exp_id=a54-official-16k-a1
+case=[[16384,1024,64,128]]
+plugin_root=/workspace/a48-plugin
+gems_root=/workspace/a48-gems
