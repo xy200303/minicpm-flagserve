@@ -778,3 +778,8 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 当前集成 FlagGems `3642366c` 上 cherry-pick A46/A47，组合提交 `51b097c2`。相关测试 **123 passed、1 skipped**；FlagTune/corex 错误与 signal 场景退出均在 A48 基线同样复现，不归因于候选。
 - 官方 16k A1/B1 为 **4555.13→4533.34 tok/s（−0.478%）**，TTFT 110319.91→110439.95ms。B1 返回码 0、四轮齐全，旧栈正收益未在 A48 组合中复现，不补第二组、不执行 MATH-500、不合入。2026-11-06 恢复实例后核实其已在关机前完成，证据见 `runs/a55-a46-a47-a48/`。
 
+### A56（2026-11-06，关闭）：Inductor 原生融合图审计
+
+- 审计当前 A48 真实编译产物：RoPE 已归入 `triton_poi_fused_1`，residual+RMSNorm 已由 `triton_red_fused_fused_add_rms_norm_1` 融合，A48 前置 RMSNorm/转置与门控节点也已覆盖。
+- 剩余 copy 已由 A47/A55 验证无组合收益。没有新的原生融合候选，不修改代码、不执行 benchmark，不再新增 opaque custom op。图证据见 `runs/a56-inductor-native-fusion/`。
+

@@ -1,0 +1,56 @@
+FILE /workspace/a48-compile-cache-v2/torch_compile_cache/torch_aot_compile/7a51652d906b8f2b40c1383c44ed1e7ec5bcf3edb04e587893a264ad56603d1c/inductor_cache/fs/cfspqdan4bwnacqab2sh5taqamx65llideiuotyitcs3jqyvhva2.py
+FILE /workspace/a48-compile-cache-v2/torch_compile_cache/torch_aot_compile/7a51652d906b8f2b40c1383c44ed1e7ec5bcf3edb04e587893a264ad56603d1c/inductor_cache/mh/cmhmnh65ifn7apfjzqtll5eygjvsxbwqilfhphg5wpvktronqbe6.py
+18: # Topologically Sorted Source Nodes: [long, embedding, rms_norm_default], Original ATen: [aten._to_copy, aten.embedding, vllm_ir.rms_norm]
+40: triton_red_fused__to_copy_embedding_rms_norm_0 = async_compile.triton('triton_red_fused__to_copy_embedding_rms_norm_0', '''
+112: triton_poi_fused_1 = async_compile.triton('triton_poi_fused_1', '''
+334: # Topologically Sorted Source Nodes: [long, embedding, rms_norm_default], Original ATen: [aten._to_copy, aten.embedding, vllm_ir.rms_norm]
+356: triton_red_fused__to_copy_embedding_rms_norm_0 = async_compile.triton('triton_red_fused__to_copy_embedding_rms_norm_0', '''
+428: triton_poi_fused_1 = async_compile.triton('triton_poi_fused_1', '''
+605:             # Topologically Sorted Source Nodes: [long, embedding, rms_norm_default], Original ATen: [aten._to_copy, aten.embedding, vllm_ir.rms_norm]
+612:             # Topologically Sorted Source Nodes: [rms_norm_default, linear], Original ATen: [vllm_ir.rms_norm, aten.linear]
+613:             extern_kernels.mm(buf2, reinterpret_tensor(arg4_1, (2048, 2560), (1, 2048), 0), out=buf3)
+617:             # Topologically Sorted Source Nodes: [split, index_select, chunk, view, chunk_1, view_1, chunk_2, unsqueeze_2, mul_4, unsqueeze_3, mul_5, sub_1, mul_6, mul_7, add_1, cat_2, unsqueeze, mul, unsqueeze_1, mul_1, sub, mul_2, mul_3, add, cat], Original ATen: [aten.split_with_sizes, aten.index_select, aten.split, aten.view, aten.unsqueeze, aten.mul, aten.sub, aten.add, aten.cat]
+FILE /workspace/a48-compile-cache-v2/torch_compile_cache/torch_aot_compile/7a51652d906b8f2b40c1383c44ed1e7ec5bcf3edb04e587893a264ad56603d1c/inductor_cache/na/cna7hcpw2bvw7r3fn6ci4mbhs5ugval2t6dbgkmdtxcpgz6dik5m.py
+FILE /workspace/a48-compile-cache-v2/torch_compile_cache/torch_aot_compile/7a51652d906b8f2b40c1383c44ed1e7ec5bcf3edb04e587893a264ad56603d1c/inductor_cache/j3/cj3yyrya32qm3oljrynxz5vphff5bui2ylg7walgelppammymvih.py
+18: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+39: #   %mm_silu_mul : Tensor "bf16[s72, 6144][6144, 1]cuda:0"[num_users=1] = call_function[target=torch.ops.fl.mm_silu_mul.default](args = (%mul_tensor_3, %permute_1), kwargs = {})
+41: triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0 = async_compile.triton('triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0', '''
+110: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
+136: triton_red_fused_fused_add_rms_norm_1 = async_compile.triton('triton_red_fused_fused_add_rms_norm_1', '''
+219: triton_poi_fused_2 = async_compile.triton('triton_poi_fused_2', '''
+449: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+470: #   %mm_silu_mul : Tensor "bf16[s72, 6144][6144, 1]cuda:0"[num_users=1] = call_function[target=torch.ops.fl.mm_silu_mul.default](args = (%mul_tensor_3, %permute_1), kwargs = {})
+472: triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0 = async_compile.triton('triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0', '''
+541: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
+567: triton_red_fused_fused_add_rms_norm_1 = async_compile.triton('triton_red_fused_fused_add_rms_norm_1', '''
+650: triton_poi_fused_2 = async_compile.triton('triton_poi_fused_2', '''
+826:             # Topologically Sorted Source Nodes: [view, linear], Original ATen: [aten.view, aten.linear]
+827:             extern_kernels.mm(reinterpret_tensor(arg0_1, (s72, 2048), (2048, 1), 0), reinterpret_tensor(arg2_1, (2048, 2048), (1, 2048), 0), out=buf0)
+831:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+835:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+836:             buf3 = torch.ops.fl.mm_silu_mul.default(buf2, reinterpret_tensor(arg5_1, (2048, 12288), (1, 2048), 0))
+842:             # Topologically Sorted Source Nodes: [linear_1], Original ATen: [aten.linear]
+843:             extern_kernels.mm(buf4, reinterpret_tensor(arg6_1, (6144, 2048), (1, 6144), 0), out=buf5)
+848:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
+856:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1, linear_2], Original ATen: [vllm_ir.fused_add_rms_norm, aten.linear]
+857:             extern_kernels.mm(buf8, reinterpret_tensor(arg8_1, (2048, 2560), (1, 2048), 0), out=buf9)
+861:             # Topologically Sorted Source Nodes: [split, index_select, chunk, view_1, chunk_1, view_2, chunk_2, unsqueeze_2, mul_4, unsqueeze_3, mul_5, sub_1, mul_6, mul_7, add_1, cat_2, unsqueeze, mul, unsqueeze_1, mul_1, sub, mul_2, mul_3, add, cat], Original ATen: [aten.split_with_sizes, aten.index_select, aten.split, aten.view, aten.unsqueeze, aten.mul, aten.sub, aten.add, aten.cat]
+FILE /workspace/a48-compile-cache-v2/torch_compile_cache/torch_aot_compile/7a51652d906b8f2b40c1383c44ed1e7ec5bcf3edb04e587893a264ad56603d1c/inductor_cache/jf/cjfs7kui3ptm54rfsy4sukabixypu35wtothvqfjnnlphqi3ipt6.py
+18: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+39: #   %mm_silu_mul : Tensor "bf16[s72, 6144][6144, 1]cuda:0"[num_users=1] = call_function[target=torch.ops.fl.mm_silu_mul.default](args = (%mul_tensor_3, %permute_1), kwargs = {})
+41: triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0 = async_compile.triton('triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0', '''
+110: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
+135: triton_red_fused_fused_add_rms_norm_1 = async_compile.triton('triton_red_fused_fused_add_rms_norm_1', '''
+275: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+296: #   %mm_silu_mul : Tensor "bf16[s72, 6144][6144, 1]cuda:0"[num_users=1] = call_function[target=torch.ops.fl.mm_silu_mul.default](args = (%mul_tensor_3, %permute_1), kwargs = {})
+298: triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0 = async_compile.triton('triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0', '''
+367: # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
+392: triton_red_fused_fused_add_rms_norm_1 = async_compile.triton('triton_red_fused_fused_add_rms_norm_1', '''
+490:             # Topologically Sorted Source Nodes: [view, linear], Original ATen: [aten.view, aten.linear]
+491:             extern_kernels.mm(reinterpret_tensor(arg0_1, (s72, 2048), (2048, 1), 0), reinterpret_tensor(arg2_1, (2048, 2048), (1, 2048), 0), out=buf0)
+495:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+499:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, t, mm_silu_mul], Original ATen: [vllm_ir.fused_add_rms_norm, aten.t, fl.mm_silu_mul]
+500:             buf3 = torch.ops.fl.mm_silu_mul.default(buf2, reinterpret_tensor(arg5_1, (2048, 12288), (1, 2048), 0))
+505:             # Topologically Sorted Source Nodes: [linear_1], Original ATen: [aten.linear]
+506:             extern_kernels.mm(buf4, reinterpret_tensor(arg6_1, (6144, 2048), (1, 6144), 0), out=buf5)
+510:             # Topologically Sorted Source Nodes: [fused_add_rms_norm_maybe_inplace, fused_add_rms_norm_maybe_inplace_1], Original ATen: [vllm_ir.fused_add_rms_norm]
