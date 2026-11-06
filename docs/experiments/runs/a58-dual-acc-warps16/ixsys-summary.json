@@ -1,0 +1,328 @@
+{
+  "trace_bounds": [
+    5123401910776929,
+    5123521910776929
+  ],
+  "raw_remote_file": "/workspace/experiments/runs/a58-current-ixsys/serve.ixsys",
+  "raw_archive_remote_file": "/workspace/a58-current-ixsys.tar.gz",
+  "raw_archive_sha256": "3dd52c433c437bc0edd06e1d7b00e6aac3465f171d88c2cf11c6c79c95a7f193",
+  "kernels": [
+    {
+      "name": "_mm_silu_mul_kernel",
+      "calls": 11004,
+      "total_ms": 15351.227734,
+      "mean_us": 1395.0588635041802,
+      "max_us": 1480.176
+    },
+    {
+      "name": "mm_kernel",
+      "calls": 33012,
+      "total_ms": 14030.771536,
+      "mean_us": 425.0203421786017,
+      "max_us": 750.196
+    },
+    {
+      "name": "void cuinfer::impl::kernel::compute_flash_attn<256u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "calls": 15372,
+      "total_ms": 6734.748282,
+      "mean_us": 438.1178950039032,
+      "max_us": 863.334
+    },
+    {
+      "name": "_segment_kernel_paged",
+      "calls": 10920,
+      "total_ms": 5111.437588,
+      "mean_us": 468.0803652014652,
+      "max_us": 672.384
+    },
+    {
+      "name": "_copy_kernel_kernel_rank_3",
+      "calls": 21714,
+      "total_ms": 2941.077945,
+      "mean_us": 135.44616123238464,
+      "max_us": 261.492
+    },
+    {
+      "name": "linear_kernel",
+      "calls": 1276,
+      "total_ms": 1429.851178,
+      "mean_us": 1120.5730235109718,
+      "max_us": 1165.007
+    },
+    {
+      "name": "triton_red_fused_fused_add_rms_norm_1",
+      "calls": 11004,
+      "total_ms": 912.251493,
+      "mean_us": 82.90180779716466,
+      "max_us": 89.657
+    },
+    {
+      "name": "triton_poi_fused_2",
+      "calls": 10742,
+      "total_ms": 875.243627,
+      "mean_us": 81.47864708620368,
+      "max_us": 84.965
+    },
+    {
+      "name": "triton_red_fused_fused_add_rms_norm_mm_silu_mul_t_0",
+      "calls": 11004,
+      "total_ms": 565.868021,
+      "mean_us": 51.4238477826245,
+      "max_us": 57.361
+    },
+    {
+      "name": "_masked_sample_partial",
+      "calls": 1276,
+      "total_ms": 439.140456,
+      "mean_us": 344.1539623824452,
+      "max_us": 366.665
+    },
+    {
+      "name": "_combine_kernel",
+      "calls": 10920,
+      "total_ms": 341.165629,
+      "mean_us": 31.24227371794872,
+      "max_us": 41.165
+    },
+    {
+      "name": "reshape_and_cache_kernel_flash",
+      "calls": 11004,
+      "total_ms": 325.536302,
+      "mean_us": 29.58345165394402,
+      "max_us": 34.115
+    },
+    {
+      "name": "_hist_zoom",
+      "calls": 1276,
+      "total_ms": 324.395727,
+      "mean_us": 254.22862617554858,
+      "max_us": 310.611
+    },
+    {
+      "name": "_dual_gather_kernel",
+      "calls": 16254,
+      "total_ms": 169.994359,
+      "mean_us": 10.45861689430294,
+      "max_us": 22.738
+    },
+    {
+      "name": "index_select_kernel",
+      "calls": 11180,
+      "total_ms": 117.232273,
+      "mean_us": 10.485892039355992,
+      "max_us": 32.85
+    },
+    {
+      "name": "void cuinfer::impl::kernel::compute_flash_attn<128u, 128u, 16u, 128u, 128u, 128u, 1u, true, false, true, false, (cuinferFlashAttnAlibiMode_t)-1, false, 0u, false, 0u, __ix_bfloat16>(cuinfer::impl::FlashAttenFp16APIParams)",
+      "calls": 882,
+      "total_ms": 100.796271,
+      "mean_us": 114.28148639455783,
+      "max_us": 139.65
+    },
+    {
+      "name": "_index_copy_jit_function",
+      "calls": 10920,
+      "total_ms": 60.236916,
+      "mean_us": 5.5162010989010986,
+      "max_us": 9.276
+    },
+    {
+      "name": "_row_stats_partial",
+      "calls": 1276,
+      "total_ms": 54.563706,
+      "mean_us": 42.76152507836991,
+      "max_us": 47.376
+    },
+    {
+      "name": "triton_poi_fused_1",
+      "calls": 262,
+      "total_ms": 21.424149,
+      "mean_us": 81.77156106870228,
+      "max_us": 83.165
+    },
+    {
+      "name": "_copy_kernel_kernel_rank_1",
+      "calls": 3705,
+      "total_ms": 14.903244,
+      "mean_us": 4.022468016194332,
+      "max_us": 6.661
+    },
+    {
+      "name": "_index_linearized_jit_function",
+      "calls": 2677,
+      "total_ms": 13.609576,
+      "mean_us": 5.083890922674636,
+      "max_us": 7.907
+    },
+    {
+      "name": "_hist_walk",
+      "calls": 1276,
+      "total_ms": 13.576513,
+      "mean_us": 10.639900470219436,
+      "max_us": 12.173
+    },
+    {
+      "name": "add_func_kernel_rank_1",
+      "calls": 2554,
+      "total_ms": 10.948344,
+      "mean_us": 4.2867439310884885,
+      "max_us": 7.434
+    },
+    {
+      "name": "triton_red_fused__to_copy_embedding_rms_norm_0",
+      "calls": 262,
+      "total_ms": 10.327909,
+      "mean_us": 39.4195,
+      "max_us": 45.0
+    },
+    {
+      "name": "_copy_kernel_kernel_rank_2",
+      "calls": 517,
+      "total_ms": 10.172221,
+      "mean_us": 19.67547582205029,
+      "max_us": 43.011
+    },
+    {
+      "name": "fill_scalar_func_kernel_rank_1",
+      "calls": 2562,
+      "total_ms": 9.886846,
+      "mean_us": 3.859034348165496,
+      "max_us": 8.076
+    },
+    {
+      "name": "_compute_slot_mapping_kernel",
+      "calls": 1277,
+      "total_ms": 9.507907,
+      "mean_us": 7.445502740798747,
+      "max_us": 10.2
+    },
+    {
+      "name": "_to_copy_func_kernel_rank_1",
+      "calls": 1664,
+      "total_ms": 7.328563,
+      "mean_us": 4.4041844951923075,
+      "max_us": 6.6
+    },
+    {
+      "name": "_sample_reduce",
+      "calls": 1276,
+      "total_ms": 6.638504,
+      "mean_us": 5.20258934169279,
+      "max_us": 7.434
+    },
+    {
+      "name": "_row_stats_reduce",
+      "calls": 1276,
+      "total_ms": 6.471571,
+      "mean_us": 5.071764106583072,
+      "max_us": 6.473
+    }
+  ],
+  "api": [
+    {
+      "name": "cudaEventSynchronize",
+      "calls": 2554,
+      "total_ms": 26079.290644,
+      "mean_us": 10211.155303054033,
+      "max_us": 30701.383
+    },
+    {
+      "name": "cuLaunchKernel",
+      "calls": 197584,
+      "total_ms": 1080.940161,
+      "mean_us": 5.470787923111183,
+      "max_us": 2174.76
+    },
+    {
+      "name": "cudaGetDevice",
+      "calls": 1791770,
+      "total_ms": 313.031599,
+      "mean_us": 0.1747052350469089,
+      "max_us": 16.99
+    },
+    {
+      "name": "cuModuleGetFunction",
+      "calls": 181,
+      "total_ms": 293.220976,
+      "mean_us": 1620.0053922651934,
+      "max_us": 63779.261
+    },
+    {
+      "name": "cuPointerGetAttribute",
+      "calls": 767528,
+      "total_ms": 279.168074,
+      "mean_us": 0.36372363483807757,
+      "max_us": 10.075
+    },
+    {
+      "name": "cudaStreamSynchronize",
+      "calls": 524,
+      "total_ms": 263.262487,
+      "mean_us": 502.4093263358779,
+      "max_us": 25618.827
+    },
+    {
+      "name": "cudaLaunchKernel",
+      "calls": 16254,
+      "total_ms": 124.346274,
+      "mean_us": 7.650195275009229,
+      "max_us": 41.667
+    },
+    {
+      "name": "cudaMemcpyAsync",
+      "calls": 12376,
+      "total_ms": 76.960054,
+      "mean_us": 6.2184917582417585,
+      "max_us": 126.081
+    },
+    {
+      "name": "cuDevicePrimaryCtxGetState",
+      "calls": 545724,
+      "total_ms": 73.02484,
+      "mean_us": 0.13381276982503976,
+      "max_us": 8.682
+    },
+    {
+      "name": "cudaGraphLaunch",
+      "calls": 1016,
+      "total_ms": 40.04741,
+      "mean_us": 39.41674212598425,
+      "max_us": 183.143
+    },
+    {
+      "name": "cuCtxGetCurrent",
+      "calls": 197765,
+      "total_ms": 28.206455,
+      "mean_us": 0.14262612191237073,
+      "max_us": 7.268
+    },
+    {
+      "name": "cuModuleLoadData",
+      "calls": 183,
+      "total_ms": 25.308122,
+      "mean_us": 138.29574863387978,
+      "max_us": 6587.85
+    },
+    {
+      "name": "cudaStreamWaitEvent",
+      "calls": 1278,
+      "total_ms": 18.37566,
+      "mean_us": 14.37845070422535,
+      "max_us": 139.216
+    },
+    {
+      "name": "cudaSetDevice",
+      "calls": 11266,
+      "total_ms": 14.053293,
+      "mean_us": 1.247407509320078,
+      "max_us": 9.459
+    },
+    {
+      "name": "cudaEventRecord",
+      "calls": 5358,
+      "total_ms": 11.136633,
+      "mean_us": 2.078505599104143,
+      "max_us": 13.827
+    }
+  ]
+}

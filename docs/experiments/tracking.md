@@ -788,3 +788,8 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 当前 A48 host profile 中 `logging.debug` 累计 11.861s、LogRecord 构造 6.284s。候选 `eea51ec7` 将根 logger 默认设为 INFO，`FLAGGEMS_LOG_LEVEL=DEBUG` 可恢复；相关测试 **122 passed、1 skipped**。
 - 官方 4k A1/A2 为 5241.33/5246.42，B1/B2 为 5213.34/5249.30 tok/s；中位数 **5243.88→5231.32（−0.2394%）**，TTFT 3908.15→3920.33ms。host 函数调用减少未转化为端到端正收益，不合入、不继续 16k 或 MATH-500。证据见 `runs/a57-logging-default/`。
 
+### A58（2026-11-06，否决）：A48 decode 双累加器内核 warps 调优
+
+- ixsys 显示 `_mm_silu_mul_kernel` 累计 15.351s，为最大单项设备热点。扩展扫描后 prefill 保持原配置；decode `warps=16` 五次复测约快 3.64%，提交 `bc1d847e`，官方形状测试 2 passed。
+- 官方 4k A1/A2 为 5250.67/5240.77，B1/B2 为 5227.04/5260.88 tok/s；中位数 **5245.72→5243.96（−0.0336%）**，整体持平，无可复现正收益。不合入、不继续 16k 或 MATH-500。原始扫描、四轮日志、ixsys 汇总和远端 trace SHA256 见 `runs/a58-dual-acc-warps16/`。
+
