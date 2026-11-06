@@ -8,4 +8,8 @@ FlagGems 分支 `exp/a55-a46-a47-a48-host-fusion`，最终提交 `51b097c2`，�
 
 相关测试为 **123 passed、1 skipped、3 deselected**，见 `gems-tests.log`。完整套件中另有一个 FlagTune/corex 不支持错误和后段 signal 场景退出；相同命令在当前 A48 基线也复现，见 `baseline-flagtune-test.log`、`baseline-full-tests.log`，不归因于 A55。
 
-先执行一组官方 16k A/B 筛查；只有组合收益可复现才补第二组、4k 和 MATH-500。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存。
+## 官方 16k 结果
+
+A1 为 **4555.13 tok/s、110319.91ms TTFT**，B1 为 **4533.34 tok/s、110439.95ms TTFT**。B1 返回码为 0、四轮完整，后三轮为 4535.83/4533.85/4530.33 tok/s；吞吐变化 **−0.478%**，TTFT 变化 **+0.109%**。旧栈正收益未在当前 A48 组合中复现，因此不补第二组、不执行 4k 或 MATH-500、不合入。原始工件见 `16k-a1/16k-b1` 及对应 tar 包。
+
+说明：关机时曾暂时将 B1 视为未完成；2026-11-06 恢复实例后已核对完整日志和返回码，确认其在关机前完成。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存。
