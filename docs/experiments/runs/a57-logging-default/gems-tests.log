@@ -1,0 +1,15 @@
+........................................................................ [ 58%]
+..s................................................                      [100%]
+=============================== warnings summary ===============================
+src/flag_gems/utils/libentry.py:738
+  /workspace/a57-gems/src/flag_gems/utils/libentry.py:738: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+    super().__init__(*args, **kwargs)
+
+src/flag_gems/utils/libentry.py:421
+tests/test_libentry.py::test_hash_generation
+tests/test_libentry.py::test_hash_changes_when_dependency_modified
+  /workspace/a57-gems/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+    resolved_benchmark = resolve_benchmarker(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+122 passed, 1 skipped, 3 deselected, 4 warnings in 3.76s

@@ -1,0 +1,18 @@
+exp_id=a57-current-deep-profile
+date=2026-11-06T15:59:29+08:00
+case=[[4096,1024,64,256]]
+plugin_root=/workspace/a48-plugin
+plugin_commit=4ea4a6e34c71368bc33db883660dbb68ae5d9eec
+plugin_branch=exp/a48-mlp-fusion
+plugin_diff=
+gems_root=/workspace/a48-gems
+gems_commit=f9085b6dc4b950e53bbfdd9b9f2e0863abdf3266
+gems_branch=exp/a48-dual-acc-silu-mul
+gems_diff=
+ixsys=0 delay=300 limit=120
+profile_only=1 bench_timeout=240
+uname=Linux e35151b7b5d0 5.4.0-148-generic #165-Ubuntu SMP Tue Apr 18 08:53:12 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+LD_LIBRARY_PATH=/usr/local/corex/lib64:/usr/local/openmpi/lib:/usr/local/lib:/usr/local/lib:/usr/local/openmpi/lib:
+PYTHONPATH=/usr/local/lib/python3.12/site-packages
+VLLM_PLUGINS=fl
+PYTHONPATH=/workspace/a48-plugin:/workspace/a48-gems/src:/usr/local/lib/python3.12/site-packages
