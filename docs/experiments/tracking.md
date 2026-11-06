@@ -783,3 +783,8 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 - 审计当前 A48 真实编译产物：RoPE 已归入 `triton_poi_fused_1`，residual+RMSNorm 已由 `triton_red_fused_fused_add_rms_norm_1` 融合，A48 前置 RMSNorm/转置与门控节点也已覆盖。
 - 剩余 copy 已由 A47/A55 验证无组合收益。没有新的原生融合候选，不修改代码、不执行 benchmark，不再新增 opaque custom op。图证据见 `runs/a56-inductor-native-fusion/`。
 
+### A57（2026-11-06，否决）：FlagGems 默认日志级别优化
+
+- 当前 A48 host profile 中 `logging.debug` 累计 11.861s、LogRecord 构造 6.284s。候选 `eea51ec7` 将根 logger 默认设为 INFO，`FLAGGEMS_LOG_LEVEL=DEBUG` 可恢复；相关测试 **122 passed、1 skipped**。
+- 官方 4k A1/A2 为 5241.33/5246.42，B1/B2 为 5213.34/5249.30 tok/s；中位数 **5243.88→5231.32（−0.2394%）**，TTFT 3908.15→3920.33ms。host 函数调用减少未转化为端到端正收益，不合入、不继续 16k 或 MATH-500。证据见 `runs/a57-logging-default/`。
+
