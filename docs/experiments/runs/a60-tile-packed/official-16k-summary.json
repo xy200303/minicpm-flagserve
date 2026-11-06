@@ -1,0 +1,43 @@
+{
+  "case": "[[16384,1024,64,128]]",
+  "baseline": [
+    {
+      "run": "16k-a1",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a60-tile-packed\\16k-a1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4550.28,
+      "mean_ttft_ms": 110411.79
+    },
+    {
+      "run": "16k-a2",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a60-tile-packed\\16k-a2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4552.5,
+      "mean_ttft_ms": 110349.36
+    }
+  ],
+  "candidate": [
+    {
+      "run": "16k-b1",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a60-tile-packed\\16k-b1\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4616.48,
+      "mean_ttft_ms": 118894.12
+    },
+    {
+      "run": "16k-b2",
+      "summary": "tmp\\main-checkout\\docs\\experiments\\runs\\a60-tile-packed\\16k-b2\\summary.csv",
+      "case": "[[16384,1024,64,128]]",
+      "total_tok_s": 4624.01,
+      "mean_ttft_ms": 118664.57
+    }
+  ],
+  "baseline_median_total_tok_s": 4551.389999999999,
+  "candidate_median_total_tok_s": 4620.245,
+  "throughput_change_pct": 1.5128345406568267,
+  "baseline_median_ttft_ms": 110380.575,
+  "candidate_median_ttft_ms": 118779.345,
+  "ttft_limit_ms": 111484.38075,
+  "throughput_at_least_3pct": false,
+  "ttft_within_baseline_plus_1pct": false
+}
