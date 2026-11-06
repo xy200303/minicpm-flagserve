@@ -290,9 +290,9 @@ def fig_a7_config():
 # 8/9. Constraint panels (half column, horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
-    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2"]
-    vals = [98.1, 98.1, 96.19, 98.1]
-    colors = [HERO, HERO] + [P["violet"]] * 2
+    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI-A60 最终交付"]
+    vals = [98.1, 98.1, 96.19, 98.1, 96.19]
+    colors = [HERO, HERO] + [P["violet"]] * 3
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(vals))[::-1]
     ax.barh(y, vals, height=0.40, color=colors,
@@ -300,21 +300,21 @@ def fig_accuracy():
     for yi, v in zip(y, vals):
         ax.text(v + 0.11, yi, f"{v:.2f}", va="center", ha="left", fontsize=7)
     ax.axvline(95.0, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
-    ax.text(95.25, 3.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
+    ax.text(95.25, 4.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
             va="center", bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=7)
     ax.tick_params(axis="y", length=0)
     ax.set_xlim(93, 99.6)
-    ax.set_ylim(-0.6, 3.9)
+    ax.set_ylim(-0.6, 4.9)
     ax.set_xlabel("MATH-500 Level 3 准确率（%）", fontsize=7.5)
     ax.xaxis.set_major_locator(MaxNLocator(4))
     save(fig, "fig8_accuracy")
 
 
 def fig_ttft():
-    labels = ["C500 官方基线", "C500 本提交", "BI-A7（关闭 BI-A20）", "BI-A20"]
-    secs = [27.197, 17.962, 136.946, 111.652]
+    labels = ["C500 官方基线", "C500 本提交", "BI-A48 对照", "BI-A60 最终交付"]
+    secs = [27.197, 17.962, 110.381, 118.779]
     colors = [BASE, HERO, BASE, HERO]
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(secs))[::-1]
@@ -508,10 +508,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12527.62 / 5089.645 - 1) * 100, (5139.415 / 2028.01 - 1) * 100],
-        [(11143.77 / 7029.675 - 1) * 100, (4513.91 / 915.15 - 1) * 100],
-        [(98.10 / 95.0 - 1) * 100, (98.10 / 95.0 - 1) * 100],
-        [(1 - 17.96176 / 27.197135) * 100, (1 - 111.81766 / 599.262) * 100],
+        [(12527.62 / 5089.645 - 1) * 100, (5314.145 / 2028.01 - 1) * 100],
+        [(11143.77 / 7029.675 - 1) * 100, (4620.245 / 915.15 - 1) * 100],
+        [(98.10 / 95.0 - 1) * 100, (96.19 / 95.0 - 1) * 100],
+        [(1 - 17.96176 / 27.197135) * 100, (1 - 118.779345 / 599.26203) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
@@ -738,8 +738,8 @@ def fig_bi_three_way():
     labels = ["4k 场景", "16k 场景"]
     official = np.array([2028.01, 915.15])
     native = np.array([1902.15, 861.98])
-    current_low = np.array([5114.00, 4512.11])
-    current_high = np.array([5164.83, 4515.71])
+    current_low = np.array([5296.55, 4616.48])
+    current_high = np.array([5331.74, 4624.01])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [official, native, current_low],
@@ -764,6 +764,8 @@ def fig_bi_three_way():
     save(fig, "fig20_bi_three_way")
 
 
+fig_accuracy()
+fig_ttft()
 fig_op_hotpath()
 fig_compliance()
 fig_incremental_gains()
