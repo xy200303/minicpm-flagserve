@@ -25,4 +25,19 @@
 
 ## 官方验证
 
-使用独立 `VLLM_CACHE_ROOT=/workspace/a60-compile-cache`，官方 serve 参数、模型和 benchmark 不变。4k A1/B1/A2/B2 正在执行，结果待完整对照后填写。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存；合入前还需 16k 对照和 MATH-500 Level 3 ≥0.95。
+使用独立 `VLLM_CACHE_ROOT=/workspace/a60-compile-cache`，官方 serve 参数、模型和 benchmark 不变。
+
+### 官方 4k 结果
+
+| 运行 | 总吞吐（tok/s） | 平均 TTFT（ms） |
+|---|---:|---:|
+| A1 | 5237.00 | 3926.43 |
+| A2 | 5239.56 | 3905.50 |
+| B1 | 5296.55 | 3848.30 |
+| B2 | 5331.74 | 3822.73 |
+| A 中位数 | 5238.28 | 3915.97 |
+| B 中位数 | 5314.15 | 3835.52 |
+
+吞吐变化 **+1.448%**，TTFT 变化 **−2.06%**，两组均复现正收益。自动汇总见 `official-4k-summary.json`，原始工件位于 `a1/a2/b1/b2`。
+
+继续执行 16k A1/B1/A2/B2 和 MATH-500，随后决定是否合入。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存。
