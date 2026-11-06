@@ -1,0 +1,4 @@
+exp_id=a60-official-4k-a1
+case=[[4096,1024,64,256]]
+plugin_root=/workspace/a48-plugin
+gems_root=/workspace/a48-gems
