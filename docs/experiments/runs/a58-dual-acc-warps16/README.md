@@ -23,4 +23,4 @@ FlagGems 分支 `exp/a58-dual-acc-warps16`，提交 `bc1d847e`，仅将 M≤128 
 
 吞吐变化 **−0.0336%**，整体持平，没有可复现的正收益。A58 不合入、不继续 16k 或 MATH-500，交付保持 warps=8。自动汇总见 `official-4k-summary.json`。
 
-设备汇总见 `ixsys-summary.json`。原始 trace 保留在实例 `/workspace/experiments/runs/a58-current-ixsys/serve.ixsys`，压缩包 `/workspace/a58-current-ixsys.tar.gz` 的 SHA256 为 `3dd52c433c437bc0edd06e1d7b00e6aac3465f171d88c2cf11c6c79c95a7f193`。大文件下载多次超时，损坏的本地片段未纳入提交。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存。
+设备汇总见 `ixsys-summary.json`。原始 trace 已完整下载到本目录 `ixsys.tar.gz`，SHA256 为 `3dd52c433c437bc0edd06e1d7b00e6aac3465f171d88c2cf11c6c79c95a7f193`，与服务器 `/workspace/a58-current-ixsys.tar.gz` 一致，`tar -tzf` 校验通过。回滚为恢复 FlagGems `3642366c` 与当前 A48 缓存。
