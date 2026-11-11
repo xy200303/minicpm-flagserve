@@ -290,8 +290,8 @@ def fig_a7_config():
 # 8/9. Constraint panels (half column, horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
-    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI-A60 最终交付"]
-    vals = [98.1, 98.1, 96.19, 98.1, 96.19]
+    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI 镜像基线最终交付"]
+    vals = [98.1, 98.1, 96.19, 98.1, 98.1]
     colors = [HERO, HERO] + [P["violet"]] * 3
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(vals))[::-1]
@@ -313,8 +313,8 @@ def fig_accuracy():
 
 
 def fig_ttft():
-    labels = ["C500 官方基线", "C500 本提交", "BI-A48 对照", "BI-A60 最终交付"]
-    secs = [27.197, 17.962, 110.381, 118.779]
+    labels = ["C500 官方基线", "C500 本提交", "BI-A48 对照", "BI 镜像基线最终交付"]
+    secs = [27.197, 17.962, 110.381, 118.761]
     colors = [BASE, HERO, BASE, HERO]
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(secs))[::-1]
@@ -508,10 +508,10 @@ def fig_compliance():
     rows = ["4k 吞吐", "16k 吞吐", "MATH-500 精度", "16k TTFT 改善"]
     cols = ["沐曦 C500", "天数 BI-V150"]
     margin = np.array([
-        [(12527.62 / 5089.645 - 1) * 100, (5314.145 / 2028.01 - 1) * 100],
-        [(11143.77 / 7029.675 - 1) * 100, (4620.245 / 915.15 - 1) * 100],
-        [(98.10 / 95.0 - 1) * 100, (96.19 / 95.0 - 1) * 100],
-        [(1 - 17.96176 / 27.197135) * 100, (1 - 118.779345 / 599.26203) * 100],
+        [(12527.62 / 5089.645 - 1) * 100, (5292.46 / 2028.01 - 1) * 100],
+        [(11143.77 / 7029.675 - 1) * 100, (4618.41 / 915.15 - 1) * 100],
+        [(98.10 / 95.0 - 1) * 100, (98.10 / 95.0 - 1) * 100],
+        [(1 - 17.96176 / 27.197135) * 100, (1 - 118.76115 / 599.26203) * 100],
     ])
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     im = ax.imshow(np.log10(margin), cmap=CMAP_SEQ, aspect="auto",
@@ -738,12 +738,12 @@ def fig_bi_three_way():
     labels = ["4k 场景", "16k 场景"]
     official = np.array([2028.01, 915.15])
     native = np.array([1902.15, 861.98])
-    current_low = np.array([5296.55, 4616.48])
-    current_high = np.array([5331.74, 4624.01])
+    current_low = np.array([5131.78, 4618.41])
+    current_high = np.array([5292.99, 4618.41])
     fig, ax = plt.subplots(figsize=(15.4 * CM, 6.4 * CM))
     cont = na.make_grouped_bar(
         ax, labels, [official, native, current_low],
-        ["官网基线", "原生栈复测（2026-10-10）", "当前交付（两次复测）"],
+        ["官网基线", "原生栈复测（2026-10-10）", "最终交付（4k 范围）"],
         ylabel="总吞吐（tokens/s）", colors=[BASE, HERO_SOFT, HERO], bar_width=0.65,
         edgecolor=BASE_EDGE, linewidth=0.4)
     for series, vals, color in zip(cont[:2], [official, native], [MID, HERO_SOFT]):
@@ -756,8 +756,12 @@ def fig_bi_three_way():
                     yerr=[[0], [current_high[i] - current_low[i]]],
                     fmt="none", ecolor=HERO, elinewidth=1.2, capsize=4,
                     capthick=1.2, zorder=4)
-        label_above(ax, cx, current_high[i] + 110,
-                    f"{current_low[i]:,.0f}–{current_high[i]:,.0f}", HERO, 6.8)
+        value_label = (
+            f"{current_low[i]:,.0f}–{current_high[i]:,.0f}"
+            if current_high[i] > current_low[i]
+            else f"{current_low[i]:,.0f}"
+        )
+        label_above(ax, cx, current_high[i] + 110, value_label, HERO, 6.8)
     ax.legend(loc="upper left", frameon=False).set_zorder(5)
     ax.set_ylim(0, 5500)
     ax.yaxis.set_major_locator(MaxNLocator(5))

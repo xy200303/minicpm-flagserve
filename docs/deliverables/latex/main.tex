@@ -112,7 +112,7 @@
 \large ——面向天数 BI-V150 与沐曦曦云 C500 的算子、内核与调度优化}
 \author{赛道：FlagOS 开放计算全球大赛（赛季二）赛道二\\[2pt]
 队伍：XLANG2026　队员：邓乾（GitHub：xy200303，单人组队）}
-\date{2026 年 11 月 7 日}
+\date{2026 年 11 月 11 日}
 
 \setlength{\emergencystretch}{2em}
 \begin{document}
@@ -121,11 +121,11 @@
 
 \begin{abstract}
 \setlength{\parindent}{2em}
-本报告面向国产芯片上的大模型推理吞吐优化任务，在官方指定的 FlagOS 栈（vllm-plugin-FL 分支 flagos-2026-s2、FlagGems 标签 v5.3.5）上，对 MiniCPM5-2B 在天数 BI-V150 与沐曦曦云 C500 两款芯片开展算子、内核与调度优化，保持 \texttt{vllm serve} 启动参数、模型与精度要求不变。
+本报告面向国产芯片上的大模型推理吞吐优化任务，在官方指定的 FlagOS 栈上，对 MiniCPM5-2B 在天数 BI-V150 与沐曦曦云 C500 两款芯片开展算子、内核与调度优化，保持 \texttt{vllm serve} 启动参数、模型与精度要求不变。天数最终版本已从公开 tag 历史重放到官方镜像实际基线 FlagGems \texttt{4df52d91}，避免以公开 tag 的后续提交替代镜像基线。
 
-在当前交付版本的同机复测中，C500 的 4k 与 16k 总吞吐分别为 12527.62 和 11143.77 tok/s，达到官网基线的 2.46 倍和 1.59 倍。天数 BI-V150 的官方开发与评测环境均为 32GB，最终 A60 交付的 4k 中位数为 5314.15 tok/s，TTFT 为 3835.52 ms，16k 中位数为 4620.25 tok/s，TTFT 为 118779.35 ms，分别达到官网基线的 2.62 倍和 5.05 倍。同日交错对照显示，BI-A60 在 A48 基础上使 4k 与 16k 吞吐分别提高 1.448\% 和 1.513\%；其 MATH-500 Level 3 为 96.19\%（105/105 成功、0 错误），高于 95\% 的赛题要求。
+在当前交付版本的同机复测中，C500 的 4k 与 16k 总吞吐分别为 12527.62 和 11143.77 tok/s，达到官网基线的 2.46 倍和 1.59 倍。天数 BI-V150 的官方开发与评测环境均为 32GB；镜像对齐后，4k 三次独立四轮测量中位数为 5292.46 tok/s，TTFT 为 3908.25 ms，16k 四轮汇总为 4618.41 tok/s，TTFT 为 118761.15 ms，分别达到官网基线的 2.61 倍和 5.05 倍。最终 MATH-500 Level 3 为 98.1\%（105/105 成功、0 错误），高于 95\% 的赛题要求。
 
-主要优化包括：按输入形状选择 GEMM 与 attention 的实现或执行配置；用 1024-bin 质量直方图实现免排序 top-p 采样；针对 PV 矩阵乘的布局转换开销重写 paged decode attention；通过双累加器 GEMM 融合 SiLU 门控；通过进程内配置缓存和单表反射减少 host 配置查询与数据库反射开销；减少 prefill 阶段的隐式同步与冗余内核发射。
+主要优化包括：按输入形状选择 GEMM 与 attention 的实现或执行配置；用 1024-bin 质量直方图实现免排序 top-p 采样；针对 PV 矩阵乘的布局转换开销重写 paged decode attention；通过双累加器 GEMM 融合 SiLU 门控，并将 gate/up 权重预打包为 K 维连续的 tile；通过进程内配置缓存和单表反射减少 host 配置查询与数据库反射开销；减少 prefill 阶段的隐式同步与冗余内核发射。
 
 \noindent\textbf{关键词：}国产芯片；推理吞吐；算子融合；paged decode attention；shape-aware dispatch；vLLM
 \end{abstract}
@@ -176,7 +176,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 组件 & 仓库 / 分支 & 固定提交与内容 \\
 \midrule
 插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{58bae94}；双平台路由、BI-A20 框架 hook 与 BI-A48 MLP 接入 \\
-算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{e9390c54}；采样、GEMM、paged decode attention、配置缓存、A60 与测试 \\
+算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{85b4ba82}；基于镜像 \texttt{4df52d91}，含采样、GEMM、paged decode attention、配置缓存、A60 与测试 \\
 文档 & \path{xy200303/minicpm-flagserve}\newline \texttt{main} & 报告、实验台账、复现脚本；不承担运行时代码 \\
 \bottomrule
 \end{tabularx}
@@ -193,8 +193,8 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \midrule
 沐曦 C500 & 4k & 5089.645 & 4210.20 & 12527.62 & 2.46$\times$\\
 沐曦 C500 & 16k & 7029.675 & 5867.59 & 11143.77 & 1.59$\times$\\
-天数 BI-V150 & 4k & 2028.01 & 1902.15 & 5314.15 & 2.62$\times$\\
-天数 BI-V150 & 16k & 915.15 & 861.98 & 4620.25 & 5.05$\times$\\
+天数 BI-V150 & 4k & 2028.01 & 1902.15 & 5292.46 & 2.61$\times$\\
+天数 BI-V150 & 16k & 915.15 & 861.98 & 4618.41 & 5.05$\times$\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -203,10 +203,12 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 注意，total tok/s 同时计入输入与输出，且 4k／16k 的请求数分别为 256／128，不能用该指标直接比较单请求速度。以 BI-V150 第一组为例，两场景总 token 分别为 1.31M／2.23M，因此 16k 总吞吐可接近 4k；同组 decode 输出吞吐则由 817.58 降至 265.89 tok/s，TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
-C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.98$\times$ 和 1.90$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI-A60 为 96.19\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1623.73 ms（官网基线 3199.435 ms），16k TTFT 为 17961.76 ms（官网基线 27197.135 ms）；BI-A60 的 4k TTFT 中位数为 3835.52 ms，16k TTFT 中位数为 118.78 s（官网基线分别为 11573.53 ms 和 599262.03 ms）。按官网基线判断，两平台各场景均满足 TTFT 不超过 baseline +1\% 的约束。
+C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相对其分别为 2.98$\times$ 和 1.90$\times$。C500 两次 MATH-500 Level 3 均为 98.1\%，BI 最终栈为 98.1\%，每次均 105/105 请求成功。C500 的 4k TTFT 为 1623.73 ms（官网基线 3199.435 ms），16k TTFT 为 17961.76 ms（官网基线 27197.135 ms）；BI 的 4k TTFT 为 3908.25 ms，16k TTFT 为 118.76 s（官网基线分别为 11573.53 ms 和 599262.03 ms）。按官网基线判断，两平台各场景均满足 TTFT 不超过 baseline +1\% 的约束。
+
+BI 的首次 4k 测量为 5131.78 tok/s，之后两次稳定态四轮测量为 5292.46 和 5292.99 tok/s；表 3 采用三次独立测量的中位数并保留首测值，避免只展示高值。16k 只执行一次完整四轮测量，四轮汇总为 4618.41 tok/s。
 
 \subsection{性能与约束对照}
-图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +146.1\%／+58.5\%／+3.3\%／+34.0\%，BI-V150 为 +162.1\%／+404.9\%／+1.3\%／+80.2\%。
+图~\ref{fig:compliance} 汇总吞吐、精度和 TTFT 相对裕度。吞吐与 TTFT 取相对基线的改善百分比，精度取相对 0.95 门槛的提升幅度。C500 四项数值为 +146.1\%／+58.5\%／+3.3\%／+34.0\%，BI-V150 为 +161.0\%／+404.7\%／+3.3\%／+80.2\%。
 
 \begin{figure}[!htbp]
 \centering
@@ -238,7 +240,7 @@ C500 的本机原生基线为 4k 4210.20、16k 5867.59 tok/s，当前交付相�
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{fig20_bi_three_way.pdf}
-\caption{天数 BI-V150：官网基线、历史原生栈复测与当前交付对比；误差线保留两次交付复测范围，原生复测与交付复测不视为同日 A/B}
+\caption{天数 BI-V150：官网基线、历史原生栈复测与镜像对齐后的最终交付对比；误差线给出 4k 三次独立四轮测量的范围，16k 为单次四轮汇总}
 \end{figure}
 
 \subsection{实验环境}
@@ -259,14 +261,17 @@ PyTorch & 2.10.0+corex.4.5.0 & 2.8.0+metax3.7.0.7 \\
 vLLM & 0.24.0 & 0.24.0 \\
 Triton & 3.6.0 & 3.0.0+metax3.7.0.7 \\
 芯片软件栈 & IX-ML 4.4.0；驱动 4.5.0 & MACA 3.7.0.38；驱动 3.8.30 \\
+FlagTree & 0.6.2a3+iluvatar3.6 & 不适用 \\
 evalscope & 1.11.1 & 1.11.1 \\
-插件 / FlagGems & 58bae94 / e9390c54 & 58bae94 / e9390c54 \\
-最终复测日期 & 2026-11-07（A60） & 2026-10-25 至 2026-11-01 \\
+插件 / FlagGems & 58bae94 / 85b4ba82 & 58bae94 / 85b4ba82 \\
+最终复测日期 & 2026-11-11（镜像对齐） & 2026-10-25 至 2026-11-01 \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 C500 的 CPU 内存是本团队实例的实测复现条件，不是官网公布的评测规格；CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段。64GB CPU 内存实例上原生镜像也曾发生启动期 OOM，因此复现说明单独保留这一现象与内存建议。BI-V150 的 32GB 指 GPU 显存，不能与 CPU 内存混淆。
+
+天数最终分支从官方镜像的 FlagGems \texttt{4df52d91}（镜像内 \texttt{v5.3.5}）重放，而不是使用公开 tag 额外包含的 7 个提交。插件集成分支的祖先与镜像 \texttt{13eb9be} 一致，无需迁移。重放记录、冲突处理、测试与最终复测见 \path{docs/experiments/runs/image-baseline-align/}。
 
 \subsection{主要技术贡献}
 本提交的技术路线由以下五部分组成，详细实现和实验分别见第 4、5 章。
@@ -521,11 +526,11 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=99,lastline=113]{python}{\GemsCode/src/flag_gems/runtime/backend/_iluvatar/fused/mm_silu_mul.py}
 \end{reportcode}
 
-修正后的微基准仅用于候选筛选：decode 约快 10\%，prefill 约快 3.85\%。早期探针中的多余转置和局部 N 偏移写回错误均已排除，不采用其计时。最终实现通过官方形状与缓存测试（3 passed），并完成两组官方交错 A/B：
+修正后的微基准仅用于候选筛选：decode 约快 10\%，prefill 约快 3.85\%。早期探针中的多余转置和局部 N 偏移写回错误均已排除，不采用其计时。实现通过官方形状与缓存测试（3 passed）。在公开 tag 的 \texttt{a7620cc1} 基线上，两组官方交错 A/B 结果为：
 
 \begin{table}[!htbp]
 \centering\small
-\caption{BI-A60 官方性能与精度结果（两组中位数）}
+\caption{BI-A60 开发期官方结果（公开 tag 基线，两组中位数）}
 \begin{tabularx}{\linewidth}{@{}l r r r r@{}}
 \toprule
 场景 & A48（tok/s） & A60（tok/s） & 吞吐变化 & TTFT：A48 → A60（ms） \\
@@ -536,7 +541,9 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \end{tabularx}
 \end{table}
 
-A60 的 MATH-500 Level 3 为 \textbf{96.19\%}（0.9619，105/105 成功、0 错误），满足不低于 95\% 的要求。16k TTFT 相比 A48 对照增加 7.63\%，但 118.78s 仍远低于官网基线 599.26s 及其 +1\% 上限；这里同时保留吞吐收益和延迟差异，不把同日 A/B 的 TTFT 当作官网约束的判据。原始 CSV、日志、测试与精度报告见 \path{docs/experiments/runs/a60-tile-packed/}。
+该轮 MATH-500 Level 3 为 96.19\%，16k TTFT 相比 A48 对照增加 7.63\%，但仍远低于官网基线及其 +1\% 上限。这里同时保留吞吐收益和延迟差异，不把历史同日 A/B 的 TTFT 当作官网约束的唯一判据。
+
+官方镜像确认后，完整 A20+A31+A48+A60 栈已重放到 FlagGems \texttt{4df52d91}，最终集成分支为 \texttt{85b4ba82}。最终 4k 三次独立四轮测量为 5131.78／5292.46／5292.99 tok/s，中位数 \textbf{5292.46 tok/s}，TTFT 3908.25ms；16k 四轮汇总为 \textbf{4618.41 tok/s}，TTFT 118761.15ms。最终 MATH-500 Level 3 为 \textbf{98.1\%}，105/105 成功、0 错误。原始 CSV、日志、测试与精度报告见 \path{docs/experiments/runs/a60-tile-packed/} 和 \path{docs/experiments/runs/image-baseline-align/}。
 
 \section{跨平台结果与组合消融}
 \subsection{组合有效性与消融分析}
@@ -623,7 +630,7 @@ bit-exact & BI-A6 双 gather、BI-A7 发射配置 & BI-A6 与两次 \texttt{inde
 批量不变性 & 单条／两条／半批／全批／逆序全批，对照 fp32 & BI-V150 实测 9 passed \\
 采样等价 & greedy、top-p、Gumbel 与 TV 距离 & greedy 与 \texttt{torch.argmax} 完全一致；保留集 IoU $\geq 0.999$；TV 与参考实现同档 \\
 权重布局 & BI-A60 官方形状与缓存内容 & BI-V150 实测 3 passed；非法 tile 形状回退 A48 \\
-端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 两次均为 98.1\%；BI-A60 为 96.19\%，105/105 成功、0 错误 \\
+端到端精度 & evalscope MATH-500 Level 3（105 题） & C500 两次均为 98.1\%；BI 最终栈为 98.1\%，105/105 成功、0 错误 \\
 真实路径命中 & 混合步 decode 切片 used/skipped & 当前日志 used=132000、skipped=0，未见 decode fast-path 异常回退 \\
 启动验证 & 固定交付源码路径 + 独立 venv + 官方启动 & 当前 C500 交付版 293 秒启动，官方四轮 benchmark 与两次精度评测均完成 \\
 \bottomrule
@@ -641,11 +648,11 @@ bit-exact & BI-A6 双 gather、BI-A7 发射配置 & BI-A6 与两次 \texttt{inde
 \midrule
 \texttt{vllm serve} 参数与基线一致 & 两张卡均按官网原命令启动，未增删任何参数；C500 不额外添加 \texttt{--compilation-config}\\
 禁止 benchmark 脚本调优 & 未修改官方脚本；当前 C500 与历史 C500-opt 采用四轮去首后三轮均值，其他单次测量单独标明\\
-禁止直接 merge 上游分支 & 基线为 flagos-2026-s2 与 FlagGems v5.3.5，全部改动以补丁形式叠加\\
+禁止直接 merge 上游分支 & 基线为 flagos-2026-s2 与天数镜像 FlagGems \texttt{4df52d91}；我们的提交在该镜像基线上重放，不以公开 tag 的后续提交替代\\
 算子优化须有开发量 & 新增 Triton 内核（paged decode attention、采样链、dual-gather）与路由/同步改造，均可独立 A/B\\
 禁止改超参开启量化、投机采样 & 保持官方模型精度与生成配置，不启用量化或投机采样\\
-精度 $\geq 0.95$ & C500 两次均为 98.1\%；BI-A60 为 96.19\%，105/105 成功、0 错误\\
-TTFT 上限为官网 baseline +1\% & 两平台各场景均满足：BI-A60 4k 为 3.84s，低于官网 11.57s；16k 为 118.78s，低于官网 599.26s。A60 的 16k TTFT 较 A48 对照增加 7.63\%，同日 A/B 差异不替代官网基线判断\\
+精度 $\geq 0.95$ & C500 两次均为 98.1\%；BI 最终栈为 98.1\%，105/105 成功、0 错误\\
+TTFT 上限为官网 baseline +1\% & 两平台各场景均满足：BI 最终 4k 为 3.91s，低于官网 11.57s；16k 为 118.76s，低于官网 599.26s\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -712,12 +719,12 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 （3）启动耗时：C500 需执行 GEMM autotune 预热。当前交付复测启动为 293 秒，原生基线为 161 秒；预热时间随实例和缓存状态变化，不能用固定秒数估计。
 
-（4）测量波动：C500 当前交付 4k 后三轮吞吐极差为 0.80\%，16k 为 0.29\%。BI-V150 两组 BI-A20 的 4k 绝对值差异较大，因此两组均列出，不用单组高值代替整体结果；16k 两组基本一致。C500 同时保留官网与本机原生基线，避免跨实例参照混淆。
+（4）测量波动：C500 当前交付 4k 后三轮吞吐极差为 0.80\%，16k 为 0.29\%。BI 最终版本的三次 4k 独立四轮测量为 5131.78／5292.46／5292.99 tok/s，首测受设备冷态影响，报告采用中位数并保留全部三次结果；16k 单次四轮测量为 4618.41 tok/s，与旧实例基本一致。C500 同时保留官网与本机原生基线，避免跨实例参照混淆。
 
 \section{结论}
-本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整、paged decode attention 重写、配置/host 开销消除、门控融合和 K 连续权重预打包。当前交付的 C500 复测中，4k 与 16k 吞吐分别为官网基线的 2.46 倍和 1.59 倍，为本机原生基线的 2.98 倍和 1.90 倍。BI-V150 最终 A60 交付的 4k 中位数为 5314.15 tok/s，16k 为 4620.25 tok/s，分别为官网基线的 2.62 倍和 5.05 倍；A60 在 A48 上继续取得 1.448\% 和 1.513\% 的同日对照收益。C500 两次 MATH-500 均为 98.1\%，BI-A60 为 96.19\%，均满足赛题要求。
+本文在官方 FlagOS 栈上完成了 MiniCPM5-2B 的双平台推理优化。C500 的主要收益来自采样链融合、GEMM 路由和 prefill 同步消除；BI-V150 的主要收益来自 vendor attention 接入、发射配置调整、paged decode attention 重写、配置/host 开销消除、门控融合和 K 连续权重预打包。当前交付的 C500 复测中，4k 与 16k 吞吐分别为官网基线的 2.46 倍和 1.59 倍，为本机原生基线的 2.98 倍和 1.90 倍。BI 最终栈在官方镜像基线重放后，4k 三次独立四轮测量中位数为 5292.46 tok/s，16k 为 4618.41 tok/s，分别为官网基线的 2.61 倍和 5.05 倍。C500 两次 MATH-500 均为 98.1\%，BI 最终栈为 98.1\%，均满足赛题要求。
 
-当前交付复测的 C500 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均优于官网和本机原生基线；BI-A60 的 4k TTFT 中位数为 3835.52 ms，16k 为 118.78 s，均满足官网 TTFT 上限。A60 的 16k TTFT 相比 A48 对照增加 7.63\%，该差异已单独保留。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
+当前交付复测的 C500 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均优于官网和本机原生基线；BI 最终栈的 4k TTFT 为 3908.25 ms，16k 为 118.76 s，均满足官网 TTFT 上限。BI 的首次 4k 测量为 5131.78 tok/s，随后两次稳定在 5292 tok/s 以上，报告保留该波动。后续可继续研究 prefill 分块策略和编译器融合，并在更多国产芯片上检验这些实现的适用性。
 
 \begin{thebibliography}{9}
 \bibitem{gb7713} 中华人民共和国国家质量监督检验检疫总局, 中国国家标准化管理委员会. GB/T 7713.3-2014 科技报告编写规则[S]. 北京: 中国标准出版社, 2014.
@@ -731,7 +738,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 \appendix
 \section{代码与实验记录索引}
-代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 58bae94）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 e9390c54，含 BI-A60 K 连续 tile 预打包）。两者均为对应上游项目的正式 fork；历史开发线归档于 \texttt{archive/*}，官方基线保留于 \texttt{baseline/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
+代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 58bae94）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 85b4ba82，基于官方镜像 FlagGems \texttt{4df52d91}）。两者均为对应上游项目的正式 fork；公开 tag 旧集成分支持久化为 tag \texttt{archive/flaggems-public-tag}，其他历史开发线归档于 \texttt{archive/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
 
 \begin{table}[!htbp]
 \centering\small
@@ -778,13 +785,14 @@ BI-V150 精度 & 当前交付提交 & 同目录 \texttt{eval1-math500.json}、\t
 BI-V150 内核验证 & BI-A20 与 stock & 同目录 \texttt{micro.json}、\texttt{pytest-a20.log}、\texttt{manifest.txt}；测试脚本为 \path{docs/verification/bi_micro_audit.py} \\
 BI-A31 & BI-A20 与 BI-A31（cf11897a） & \path{docs/experiments/runs/a31-config-local-cache/}：\texttt{a31-official-evidence.tar.gz}、\texttt{a31-16k-evidence.tar.gz}、\texttt{a31-eval.tar.gz}、\texttt{host.prof} \\
 BI-A48 & 插件 58bae94；FlagGems 3642366c & \path{docs/experiments/runs/a48-dual-acc-silu-mul/}：\texttt{official-4k-v4/summary.json}、\texttt{official-16k/summary.json}、\texttt{eval/eval1-math500.json} 及各次原始 CSV／日志 \\
-BI-A60 & 实验 ffe47a67；集成 e9390c54 & \path{docs/experiments/runs/a60-tile-packed/}：\texttt{official-4k-summary.json}、\texttt{official-16k-summary.json}、\texttt{gems-tests-v5.log}、\texttt{eval/eval1-math500.json} 及各次原始 CSV／日志 \\
+BI-A60 & 实验 ffe47a67；公开 tag 集成 e9390c54 & \path{docs/experiments/runs/a60-tile-packed/}：\texttt{official-4k-summary.json}、\texttt{official-16k-summary.json}、\texttt{gems-tests-v5.log}、\texttt{eval/eval1-math500.json} 及各次原始 CSV／日志 \\
+BI 镜像对齐最终复测 & FlagGems 85b4ba82，基线 4df52d91；插件 58bae94 & \path{docs/experiments/runs/image-baseline-align/}：\texttt{bench-evidence.tar.gz}、\texttt{eval-evidence.tar.gz}、\texttt{tests.tar.gz}、\texttt{manifest.txt} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
 \subsection{官网基线来源}
-官网基线位于赛题页面“4.3 评审方案”的“天数基线”和“沐曦基线”图片中，访问日期为 2026-10-27：\url{https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn}。原图随报告源文件保存为 \texttt{official\_baseline\_biv150.png} 与 \texttt{official\_baseline\_c500.png}；图~\ref{fig:official-baselines} 原样展示，报告表 3 的官网基线数字由这两张表读取。
+官网基线位于赛题页面“4.3 评审方案”的“天数基线”和“沐曦基线”图片中，访问日期为 2026-11-11：\url{https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn}。原图随报告源文件保存为 \texttt{official\_baseline\_biv150.png} 与 \texttt{official\_baseline\_c500.png}；图~\ref{fig:official-baselines} 原样展示，报告表 3 的官网基线数字由这两张表读取。
 
 \begin{figure}[!htbp]
 \centering

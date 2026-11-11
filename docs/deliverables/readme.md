@@ -11,7 +11,7 @@
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
 | `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `58bae94` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
-| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `e9390c54` | C500 采样/GEMM 算子、BI-V150 A20 paged decode attention、A60 tile 预打包与测试 |
+| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `85b4ba82` | 基于官方镜像 `4df52d91`：C500 采样/GEMM 算子、BI-V150 A20 paged decode attention、A60 tile 预打包与测试 |
 
 这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`xy200303/minicpm-flagserve` 的 `main` 只保存报告、实验台账与复现文档，不承担运行时代码。两个源码仓库均为对应上游项目的正式 fork，后续可直接向上游提交 PR。
 
@@ -40,7 +40,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `58bae94` 和 FlagGems `e9390c54`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `58bae94` 和 FlagGems `85b4ba82`；天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -63,8 +63,8 @@ git clone --single-branch --branch integration/flaggems \
 |---|---|---:|---:|---:|---:|
 | C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12399.31** | **2.44x** |
 | C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11046.19** | **1.57x** |
-| BI-V150 | 4k | 2028.01 | 1902.15 | **5314.15** | **2.62x** |
-| BI-V150 | 16k | 915.15 | 861.98 | **4620.25** | **5.05x** |
+| BI-V150 | 4k | 2028.01 | 1902.15 | **5292.46** | **2.61x** |
+| BI-V150 | 16k | 915.15 | 861.98 | **4618.41** | **5.05x** |
 
 原生栈复测均使用未修改的官方栈、官方命令和四轮去首均值：C500 测于
 2026-10-25，BI 测于 2026-10-10（32GB 官方实例）。BI 原生逐轮数据见
@@ -92,14 +92,15 @@ A48 双累加器门控融合在两组同日交错 A/B 中继续取得小幅正�
 **111534.41 → 110251.38ms**。A48 的 MATH-500 为 **98.1%**，105/105 成功、0 错误。
 原始数据见 `docs/experiments/runs/a48-dual-acc-silu-mul/`。
 
-A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维连续，缓存仅构建一次并保留原权重引用。官方 4k 中位数 **5238.28 → 5314.15 tok/s（+1.448%）**，TTFT **3915.97 → 3835.52 ms（−2.06%）**；16k 中位数 **4551.39 → 4620.25 tok/s（+1.513%）**，TTFT **110380.58 → 118779.35 ms（+7.63%）**。16k TTFT 相比 A48 对照有所增加，但仍远低于官网基线及其 +1% 上限。A60 的 MATH-500 为 **96.19%**，105/105 成功、0 错误，已合入 FlagGems `e9390c54`。原始数据见 `docs/experiments/runs/a60-tile-packed/`。
+A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维连续，缓存仅构建一次并保留原权重引用。开发期在公开 tag 基线上的两组同日 A/B 为 4k **5238.28 → 5314.15 tok/s（+1.448%）**、16k **4551.39 → 4620.25 tok/s（+1.513%）**；该历史数据见 `docs/experiments/runs/a60-tile-packed/`。
+
+官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，最终 `integration/flaggems` 为 `85b4ba82`。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低是设备冷态，报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 A20 为 96.19% 和 98.1%，
-A31 与 A48 均为 98.1%，A60 为 96.19%。均 ≥ 0.95。
+C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 最终镜像对齐栈为 **98.1%**，105/105 成功、0 错误。均 ≥ 0.95。
 
 **TTFT**：C500 4k **1719.18 ms**（官网基线 3199.435 ms）、16k **18141.47 ms**
-（官网基线 27197.135 ms）；BI-V150 A60 4k 为 **3835.52 ms**，16k 为 **118.78 s**
+（官网基线 27197.135 ms）；BI-V150 最终栈 4k 为 **3908.25 ms**，16k 为 **118.76 s**
 （官网基线分别为 11573.53ms 和 599262.03ms）。按官网基线判断，两平台各场景均满足
 `baseline +1%` 上限。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，
 不替代官网基线判断。
@@ -159,7 +160,7 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 
 - 同一 `mm_silu_mul.py` 新增 `_tile_packed_silu_mul_kernel`，将 gate/up 分别打包为 `[K/BK, N/BN, BN, BK]` 的连续存储；逻辑点积保持 `[BK,BN]`，输出使用全局 N 偏移。
 - `_tile_packed_weights` 以权重地址、设备、类型、形状和步长为键，缓存仅构建一次，并保留原权重引用；不满足 K/N tile 整除条件时回退 A48 内核。
-- 官方形状与缓存测试 3 passed。4k/16k 中位数分别提升 **1.448%/1.513%**；4k TTFT 改善 2.06%，16k TTFT 相比 A48 对照增加 7.63%，但满足相对官网基线的约束；MATH-500 **96.19%**。
+- 官方形状与缓存测试 3 passed。开发期公开 tag 基线 A/B 为 **+1.448%/+1.513%**；镜像对齐后的最终栈 4k 中位数 **5292.46 tok/s**、16k **4618.41 tok/s**，MATH-500 **98.1%**。
 
 ### 其它
 
@@ -267,6 +268,9 @@ evalscope eval --model minicpm \
 | BI-V150 A31 4k/16k 与精度 | `docs/experiments/runs/a31-config-local-cache/` 下的 `a31-official-evidence.tar.gz`、`a31-16k-evidence.tar.gz`、`a31-eval.tar.gz`、`host.prof` |
 | BI-V150 A48 性能与精度 | `docs/experiments/runs/a48-dual-acc-silu-mul/` 下的官方汇总、逐轮 CSV／日志与 `eval/` |
 | BI-V150 A60 性能与精度 | `docs/experiments/runs/a60-tile-packed/` 下的 `official-{4k,16k}-summary.json`、逐轮原始工件、`gems-tests-v5.log` 与 `eval/` |
+| BI-V150 镜像对齐最终复测 | `docs/experiments/runs/image-baseline-align/` 下的 `bench-evidence.tar.gz`、`eval-evidence.tar.gz`、`tests.tar.gz` 与 `manifest.txt` |
 | 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
 
-官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-10-27）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。
+官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-11-11）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。
+
+天数最终 FlagGems 基线以镜像提交 `4df52d91` 为准，而不是公开 tag 另外包含的 7 个提交；FlagTree 保持镜像的 `0.6.2a3+iluvatar3.6`。

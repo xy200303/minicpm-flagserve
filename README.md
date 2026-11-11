@@ -13,6 +13,7 @@ FlagOS 开放计算全球大赛 S2 · 赛道二（MiniCPM5-2B 推理吞吐优化
 - 技术报告以 `docs/deliverables/latex/main.tex` 为准；旧 `report-draft.md` 已停用。
 - 代码与数据审计见 `docs/deliverables/audit-2026-10-25.md`。
 - BI-V150 官方开发与评测均为 **32GB**；不得再引用早期“64GB 评测机”推测。
+- 天数最终 FlagGems 以官方镜像提交 `4df52d91` 为基线，FlagTree 为 `0.6.2a3+iluvatar3.6`；最终复测见 `docs/experiments/runs/image-baseline-align/`。
 - 历史实验仅用于追溯。引用数据前必须核对代码版本、硬件规格、测量口径和原始日志，不得直接复制旧摘要。
 
 ## 仓库与分支布局

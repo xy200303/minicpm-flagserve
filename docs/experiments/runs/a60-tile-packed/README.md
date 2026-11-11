@@ -57,4 +57,4 @@
 
 MATH-500 Level 3 最终得分 **0.9619（96.19%，报告保留一位小数为 96.2%）**，105/105 请求成功、0 错误，满足 ≥0.95。原始报告见 `eval/eval1-math500.json`，完整评测包为 `eval.tar.gz`，SHA256 为 `c2291c13480dedb8ede668beb65d9f29585d4a0e7ec2f5296f2ac3a75e9587f4`。
 
-A60 已合入 FlagGems `integration/flaggems`，提交为 `e9390c54`；该分支与实验分支 `ffe47a67` 无代码差异。最终天数交付栈为 **A20+A31+A48+A60**，插件保持 `58bae94`。回滚为将 FlagGems 恢复到 `3642366c`，并恢复当前 A48 编译缓存；插件无需回滚。
+A60 先合入公开 tag 基线分支（`e9390c54`），随后为匹配官方镜像又整体重放到 `4df52d91`，最终提交为 `85b4ba82`。最终天数交付栈为 **A20+A31+A48+A60**，插件保持 `58bae94`。公开 tag 历史保留为 tag `archive/flaggems-public-tag`；镜像对齐后的最终复测见 `../image-baseline-align/`。回滚到对齐前版本可用该归档 tag。

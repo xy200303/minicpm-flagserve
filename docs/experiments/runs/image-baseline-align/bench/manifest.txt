@@ -1,0 +1,49 @@
+captured_at=2026-11-11T12:52:55+08:00
+hostname=8f8a906a307e
+--- uname ---
+Linux 8f8a906a307e 5.4.0-148-generic #165-Ubuntu SMP Tue Apr 18 08:53:12 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux
+--- cpu ---
+Model name:                      Intel(R) Xeon(R) Gold 6330 CPU @ 2.00GHz
+Thread(s) per core:              2
+Core(s) per socket:              28
+Socket(s):                       2
+NUMA node(s):                    2
+--- memory ---
+               total        used        free      shared  buff/cache   available
+Mem:           503Gi        37Gi       9.5Gi       161Mi       460Gi       466Gi
+Swap:          8.0Gi        95Mi       7.9Gi
+--- gpu ---
+Timestamp    Wed Nov 11 12:52:55 2026
++--------------------------------------------------------------------------------+
+|  IX-ML: 4.4.0            Driver Version: 4.5.0          CUDA Version: 10.2     |
+|----------------------------------+----------------------+----------------------|
+| GPU  Name                        | Bus-Id               | Clock-SM  Clock-Mem  |
+| Fan  Temp  Perf    Pwr:Usage/Cap |      Memory-Usage    | GPU-Util  Compute M. |
+|==================================+======================+======================|
+| 0    Iluvatar BI-V150            | 00000000:34:00.0     | 1500MHz   1600MHz    |
+| N/A  34C   P0       N/A / N/A    | 29086MiB / 32768MiB  | 0%        Default    |
++----------------------------------+----------------------+----------------------+
+
++--------------------------------------------------------------------------------+
+| Processes:                                                          GPU Memory |
+|  GPU        PID      Process name                                   Usage(MiB) |
+|================================================================================|
++--------------------------------------------------------------------------------+
+--- versions ---
+flag_gems 5.3.5
+vllm-plugin-fl 0.3.0rc0+g13eb9be69
+flagtree 0.6.2a3+iluvatar3.6
+torch 2.10.0+corex.4.5.0
+vllm 0.24.0+empty
+--- commits ---
+85b4ba8256723d8c38fff8c751295e47bb30abb9
+58bae9494a93d561353d0c793e294fc54a40ba73
+--- source paths ---
+/workspace/flag-image-align/src/flag_gems/utils/libentry.py:738: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/workspace/flag-image-align/src/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+/workspace/vllm-plugin-image-align/vllm_fl/__init__.py
+/workspace/flag-image-align/src/flag_gems/__init__.py
+--- env ---
+PYTHONPATH=/usr/local/lib/python3.12/site-packages
