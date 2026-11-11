@@ -25,7 +25,7 @@ git clone --single-branch --branch integration/flaggems \
 # 打包时保留两个目录下的 .git；只剔除本机 build、__pycache__ 和虚拟环境
 ```
 
-**当前交付复测（2026-10-25，C500 64GB / RAM 128GB）**：部署上表两个固定提交，显式设置 `PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src` 后按官方命令启动。交付版 293 秒启动，原生基线 161 秒启动；日志确认 `mcblas_mm`、采样融合与 lm_head nn 路由。两个版本均完成官方四轮 benchmark，交付版另完成两次 MATH-500 Level 3，均为 98.1%。
+**C500 实测版本（64GB GPU / 128GB RAM）**：4k／16k 性能采集于 2026-11-01，使用插件 `0207b7e1`、FlagGems `9c06143c`（含 A31）；两次 MATH-500 采集于 2026-10-25，使用插件 `0207b7e1`、FlagGems `aff68555`。启动耗时受 autotune 缓存影响，实测约 127–1129 秒，原生基线为 161 秒；日志确认 `mcblas_mm`、采样融合与 lm_head nn 路由。最终源码此后只增加 Iluvatar 专用 A48／A60 并规范化换行，C500 执行路径未变，但 C500 未在最终提交上重跑，表中 C500 数值不冒充最终源码的逐字节实测。
 
 ## 0.1 环境要求与启动耗时
 
@@ -40,7 +40,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `b5793cd4` 和 FlagGems `ef516137`；性能与精度在父提交 `58bae94`／`85b4ba82` 上测得，最终提交只规范化 CRLF。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `b5793cd4` 和 FlagGems `ef516137`。BI 性能与精度在父提交 `58bae94`／`85b4ba82` 上测得，最终提交只规范化 CRLF；C500 数据使用其专用实测提交，详见上文。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -48,8 +48,8 @@ git clone --single-branch --branch integration/flaggems \
 被杀时 GPU 显存仅 858 MiB）。128 GB 规格实例全程稳定。
 **这不是代码问题**，与负载、vllm 版本、我们的改动均无关。
 
-**启动耗时**：C500 首次启动需要执行 GEMM autotune 预热。当前交付复测启动为
-**293 秒**，原生基线为 **161 秒**；预热时间随实例和缓存状态变化。
+**启动耗时**：C500 首次启动需要执行 GEMM autotune 预热。实测记录约
+**127–1129 秒**，原生基线为 **161 秒**；预热时间随实例和缓存状态变化，不能用单值估计。
 **请耐心等待，不要误判为卡死**。如不需要预热可设 `VLLM_FL_MM_WARMUP=0`，
 但 4k 吞吐会下降约 6%、TTFT 变差。
 
@@ -57,17 +57,18 @@ git clone --single-branch --branch integration/flaggems \
 
 官方用例 `[input_len, output_len, concurrency, num_prompts]`，使用
 `vllm bench serve`，无计时埋点。当前 C500 复测与历史 opt 系列均采用 4 轮去首、
-后三轮均值；prefix cache 命中情况逐次检查，当前交付复测低于 1%。
+后三轮均值；prefix cache 命中情况逐次检查，各次最终复测低于 1%。
 
-| 平台 | 场景 | 官网基线 | 原生栈复测 | 当前交付 | 相对官网 |
+| 平台 | 场景 | 官网基线 | 原生栈复测 | 本提交实测 | 相对官网 |
 |---|---|---:|---:|---:|---:|
 | C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12527.62** | **2.46x** |
 | C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11143.77** | **1.59x** |
 | BI-V150 | 4k | 2028.01 | 1902.15 | **5292.46** | **2.61x** |
 | BI-V150 | 16k | 915.15 | 861.98 | **4618.41** | **5.05x** |
 
-原生栈复测均使用未修改的官方栈、官方命令和四轮去首均值：C500 测于
-2026-10-25，BI 测于 2026-10-10（32GB 官方实例）。BI 原生逐轮数据见
+原生栈复测均使用未修改的官方栈、官方命令和四轮去首均值：C500 原生基线测于
+2026-10-25，C500 性能实测采集于 2026-11-01；BI 原生基线测于 2026-10-10（32GB 官方实例）。
+上述倍数因此是跨日期参考，不替代官网基线和同日 A/B。BI 原生逐轮数据见
 `docs/baselines/iluvatar-biv150/a1-iluvatar-vendor-fa.md`。跨日期、跨实例数据
 不替代下文同日 A/B 对照。
 
@@ -76,8 +77,8 @@ git clone --single-branch --branch integration/flaggems \
 因此 16k 总吞吐可接近 4k；同组 decode 输出吞吐由 817.58 降至 265.89 tok/s，
 TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
-C500 的本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**，当前交付相对其
-分别为 **2.95x** 和 **1.88x**。BI-V150 的官方开发与评测环境均为 **32 GB**。
+C500 的本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**，C500 实测相对其
+分别为 **2.98x** 和 **1.90x**。BI-V150 的官方开发与评测环境均为 **32 GB**。
 两组 A20/A7 对照分别为：4k **3855.31 → 4087.91（+6.0%）**、
 **3840.80 → 4722.22（+22.9%）**；16k **3568.31 → 4520.19（+26.7%）**、
 **3570.61 → 4520.10（+26.6%）**。两组均列出，不用单组高值代替整体结果。
@@ -97,7 +98,7 @@ A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维�
 官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，测量提交为 `85b4ba82`；最终 `integration/flaggems` 为 `ef516137`，仅追加换行规范化。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低是设备冷态，报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 当前交付两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 最终镜像对齐栈为 **98.1%**，105/105 成功、0 错误。均 ≥ 0.95。
+C500 已完成的两次复测均为 **98.1%**（105/105 请求成功）；BI-V150 最终镜像对齐栈为 **98.1%**，105/105 成功、0 错误。均 ≥ 0.95。
 
 **TTFT**：C500 4k **1623.73 ms**（官网基线 3199.435 ms）、16k **17961.76 ms**
 （官网基线 27197.135 ms）；BI-V150 最终栈 4k 为 **3908.25 ms**，16k 为 **118.76 s**
@@ -253,16 +254,16 @@ evalscope eval --model minicpm \
 
 当前交付策略以本文第 2、3 节和实际代码为准。历史探索记录仅用于追溯，
 不作为后续开发的直接输入；引用前须核对代码版本、硬件规格、测量口径和原始日志。
-事实与代码审计见 `xy200303/minicpm-flagserve` 仓库的
-`docs/deliverables/audit-2026-10-25.md`。
+`docs/deliverables/audit-2026-10-25.md` 只是当时的事实审计，最终提交以本说明和
+`docs/experiments/runs/image-baseline-align/` 为准。
 
 最终复测原始证据均保存在该文档仓库，可用以下路径直接核查：
 
 | 结果 | 原始证据 |
 |---|---|
-| C500 当前交付性能 | `docs/experiments/runs/c500-final-audit/healthy-final-{raw,summary}.csv` 与同目录 serve／bench 日志 |
-| C500 本机原生基线 | 同目录 `healthy-baseline-{raw,summary}.csv` 与 serve／bench 日志 |
-| C500 两次精度与微基准 | 同目录 `healthy-eval1-math500.json`、`healthy-eval2-math500.json`、`micro-healthy.json` |
+| C500 实测性能 | `docs/experiments/runs/c500-next-optimization/c500-current-{4k,16k}-a1/summary.csv` 及各自 serve／bench 日志 |
+| C500 本机原生基线 | `docs/experiments/runs/c500-final-audit/healthy-baseline-{raw,summary}.csv` 与 serve／bench 日志 |
+| C500 两次精度与微基准 | `docs/experiments/runs/c500-final-audit/` 下的 `healthy-eval1-math500.json`、`healthy-eval2-math500.json`、`micro-healthy.json` |
 | BI-V150 两组 A7/A20 | `docs/experiments/runs/bi-final-audit/{1-a7,1-a20,2-a7,2-a20}/benchmark_results/` 及同级 serve／bench 日志 |
 | BI-V150 精度与内核验证 | 同目录 `eval1-math500.json`、`eval2-math500.json`、`micro.json`、`pytest-a20.log` |
 | BI-V150 A31 4k/16k 与精度 | `docs/experiments/runs/a31-config-local-cache/` 下的 `a31-official-evidence.tar.gz`、`a31-16k-evidence.tar.gz`、`a31-eval.tar.gz`、`host.prof` |

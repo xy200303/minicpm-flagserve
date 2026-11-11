@@ -71,6 +71,6 @@ benchmark 脚本执行官方命令，每个场景四轮、自动去首轮。4k �
 
 - 性能证据：`bench-evidence.tar.gz`，SHA256 `61c783a2fd810df7a7f3d6b229569b5ea9c5737d35e35dfa2d6ac59ff029d6c4`
 - 精度证据：`eval-evidence.tar.gz`，SHA256 `3379990ad4b977f0f04d48dadb2d7c251059f2997c12d4b7045e1cfaad821704`
-- 测试与最终包审计：`tests.tar.gz`，SHA256 `aaa6531fce6a303be44fc1e7a5037bf457b164e24aa9f462324c41ab044182ab`；包含最终包测试日志、Git 干净性、包 SHA256、真实请求响应和 smoke 服务日志
+- 测试与最终包审计：`tests.tar.gz`，SHA256 `c5266dfafc361efff564d31fa367c14d2ed76efe1f6996a41b8ef9aedffabe27`；包含最终包测试日志、Git 干净性、包 SHA256、真实请求响应和 smoke 服务日志
 - 回滚代码：将 `integration/flaggems` 恢复到旧标签 `archive/flaggems-public-tag`（`e9390c54`）即可；本次没有修改插件。
 - 回滚性能环境：恢复对应 `VLLM_CACHE_ROOT` 或重新编译；本次使用 `/workspace/image-align-cache`。
