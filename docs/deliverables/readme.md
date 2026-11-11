@@ -10,8 +10,8 @@
 
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
-| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `b5793cd4` | C500 opt1–opt11、BI-V150 A1–A7、A20 插件 hook |
-| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `ef516137` | 基于官方镜像 `4df52d91`：C500 采样/GEMM 算子、BI-V150 A20 paged decode attention、A60 tile 预打包与测试 |
+| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `b5793cd4` | C500 opt1–opt11、BI-V150 A1–A7、A20 与 A48 插件路由 |
+| `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `ef516137` | 基于官方镜像 `4df52d91`：C500 采样/GEMM 算子、BI-V150 A20/A31/A48/A60 算子与测试 |
 
 这两条分支也是后续开发的**集成分支**：新实验从它们创建实验分支，验证通过后再回合；`xy200303/minicpm-flagserve` 的 `main` 只保存报告、实验台账与复现文档，不承担运行时代码。两个源码仓库均为对应上游项目的正式 fork，后续可直接向上游提交 PR。
 
@@ -25,7 +25,7 @@ git clone --single-branch --branch integration/flaggems \
 # 打包时保留两个目录下的 .git；只剔除本机 build、__pycache__ 和虚拟环境
 ```
 
-**C500 实测版本（64GB GPU / 128GB RAM）**：4k／16k 性能采集于 2026-11-01，使用插件 `0207b7e1`、FlagGems `9c06143c`（含 A31）；两次 MATH-500 采集于 2026-10-25，使用插件 `0207b7e1`、FlagGems `aff68555`。启动耗时受 autotune 缓存影响，实测约 127–1129 秒，原生基线为 161 秒；日志确认 `mcblas_mm`、采样融合与 lm_head nn 路由。最终源码此后只增加 Iluvatar 专用 A48／A60 并规范化换行，C500 执行路径未变，但 C500 未在最终提交上重跑，表中 C500 数值不冒充最终源码的逐字节实测。
+**C500 实测版本（64GB GPU / 128GB RAM）**：4k／16k 性能采集于 2026-11-01，使用插件 `0207b7e1`、FlagGems `9c06143c`（含 A31）；两次 MATH-500 采集于 2026-10-25，使用插件 `0207b7e1`、FlagGems `aff68555`。启动耗时受 autotune 缓存影响，实测约 127–1129 秒，原生基线为 161 秒；日志确认 `mcblas_mm`、采样融合与 lm_head nn 路由。最终源码此后回到官方镜像基线（相差的 7 个公开 tag 提交不触及 Metax 执行路径），并增加 Iluvatar 专用 A48／A60、规范化换行，C500 执行路径未变；但 C500 未在最终提交上重跑，表中 C500 数值不冒充最终源码的逐字节实测。
 
 ## 0.1 环境要求与启动耗时
 
