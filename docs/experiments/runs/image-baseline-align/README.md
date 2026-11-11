@@ -8,8 +8,8 @@
 |---|---|
 | 实例 | `8f8a906a307e`，官方重置后的 BI-V150 32GB 实例 |
 | FlagGems 镜像基线 | `4df52d9168ac55c1c1061cefb4638c570292d896`，镜像内 `v5.3.5` 指向该提交 |
-| FlagGems 交付分支 | `integration/flaggems`，`85b4ba8256723d8c38fff8c751295e47bb30abb9` |
-| vllm-plugin-FL | `integration/vllm-plugin-fl`，`58bae9494a93d561353d0c793e294fc54a40ba73` |
+| FlagGems 交付分支 | `integration/flaggems`，`ef5161373bc97c2ccabd1f6d51d92fb2a37ff814`；性能/精度测量于父提交 `85b4ba82`，最终提交只规范化 CRLF |
+| vllm-plugin-FL | `integration/vllm-plugin-fl`，`b5793cd4477a530eb420c58bf2a4e5d742a8846c`；性能/精度测量于父提交 `58bae94`，最终提交只规范化 CRLF |
 | FlagTree | `0.6.2a3+iluvatar3.6` |
 | Torch / vLLM | `2.10.0+corex.4.5.0` / `0.24.0+empty` |
 | CPU / 内存 | Xeon Gold 6330，503GiB |
@@ -71,6 +71,6 @@ benchmark 脚本执行官方命令，每个场景四轮、自动去首轮。4k �
 
 - 性能证据：`bench-evidence.tar.gz`，SHA256 `61c783a2fd810df7a7f3d6b229569b5ea9c5737d35e35dfa2d6ac59ff029d6c4`
 - 精度证据：`eval-evidence.tar.gz`，SHA256 `3379990ad4b977f0f04d48dadb2d7c251059f2997c12d4b7045e1cfaad821704`
-- 测试日志：`tests.tar.gz`，SHA256 `071248568d78db16faf5726ad7a97998e7862fd9596697c765612dc77a7d69f4`
+- 测试与最终包审计：`tests.tar.gz`，SHA256 `aaa6531fce6a303be44fc1e7a5037bf457b164e24aa9f462324c41ab044182ab`；包含最终包测试日志、Git 干净性、包 SHA256、真实请求响应和 smoke 服务日志
 - 回滚代码：将 `integration/flaggems` 恢复到旧标签 `archive/flaggems-public-tag`（`e9390c54`）即可；本次没有修改插件。
 - 回滚性能环境：恢复对应 `VLLM_CACHE_ROOT` 或重新编译；本次使用 `/workspace/image-align-cache`。

@@ -175,8 +175,8 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \toprule
 组件 & 仓库 / 分支 & 固定提交与内容 \\
 \midrule
-插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{58bae94}；双平台路由、BI-A20 框架 hook 与 BI-A48 MLP 接入 \\
-算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{85b4ba82}；基于镜像 \texttt{4df52d91}，含采样、GEMM、paged decode attention、配置缓存、A60 与测试 \\
+插件 & \path{xy200303/vllm-plugin-FL}\newline \path{integration/vllm-plugin-fl} & \texttt{b5793cd4}；双平台路由、BI-A20 框架 hook 与 BI-A48 MLP 接入 \\
+算子 & \path{xy200303/FlagGems}\newline \path{integration/flaggems} & \texttt{ef516137}；基于镜像 \texttt{4df52d91}，含采样、GEMM、paged decode attention、配置缓存、A60 与测试 \\
 文档 & \path{xy200303/minicpm-flagserve}\newline \texttt{main} & 报告、实验台账、复现脚本；不承担运行时代码 \\
 \bottomrule
 \end{tabularx}
@@ -263,7 +263,7 @@ Triton & 3.6.0 & 3.0.0+metax3.7.0.7 \\
 芯片软件栈 & IX-ML 4.4.0；驱动 4.5.0 & MACA 3.7.0.38；驱动 3.8.30 \\
 FlagTree & 0.6.2a3+iluvatar3.6 & 不适用 \\
 evalscope & 1.11.1 & 1.11.1 \\
-插件 / FlagGems & 58bae94 / 85b4ba82 & 58bae94 / 85b4ba82 \\
+插件 / FlagGems & b5793cd4 / ef516137 & b5793cd4 / ef516137 \\
 最终复测日期 & 2026-11-11（镜像对齐） & 2026-10-25 至 2026-11-01 \\
 \bottomrule
 \end{tabularx}
@@ -543,7 +543,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 
 该轮 MATH-500 Level 3 为 96.19\%，16k TTFT 相比 A48 对照增加 7.63\%，但仍远低于官网基线及其 +1\% 上限。这里同时保留吞吐收益和延迟差异，不把历史同日 A/B 的 TTFT 当作官网约束的唯一判据。
 
-官方镜像确认后，完整 A20+A31+A48+A60 栈已重放到 FlagGems \texttt{4df52d91}，最终集成分支为 \texttt{85b4ba82}。最终 4k 三次独立四轮测量为 5131.78／5292.46／5292.99 tok/s，中位数 \textbf{5292.46 tok/s}，TTFT 3908.25ms；16k 四轮汇总为 \textbf{4618.41 tok/s}，TTFT 118761.15ms。最终 MATH-500 Level 3 为 \textbf{98.1\%}，105/105 成功、0 错误。原始 CSV、日志、测试与精度报告见 \path{docs/experiments/runs/a60-tile-packed/} 和 \path{docs/experiments/runs/image-baseline-align/}。
+官方镜像确认后，完整 A20+A31+A48+A60 栈已重放到 FlagGems \texttt{4df52d91}，性能测量提交为 \texttt{85b4ba82}；最终集成分支 \texttt{ef516137} 只追加换行规范化。4k 三次独立四轮测量为 5131.78／5292.46／5292.99 tok/s，中位数 \textbf{5292.46 tok/s}，TTFT 3908.25ms；16k 四轮汇总为 \textbf{4618.41 tok/s}，TTFT 118761.15ms。最终 MATH-500 Level 3 为 \textbf{98.1\%}，105/105 成功、0 错误。原始 CSV、日志、测试与精度报告见 \path{docs/experiments/runs/a60-tile-packed/} 和 \path{docs/experiments/runs/image-baseline-align/}。
 
 \section{跨平台结果与组合消融}
 \subsection{组合有效性与消融分析}
@@ -738,7 +738,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 \appendix
 \section{代码与实验记录索引}
-代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 58bae94）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 85b4ba82，基于官方镜像 FlagGems \texttt{4df52d91}）。两者均为对应上游项目的正式 fork；公开 tag 旧集成分支持久化为 tag \texttt{archive/flaggems-public-tag}，其他历史开发线归档于 \texttt{archive/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
+代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 b5793cd4）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 ef516137，基于官方镜像 FlagGems \texttt{4df52d91}）。两者均在性能测量提交之后只追加了换行规范化。公开 tag 旧集成分支持久化为 tag \texttt{archive/flaggems-public-tag}，其他历史开发线归档于 \texttt{archive/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
 
 \begin{table}[!htbp]
 \centering\small
@@ -786,7 +786,7 @@ BI-V150 内核验证 & BI-A20 与 stock & 同目录 \texttt{micro.json}、\textt
 BI-A31 & BI-A20 与 BI-A31（cf11897a） & \path{docs/experiments/runs/a31-config-local-cache/}：\texttt{a31-official-evidence.tar.gz}、\texttt{a31-16k-evidence.tar.gz}、\texttt{a31-eval.tar.gz}、\texttt{host.prof} \\
 BI-A48 & 插件 58bae94；FlagGems 3642366c & \path{docs/experiments/runs/a48-dual-acc-silu-mul/}：\texttt{official-4k-v4/summary.json}、\texttt{official-16k/summary.json}、\texttt{eval/eval1-math500.json} 及各次原始 CSV／日志 \\
 BI-A60 & 实验 ffe47a67；公开 tag 集成 e9390c54 & \path{docs/experiments/runs/a60-tile-packed/}：\texttt{official-4k-summary.json}、\texttt{official-16k-summary.json}、\texttt{gems-tests-v5.log}、\texttt{eval/eval1-math500.json} 及各次原始 CSV／日志 \\
-BI 镜像对齐最终复测 & FlagGems 85b4ba82，基线 4df52d91；插件 58bae94 & \path{docs/experiments/runs/image-baseline-align/}：\texttt{bench-evidence.tar.gz}、\texttt{eval-evidence.tar.gz}、\texttt{tests.tar.gz}、\texttt{manifest.txt} \\
+BI 镜像对齐最终复测 & FlagGems 测量 85b4ba82、最终 ef516137；插件测量 58bae94、最终 b5793cd4；基线 4df52d91 & \path{docs/experiments/runs/image-baseline-align/}：\texttt{bench-evidence.tar.gz}、\texttt{eval-evidence.tar.gz}、\texttt{tests.tar.gz}、\texttt{manifest.txt} \\
 \bottomrule
 \end{tabularx}
 \end{table}

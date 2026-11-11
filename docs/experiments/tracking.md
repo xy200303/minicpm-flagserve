@@ -807,7 +807,8 @@ NSEG 分配"会引入图捕获期尺寸风险。组委会 10-12 已确认此类�
 ### M1（2026-11-11，交付基线对齐）：FlagGems 重放到官方镜像提交
 
 - 官方天数镜像实际使用 FlagGems `4df52d9168ac55c1c1061cefb4638c570292d896`，镜像内 `v5.3.5` 指向该提交；该提交比公开 tag 的 `a7620cc1` 早 7 个提交。FlagTree 为 `0.6.2a3+iluvatar3.6`。
-- A20+A31+A48+A60 已从 `a7620cc1` 重放到镜像提交，最终 FlagGems `integration/flaggems` 为 `85b4ba82`；旧集成分支持久化为 tag `archive/flaggems-public-tag`（`e9390c54`）。插件 `58bae94` 基线本就等于镜像 `13eb9be`，无需迁移。
+- A20+A31+A48+A60 已从 `a7620cc1` 重放到镜像提交，FlagGems `integration/flaggems` 为 `85b4ba82`；旧集成分支持久化为 tag `archive/flaggems-public-tag`（`e9390c54`）。插件 `58bae94` 基线本就等于镜像 `13eb9be`，无需迁移。
+- 提交前审查发现 3 个 FlagGems 文件和 1 个插件文件因历史 Windows 操作被整体转成 CRLF。最终分支分别追加仅换行的 `ef516137` 与 `b5793cd4`，把最终 diff 从数千行噪声还原为真实改动；性能与精度仍取规范化前的 `85b4ba82`／`58bae94`。
 - 重放中仅 `_iluvatar/fused/__init__.py` 冲突，原因是镜像没有后加的 `matmul_bias_activation`；按镜像侧解决，只保留本工作的 `mm_silu_mul` 注册。FlagGems 12 passed、插件 3 passed。
 - 官方四轮 benchmark：4k 三次独立测量为 5131.78/5292.46/5292.99 tok/s，中位数 **5292.46**，TTFT **3908.25ms**；16k 为 **4618.41 tok/s**，TTFT **118761.15ms**。4k 首测受服务冷态影响，报告采用三次中位数并保留最低值。
 - MATH-500 Level 3 为 **98.1%**，105/105 成功、0 错误。完整环境、逐轮 CSV、精度与回滚方式见 `runs/image-baseline-align/`。
