@@ -742,6 +742,7 @@ C500 已完成复测的 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均�
 \bibitem{minicpm} OpenBMB. MiniCPM5-2B[EB/OL]. \url{https://modelscope.cn/models/OpenBMB/MiniCPM5-2B}.
 \end{thebibliography}
 
+\clearpage
 \appendix
 \section{代码与实验记录索引}
 代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 b5793cd4）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 ef516137，基于官方镜像 FlagGems \texttt{4df52d91}）。两者均在性能测量提交之后只追加了换行规范化。公开 tag 旧集成分支持久化为 tag \texttt{archive/flaggems-public-tag}，其他历史开发线归档于 \texttt{archive/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
