@@ -79,6 +79,7 @@
 \tikzset{
   flowbox/.style={draw=mainblue, fill=mainblue!5, rounded corners=2pt,
     align=center, font=\small, inner sep=5pt, minimum height=0.82cm},
+  flowwide/.style={flowbox, text width=3.15cm, minimum width=3.5cm},
   flowsmall/.style={flowbox, font=\scriptsize, inner sep=4pt},
   flowarrow/.style={-{Latex[length=2mm]}, thick, draw=mainblue},
   flownote/.style={font=\scriptsize\itshape\color{codegray}},
@@ -294,20 +295,22 @@ C500 的 CPU 内存是本团队实例的实测复现条件，不是官网公布�
 
 \begin{figure}[!htbp]
 \centering
+\resizebox{\linewidth}{!}{%
 \begin{tikzpicture}[font=\small]
-  \node[flowbox, minimum width=3.1cm] (serve) at (0,0) {\texttt{vllm serve}\\官方启动参数};
-  \node[flowbox, minimum width=3.1cm] (dispatch) at (4.0,0) {vllm-plugin-FL\\dispatch / hook};
-  \node[flowbox, minimum width=3.1cm] (kernels) at (8.0,0) {FlagGems / vendor\\Triton · mcBLAS · ixAttnBkd};
-  \node[flowbox, minimum width=3.1cm] (gpu) at (12.0,0) {BI-V150 / C500\\GPU 执行};
-  \node[flowsmall, minimum width=3.1cm] (fallback) at (4.0,-1.8) {stock 路径\\按实现回退};
-  \node[flowsmall, minimum width=3.1cm] (evidence) at (8.0,-1.8) {profile · A/B · 精度\\CSV · 日志 · 单测};
+  \node[flowwide] (serve) at (0,0) {\texttt{vllm serve}\\官方启动参数};
+  \node[flowwide] (dispatch) at (4.6,0) {vllm-plugin-FL\\dispatch / hook};
+  \node[flowwide] (kernels) at (9.2,0) {FlagGems / vendor\\Triton · mcBLAS · ixAttnBkd};
+  \node[flowwide] (gpu) at (13.8,0) {BI-V150 / C500\\GPU 执行};
+  \node[flowsmall, text width=3.0cm, minimum width=3.35cm] (fallback) at (4.6,-1.9) {stock 路径\\按实现回退};
+  \node[flowsmall, text width=3.0cm, minimum width=3.35cm] (evidence) at (9.2,-1.9) {profile · A/B · 精度\\CSV · 日志 · 单测};
   \draw[flowarrow] (serve) -- (dispatch);
   \draw[flowarrow] (dispatch) -- (kernels);
   \draw[flowarrow] (kernels) -- (gpu);
   \draw[flowarrow, dashed] (dispatch) -- (fallback);
   \draw[flowarrow, dashed] (dispatch) -- (evidence);
-  \node[flownote] at (6.0,-2.65) {保留 stock 回退路径与原始测试记录};
-\end{tikzpicture}
+  \node[flownote] at (6.9,-2.85) {保留 stock 回退路径与原始测试记录};
+\end{tikzpicture}%
+}
 \caption{插件、算子实现与测试记录之间的关系}
 \end{figure}
 
