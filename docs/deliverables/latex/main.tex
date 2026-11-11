@@ -132,7 +132,10 @@
 \end{abstract}
 
 \clearpage
+\begingroup
+\setstretch{0.98}
 \tableofcontents
+\endgroup
 \clearpage
 
 \section{引言}
@@ -743,7 +746,7 @@ C500 已完成复测的 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均�
 \section{代码与实验记录索引}
 代码分支：插件为 \texttt{xy200303/vllm-plugin-FL} 的 \texttt{integration/vllm-plugin-fl}（至 b5793cd4）；算子为 \texttt{xy200303/FlagGems} 的 \texttt{integration/flaggems}（至 ef516137，基于官方镜像 FlagGems \texttt{4df52d91}）。两者均在性能测量提交之后只追加了换行规范化。公开 tag 旧集成分支持久化为 tag \texttt{archive/flaggems-public-tag}，其他历史开发线归档于 \texttt{archive/*}。报告与实验记录另存于 \texttt{xy200303/minicpm-flagserve} 的 \texttt{main}。
 
-\begin{table}[!htbp]
+\begin{table}[H]
 \centering\small
 \caption{关键代码文件与报告章节的对应关系}
 \begin{tabularx}{\linewidth}{@{}p{6.1cm}Y@{}}
@@ -773,7 +776,7 @@ C500 已完成复测的 4k TTFT 为 1623.73 ms，16k TTFT 为 17961.76 ms，均�
 \subsection{结果与原始证据对应表}
 以下路径均相对于文档仓库 \href{https://github.com/xy200303/minicpm-flagserve}{xy200303/minicpm-flagserve} 的根目录。汇总 CSV 可由同目录原始 CSV 复算，精度取 JSON 的 \texttt{metrics[0].score}；日志同时保留启动参数、实际加载路径和逐轮运行过程。
 
-\begin{table}[!htbp]
+\begin{table}[H]
 \centering\small
 \caption{报告结果、代码版本与原始证据索引}
 \begin{tabularx}{\linewidth}{@{}p{2.5cm}p{4.2cm}Y@{}}
@@ -806,8 +809,8 @@ BI 镜像对齐最终复测 & FlagGems 测量 85b4ba82、最终 ef516137；插�
 
 原始图片地址分别为 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/QlVfSLuI/image.png}{天数基线}和 \href{https://flagos.ks3-cn-beijing.ksyuncs.com/images/1a2hydOd/image.png}{沐曦基线}。官网基线用于统一赛题参照；本机原生基线和 BI-A7 当日对照用于分析实际代码收益，三种参照在正文中分别标明，不相互替代。
 
-\section{内核形状扫描与测量波动}
-本附录给出 paged decode attention 在 NSEG $\times$ 并发度上的实测分布，以及官方 benchmark 连续 4 次 run 的吞吐波动。数据来源分别为 \texttt{docs/experiments/a26/a26\_sweep.log}（20 次重复取均值）和 \texttt{docs/baselines/metax-c500/raw\_runs\_baseline.csv}。
+\section{内核形状扫描}
+本附录给出 paged decode attention 在 NSEG $\times$ 并发度上的实测分布，数据来源为 \texttt{docs/experiments/a26/a26\_sweep.log}（20 次重复取均值）。最终交付的重复测量波动已在 §5.7 和 §8.3 中单独列出。
 
 \begin{figure}[!htbp]
 \centering
@@ -836,12 +839,6 @@ BI 镜像对齐最终复测 & FlagGems 测量 85b4ba82、最终 ef516137；插�
 \centering
 \includegraphics[width=\linewidth]{fig12_decode_evolution.pdf}
 \caption{decode attention 从 stock 到自研内核的带宽演进}
-\end{figure}
-
-\begin{figure}[H]
-\centering
-\includegraphics[width=\linewidth]{fig13_run_variance.pdf}
-\caption{官方 benchmark 连续 4 次 run 的吞吐波动}
 \end{figure}
 
 官方 benchmark 对 4k 与 16k 均执行四轮，去掉首轮后取后三轮均值；历史 C500-opt 系列采用这一口径。C500 区间端点及个别旧 16k 记录为单次 \texttt{vllm bench serve} 输出，已另行说明，不与四轮聚合混称。优化项使用同日交错 A/B 比较，减少实例时段漂移的影响。
