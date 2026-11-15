@@ -478,6 +478,38 @@ prefill trace 中，相邻 GPU 内核间隔大于 20 $\mu$s 的 gap 占 18.1\%�
 
 \begin{figure}[!htbp]
 \centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize]
+  % before
+  \node[anchor=east] at (-0.15,1.72) {优化前};
+  \foreach \i in {0,...,11} {
+    \draw[fill=mainblue!10, draw=mainblue!35] ({\i*1.05},1.35) rectangle ++(0.95,0.7);
+  }
+  \foreach \i in {1,...,11} {
+    \draw[accentred, line width=2.2pt] ({\i*1.05-0.05},1.28) -- ++(0,0.84);
+  }
+  \node[accentred, anchor=west, align=left] at (12.9,1.7)
+    {每层一次 \texttt{tolist()}\\42 次 DtoH 同步/步\\GPU 等 CPU};
+  % after
+  \node[anchor=east] at (-0.15,0.45) {优化后};
+  \draw[fill=accentred!12, draw=accentred!50] (0,0.1) rectangle (1.25,0.8);
+  \node[accentred] at (0.62,0.45) {1 次};
+  \draw[fill=mainblue!10, draw=mainblue!35] (1.25,0.1) rectangle (12.55,0.8);
+  \node[mainblue] at (6.9,0.45) {42 层直接读同一份 cumsum 缓存};
+  \node[accentred, anchor=west, align=left] at (12.9,0.45)
+    {4k $+10.9\%$\\16k $+9.9\%$};
+  % time axis
+  \draw[-{Latex[length=1.6mm]}, codegray] (-0.1,-0.12) -- (12.8,-0.12)
+    node[midway, below] {时间};
+  \node[anchor=west, codegray] at (12.9,-0.12) {16k TTFT 20.8$\rightarrow$18.0 s};
+\end{tikzpicture}%
+}
+\caption{C500-opt10 的 prefill 元数据同步：优化前每层调用一次 \texttt{tolist()} 触发 DtoH 强制同步（42 次/步），优化后首个 prefill 步在 GPU 上算一次 cumsum 并缓存到当前 \texttt{attn\_metadata}，其余层直接读取。条形按 42 层压缩为 12 段示意\label{fig:opt10-sync}}
+\end{figure}
+
+
+\begin{figure}[!htbp]
+\centering
 \includegraphics[width=\linewidth]{fig3_c500_ladder.pdf}
 \caption{C500 4k 场景历史版本优化阶梯（含跨实例记录，非严格同机累计 A/B）\label{fig:c500-ladder}}
 \end{figure}
@@ -686,6 +718,64 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 其余未采用候选见附录~\ref{sec:explorations}。这些探索表明，厂商接口必须先验证布局兼容性，分段配置不能仅按短上下文微基准选择，已有编译器融合也应先审计再改写。接口阻塞、微基准筛选和官方端到端对照分别记录，不视为同等强度的证据。
 
 \subsection{跨平台结果对照}
+{\hbadness=10000
+两张卡的优化组合并不相同：同为“算子级优化”，落到哪种硬件、是否值得做，取决于该卡的瓶颈。图~\ref{fig:chip-map} 汇总了各项手段在两侧的适用状态，后面两小节给出对应的数据与原因。
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize]
+  \tikzset{
+    cell/.style={draw=white, line width=0.5pt, rounded corners=1.5pt,
+      minimum width=3.35cm, minimum height=0.74cm, align=center, inner sep=2pt},
+    head/.style={font=\small\bfseries, text=mainblue},
+    rowlab/.style={anchor=east, align=right, text width=3.1cm, font=\scriptsize},
+  }
+  \node[head] at (4.95,6.85) {C500};
+  \node[head] at (8.55,6.85) {BI-V150};
+  % rows: y from 6.1 step -0.86
+  \node[rowlab] at (3.05,6.05) {采样链融合\\（bf16 直读 + Gumbel-Max）};
+  \node[cell, fill=mainblue!22, text=mainblue] at (4.95,6.05) {\textbf{采用}\\[-1pt]{\scriptsize opt1/3/7/11}};
+  \node[cell, fill=mainblue!22, text=mainblue] at (8.55,6.05) {\textbf{采用}\\[-1pt]{\scriptsize 移植自 C500（A5）}};
+
+  \node[rowlab] at (3.05,5.19) {GEMM 布局与 vendor 库};
+  \node[cell, fill=mainblue!22, text=mainblue] at (4.95,5.19) {\textbf{采用}\\[-1pt]{\scriptsize 单 nn + mcBLAS}};
+  \node[cell, fill=lightgrey!30, text=codegray] at (8.55,5.19) {不适用\\[-1pt]{\scriptsize GEMM 非瓶颈}};
+
+  \node[rowlab] at (3.05,4.33) {prefill 元数据与同步};
+  \node[cell, fill=mainblue!22, text=mainblue] at (4.95,4.33) {\textbf{采用}\\[-1pt]{\scriptsize opt10 当步缓存}};
+  \node[cell, fill=mainblue!22, text=mainblue] at (8.55,4.33) {\textbf{采用}\\[-1pt]{\scriptsize A3 移到 CPU 侧}};
+
+  \node[rowlab] at (3.05,3.47) {decode attention};
+  \node[cell, fill=mainblue!7, text=mainblue] at (4.95,3.47) {厂商 FA\\[-1pt]{\scriptsize flash\_attn\_with\_kvcache}};
+  \node[cell, fill=mainblue!22, text=mainblue] at (8.55,3.47) {\textbf{采用}\\[-1pt]{\scriptsize 自研 A20 分段内核}};
+
+  \node[rowlab] at (3.05,2.61) {host 配置与模型反射};
+  \node[cell, fill=mainblue!7, text=mainblue] at (4.95,2.61) {共享\\[-1pt]{\scriptsize FlagGems 通用层}};
+  \node[cell, fill=mainblue!22, text=mainblue] at (8.55,2.61) {\textbf{采用}\\[-1pt]{\scriptsize A31 进程内缓存}};
+
+  \node[rowlab] at (3.05,1.75) {门控融合 / 权重预打包};
+  \node[cell, fill=accentred!8, text=accentred] at (4.95,1.75) {否决\\[-1pt]{\scriptsize 附录 C.2}};
+  \node[cell, fill=mainblue!22, text=mainblue] at (8.55,1.75) {\textbf{采用}\\[-1pt]{\scriptsize A48 / A60}};
+
+  \node[rowlab] at (3.05,0.89) {启动期 GEMM 预热};
+  \node[cell, fill=lightgrey!30, text=codegray] at (4.95,0.89) {默认关闭\\[-1pt]{\scriptsize 见 \S8.3}};
+  \node[cell, fill=lightgrey!30, text=codegray] at (8.55,0.89) {无此项};
+
+  % legend
+  \fill[mainblue!22] (0.2,-0.35) rectangle ++(0.42,0.28);
+  \node[anchor=west] at (0.7,-0.21) {采用};
+  \fill[mainblue!7] (2.1,-0.35) rectangle ++(0.42,0.28);
+  \node[anchor=west] at (2.6,-0.21) {共享/沿用厂商};
+  \fill[lightgrey!30] (5.4,-0.35) rectangle ++(0.42,0.28);
+  \node[anchor=west] at (5.9,-0.21) {不适用};
+  \fill[accentred!8] (7.9,-0.35) rectangle ++(0.42,0.28);
+  \node[anchor=west] at (8.4,-0.21) {已验证否决};
+\end{tikzpicture}%
+}
+\caption{\sloppy 两平台优化组合的适用性：同一手段在两种芯片上的收益取决于瓶颈位置。C500 的主线是 GEMM 布局与 vendor 库，BI-V150 的主线是 attention 内核与 host 路径；采样融合与配置缓存可跨卡共享\label{fig:chip-map}}
+\end{figure}
+}
 两种芯片的历史收益构成分别见图~\ref{fig:c500-ladder} 和图~\ref{fig:bi-stage}。C500 的 C500-opt1–opt6 包含跨实例版本记录，展示开发过程而非严格同机累计 A/B；BI-V150 各阶段使用各自的当日对照，数据不作累计。
 
 局部加速与端到端收益的关系见图~\ref{fig:speedup}。其中 C500-opt8 的横坐标为四种 prefill GEMM 形状加速比的算术平均值，BI-A20 为 stock 0.939 ms 与页对齐版本 0.588 ms 之比。由于各内核在完整模型中的时间占比不同，局部加速比与端到端提升之间不存在固定的线性换算关系。
@@ -721,10 +811,38 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 权重布局 & A60 官方形状与缓存 & BI-V150 上 3 个用例通过；非法形状回退 A48 \\
 端到端准确率 & MATH-500 Level 3，105 题/次 & C500 多次评测 96.19\%--98.1\%；BI 镜像对齐 98.1\% \\
 服务正确性 & 混合步 decode fast path & used=132000、skipped=0；未见异常回退 \\
-启动与评测 & 固定源码、虚拟环境、官方命令 & C500 完成 4k/16k 各四轮吞吐与 MATH-500 评测；启动约 127–1129 秒 \\
+启动与评测 & 固定源码、虚拟环境、官方命令 & C500 完成 4k/16k 各四轮吞吐与 MATH-500 评测；冷启动 124 秒 \\
 \bottomrule
 \end{tabularx}
 \end{table}
+
+四层验证的覆盖关系见图~\ref{fig:correctness-layers}：从单个 kernel 的数值等价，到批量不变性、采样分布，最后到端到端精度。
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize]
+  % end-to-end
+  \draw[fill=mainblue!5, draw=mainblue!35, rounded corners=2pt] (2.7,2.52) rectangle (10.3,3.24);
+  \node[anchor=west] at (2.86,2.88) {\textbf{端到端}：MATH-500 Level 3 96.19--98.1\%（105 题/次）};
+  % sampling
+  \draw[fill=mainblue!5, draw=mainblue!35, rounded corners=2pt] (1.8,1.68) rectangle (11.2,2.40);
+  \node[anchor=west] at (1.96,2.04) {\textbf{采样}：greedy 与 argmax 一致；核集 IoU $\geq0.999$；TV 在采样噪声内};
+  % batch
+  \draw[fill=mainblue!5, draw=mainblue!35, rounded corners=2pt] (0.9,0.84) rectangle (12.1,1.56);
+  \node[anchor=west] at (1.06,1.20) {\textbf{批量}：9 用例（单条/两条/半批/全批/逆序/重复）全部通过};
+  % kernel
+  \draw[fill=mainblue!5, draw=mainblue!35, rounded corners=2pt] (0.0,0.0) rectangle (13.0,0.72);
+  \node[anchor=west] at (0.16,0.36) {\textbf{内核}：K/V 收集与发射配置 bit-exact；A20 max$|$err$|$ 3.05e-5 / 6.10e-5};
+  % side arrows
+  \foreach \y in {3.4,2.56,1.72} {
+    \draw[-{Latex[length=1.6mm]}, codegray] (6.5,\y-0.16) -- (6.5,\y-0.34);
+  }
+  \node[anchor=west, codegray] at (0.0,-0.22) {$\uparrow$ 越往上，越接近最终交付判据};
+\end{tikzpicture}%
+}
+\caption{正确性验证的分层覆盖：内核数值与批量不变性属于算子级证据，采样分布属于分布级证据，端到端精度是唯一的交付判据；各层原始日志按 \S\ref{sec:correctness} 的索引归档\label{fig:correctness-layers}}
+\end{figure}
 
 \clearpage
 \section{合规对照与复现指南}
