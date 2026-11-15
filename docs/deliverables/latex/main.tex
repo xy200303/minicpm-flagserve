@@ -103,7 +103,7 @@
 
 C500 最终交付提交的 4k/16k 总吞吐为 12465.68/11082.85 tok/s，分别达到官网基线的 2.45/1.58 倍；BI-V150 当前可追溯的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍，但尚未在最终交付提交上复测。按官方指标取两场景平均，C500 为 11774.27 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。两平台已测 MATH-500 Level 3 准确率均为 98.1\%；C500 最终复测的平均 TTFT 为 1646.58/18056.74 ms（4k/16k）。
 
-C500 数值测于最终交付提交，并使用关闭启动阶段 GEMM autotune 预热的 \texttt{VLLM\_FL\_MM\_WARMUP=0}。BI 数值测于交付提交的父提交，两者只差换行规范化；最终提交复测仍待可用 BI 实例（\secref{sec:provenance}）。
+C500 数值测于最终交付提交；该次服务设置 \texttt{VLLM\_FL\_MM\_WARMUP=0}，只关闭新增的启动阶段 GEMM autotune 预热。BI 数值测于交付提交的父提交，与交付提交只差换行规范化；最终提交复测仍待可用 BI 实例（\secref{sec:provenance}）。
 
 \noindent\textbf{关键词：}国产芯片；推理吞吐；算子融合；paged decode attention；shape-aware dispatch；vLLM
 \end{abstract}
