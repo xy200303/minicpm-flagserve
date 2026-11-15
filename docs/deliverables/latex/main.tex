@@ -101,9 +101,9 @@
 \raggedright
 本研究在 FlagOS 上优化 MiniCPM5-2B 于天数 BI-V150 和沐曦曦云 C500 的推理吞吐。模型、服务参数和评测脚本保持官方设置。C500 优化采样、矩阵乘法（GEMM）布局与 prefill 元数据；BI-V150 重写分页 decode attention，并优化配置查询和门控矩阵乘法。
 
-C500 最终交付提交的 4k/16k 总吞吐为 12465.68/11082.85 tok/s，分别达到官网基线的 2.45/1.58 倍；BI-V150 当前可追溯的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍，但尚未在最终交付提交上复测。按官方指标取两场景平均，C500 为 11774.27 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。两平台已测 MATH-500 Level 3 准确率均为 98.1\%；C500 最终复测的平均 TTFT 为 1646.58/18056.74 ms（4k/16k）。
+C500 最终交付提交的 4k/16k 总吞吐为 12450.37/11095.14 tok/s，分别达到官网基线的 2.45/1.58 倍；BI-V150 当前可追溯的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍，但尚未在最终交付提交上复测。按官方指标取两场景平均，C500 为 11772.76 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。两平台已测 MATH-500 Level 3 准确率均为 98.1\%；C500 最终复测的平均 TTFT 为 1629.09/18031.98 ms（4k/16k）。
 
-C500 数值测于最终交付提交；该次服务设置 \texttt{VLLM\_FL\_MM\_WARMUP=0}，只关闭新增的启动阶段 GEMM autotune 预热。BI 数值测于交付提交的父提交，与交付提交只差换行规范化；最终提交复测仍待可用 BI 实例（\secref{sec:provenance}）。
+C500 数值测于最终交付提交，服务参数与官网命令完全一致，未设置额外环境变量。BI 数值测于交付提交的父提交，与交付提交只差换行规范化；最终提交复测仍待可用 BI 实例（\secref{sec:provenance}）。
 
 \noindent\textbf{关键词：}国产芯片；推理吞吐；算子融合；paged decode attention；shape-aware dispatch；vLLM
 \end{abstract}
@@ -162,7 +162,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \toprule
 组件 & 仓库与分支 & 交付提交 & 内容 \\
 \midrule
-插件 & \texttt{vllm-plugin-FL}\newline\texttt{integration/vllm-plugin-fl} & \texttt{b5793cd4} & 双平台路由与 BI-A20/A48 接入 \\
+插件 & \texttt{vllm-plugin-FL}\newline\texttt{integration/vllm-plugin-fl} & \texttt{58b750e} & 双平台路由与 BI-A20/A48 接入 \\
 算子 & \texttt{FlagGems}\newline\texttt{integration/flaggems} & \texttt{ef516137} & 基于镜像 \texttt{4df52d91}；采样、GEMM、decode attention、配置缓存与测试 \\
 文档 & 文档仓库\newline\texttt{main} & — & 报告、实验台账与复现脚本 \\
 \bottomrule
@@ -173,9 +173,9 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 \textbf{BI-V150。}性能与精度测于交付提交的父提交（插件 \texttt{58bae94}、FlagGems \texttt{85b4ba82}）。交付提交此后只追加换行规范化，执行路径相同。
 
-\textbf{C500。}最终交付提交 \texttt{b5793cd4}/\texttt{ef516137} 于 2026-11-16 完成官方 4k、16k 各四轮 benchmark，全部请求成功；MATH-500 Level 3 完成 105/105，准确率 98.1\%。本次服务额外设置 \texttt{VLLM\_FL\_MM\_WARMUP=0}，仅关闭新增的启动阶段 GEMM autotune 预热（该预热把 FlagGems 首次遇到的分桶调优提前到模型加载阶段，关闭后调优落在首个请求批次），不改变官方服务参数、模型、采样参数、量化或投机采样。4k/16k 吞吐（后三轮均值，即官方脚本的汇总口径）为 12465.68/11082.85 tok/s，平均 TTFT 为 1646.58/18056.74 ms，原始证据见 C500 实验目录。BI-V150 的性能与精度仍采用交付提交父提交上的镜像对齐测量；由于当前 BI 评测实例不可用，最终提交复测尚未完成，这是当前报告的主要局限。
+\textbf{C500。}最终交付提交 \texttt{58b750e}/\texttt{ef516137} 于 2026-11-16 完成官方 4k、16k 各四轮 benchmark，全部请求成功；MATH-500 Level 3 完成 105/105，准确率 98.1\%。本次服务未设置额外环境变量。早期版本默认开启的启动期 GEMM 预热已改为可选且默认关闭：实测它把冷启动从 124 秒拉长到 6--19 分钟，而官方脚本弃首轮，预热对 4k/16k 吞吐与 TTFT 没有影响（\secref{sec:repro-notes}）。4k/16k 吞吐（后三轮均值，即官方脚本的汇总口径）为 12450.37/11095.14 tok/s，平均 TTFT 为 1629.09/18031.98 ms，原始证据见 C500 实验目录。BI-V150 的性能与精度仍采用交付提交父提交上的镜像对齐测量；由于当前 BI 评测实例不可用，最终提交复测尚未完成，这是当前报告的主要局限。
 
-C500 启动耗时受 autotune 缓存影响，实测记录跨度约 127–1129 秒，原生基线为 161 秒，不能用单值估计。
+C500 冷启动实测 124 秒（清空调优库与 Triton 编译缓存），原生栈为 161 秒；早期默认开启预热的版本曾达 6--19 分钟，现已默认关闭。
 
 \subsection{吞吐结果}\label{sec:throughput}
 \begin{table}[!htbp]
@@ -185,9 +185,9 @@ C500 启动耗时受 autotune 缓存影响，实测记录跨度约 127–1129 �
 \toprule
 平台 & 场景 & 官网基线 & 原生栈复测 & 优化版本实测 & 相对官网 & 相对原生栈 \\
 \midrule
-沐曦 C500 & 4k & 5089.645 & 4210.20 & 12465.68 & 2.45$\times$ & 2.96$\times$\\
-沐曦 C500 & 16k & 7029.675 & 5867.59 & 11082.85 & 1.58$\times$ & 1.89$\times$\\
-沐曦 C500 & \textbf{平均} & 6059.66 & 5038.90 & \textbf{11774.27} & \textbf{1.94$\times$} & 2.34$\times$\\
+沐曦 C500 & 4k & 5089.645 & 4210.20 & 12450.37 & 2.45$\times$ & 2.96$\times$\\
+沐曦 C500 & 16k & 7029.675 & 5867.59 & 11095.14 & 1.58$\times$ & 1.89$\times$\\
+沐曦 C500 & \textbf{平均} & 6059.66 & 5038.90 & \textbf{11772.76} & \textbf{1.94$\times$} & 2.34$\times$\\
 \midrule
 天数 BI-V150 & 4k & 2028.01 & 1902.15 & 5292.46 & 2.61$\times$ & 2.78$\times$\\
 天数 BI-V150 & 16k & 915.15 & 861.98 & 4618.41 & 5.05$\times$ & 5.36$\times$\\
@@ -209,7 +209,7 @@ C500 启动耗时受 autotune 缓存影响，实测记录跨度约 127–1129 �
 total tok/s 同时计入输入与输出，4k/16k 的请求数又不同，不能据此直接比较单请求速度。例如 BI-A20 第一组历史对照中，两场景的 decode 输出吞吐为 817.58/265.89 tok/s，TTFT 为 4.33/111.64 s；总吞吐相近并不意味着长上下文成本相同。
 
 \subsection{精度与延迟约束}\label{sec:constraints}
-精度与延迟使用各自的原始单位，不混合成单一“裕度”分数。C500 最终提交和 BI 镜像对齐测量的 MATH-500 Level 3 准确率均为 98.1\%，高于 95\% 门槛；BI 最终提交精度未验证。每次 105/105 请求成功表示服务无请求错误，并不表示 105 题全部答对。C500 最终复测的平均 TTFT 比官网基线低 33.6\%–48.5\%；BI 历史测量低 66.2\%–80.2\%，但 BI 最终提交的 TTFT 未验证。
+精度与延迟使用各自的原始单位，不混合成单一“裕度”分数。C500 最终提交和 BI 镜像对齐测量的 MATH-500 Level 3 准确率均为 98.1\%，高于 95\% 门槛；BI 最终提交精度未验证。每次 105/105 请求成功表示服务无请求错误，并不表示 105 题全部答对。C500 最终复测的平均 TTFT 比官网基线低 33.7\%–49.1\%；BI 历史测量低 66.2\%–80.2\%，但 BI 最终提交的 TTFT 未验证。
 
 \begin{table}[!htbp]
 \centering\small
@@ -218,8 +218,8 @@ total tok/s 同时计入输入与输出，4k/16k 的请求数又不同，不能�
 \toprule
 平台 & 场景 & 官网基线 & 上限（基线 $\times 1.01$） & 优化版本实测 & 相对基线 \\
 \midrule
-C500 & 4k & 3199.435 & 3231.43 & 1646.58 & −48.5\% \\
-C500 & 16k & 27197.135 & 27469.11 & 18056.74 & −33.6\% \\
+C500 & 4k & 3199.435 & 3231.43 & 1629.09 & −49.1\% \\
+C500 & 16k & 27197.135 & 27469.11 & 18031.98 & −33.7\% \\
 BI-V150 & 4k & 11573.53 & 11689.27 & 3908.25 & −66.2\% \\
 BI-V150 & 16k & 599262.03 & 605254.65 & 118761.15 & −80.2\% \\
 \bottomrule
@@ -252,8 +252,8 @@ BI-V150 & 16k & 599262.03 & 605254.65 & 118761.15 & −80.2\% \\
 \cmidrule(lr){4-6}\cmidrule(lr){7-8}\cmidrule(l){9-9}
 平台 & 场景 & （tok/s） & 均值 & 中位数 & P99 & 均值 & P99 & P99 \\
 \midrule
-C500 & 4k & 2493.14 & 1.65 & 0.50 & 9.66 & 23.91 & 25.22 & 91.51 \\
-C500 & 16k & 651.93 & 18.06 & 3.07 & 67.21 & 78.12 & 94.04 & 201.86 \\
+C500 & 4k & 2490.08 & 1.63 & 0.49 & 9.59 & 23.96 & 25.33 & 91.28 \\
+C500 & 16k & 652.66 & 18.03 & 3.07 & 67.11 & 78.03 & 93.93 & 200.63 \\
 BI-V150 & 4k & 1058.49 & 3.91 & 1.28 & 22.61 & 56.34 & 59.82 & 205.48 \\
 BI-V150 & 16k & 271.67 & 118.76 & 126.29 & 215.39 & 87.94 & 105.52 & 321.68 \\
 \bottomrule
@@ -277,9 +277,9 @@ PyTorch & 2.10.0+corex.4.5.0 & 2.8.0+metax3.7.0.7 \\
 框架 / 编译器 & vLLM 0.24.0 / Triton 3.6.0 & vLLM 0.24.0 / Triton 3.0.0+metax3.7.0.7 \\
 芯片栈 / 驱动 & IX-ML 4.4.0 / 4.5.0 & MACA 3.7.0.38 / 3.8.30 \\
 软件包 & FlagTree 0.6.2a3+iluvatar3.6；evalscope 1.11.1 & evalscope 1.11.1 \\
-性能测量提交 & 58bae94 / 85b4ba82 & b5793cd4 / ef516137 \\
-精度测量提交 & 58bae94 / 85b4ba82 & b5793cd4 / ef516137 \\
-交付提交 & b5793cd4 / ef516137 & b5793cd4 / ef516137 \\
+性能测量提交 & 58bae94 / 85b4ba82 & 58b750e / ef516137 \\
+精度测量提交 & 58bae94 / 85b4ba82 & 58b750e / ef516137 \\
+交付提交 & 58b750e / ef516137 & 58b750e / ef516137 \\
 测量日期 & 2026-11-11 & 2026-11-16 \\
 \bottomrule
 \end{tabularx}
@@ -408,7 +408,9 @@ BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM �
 \end{figure}
 
 \subsection{GEMM 布局与路由（C500-opt2/C500-opt4/C500-opt6/C500-opt8/C500-opt11）}\label{sec:c500-gemm}
-MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
+MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。2026-11-16 在当前交付栈上复测单布局（\texttt{VLLM\_FL\_NN\_MIN\_M=0}、\texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=1}）：KV 池由 1{,}111{,}744 增至 1{,}204{,}064 tokens，16k 后三轮均值 11130.01 对 11095.14、4k 为 12485.28 对 12450.37，两场景均高约 0.3\%，与跨次波动同量级；单布局会释放 nt 权重存储并改变 Parameter 形状，因此未改为默认。
+
+另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
 只有已经生成 nn 副本且形状满足条件的线性层才进入新路径。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
 
@@ -692,7 +694,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 赛题约束 & 本项目做法 \\
 \midrule
 服务参数与基线一致 & 两平台使用官网命令；C500 不添加编译配置 \\
-额外环境变量 & 仅 C500 设 \texttt{VLLM\_FL\_MM\_WARMUP=0}，关闭自研启动预热（非 serve 参数）\\
+额外环境变量 & 无；服务命令与官网一致 \\
 不得调 benchmark 脚本 & 保留官方脚本；结果按实测轮次汇总，并标明单次测量 \\
 不得直接合并上游分支 & 从指定分支和镜像基线开发，BI 算子基线为 \texttt{4df52d91} \\
 优化须有算子开发量 & 实现采样和 attention 内核，并修改 GEMM 路由与同步路径 \\
@@ -764,9 +766,9 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 \item \textbf{C500 的 CPU 内存。}复现建议采用 $\geq$128 GB CPU 内存（不是官方硬性规格）：64 GB 内存规格实例上，纯镜像原版 \texttt{vllm serve} 也曾在 Inductor 编译阶段被 cgroup OOM killer 杀掉，匿名内存峰值 63.4 GB，被杀时 GPU 显存仅 858 MiB；128 GB 规格实例完成了测试。直接原因是 CPU 内存达到容器限制，不能归因于本队 nn 布局改动；但尚未完成跨版本定位，不能排除 vLLM 或编译器版本对内存峰值的影响。
 
-\item \textbf{启动耗时。}C500 默认在模型加载后执行 GEMM autotune 预热（\texttt{VLLM\_FL\_MM\_WARMUP} 默认为 1），把 FlagGems 首次遇到的分桶调优提前到服务就绪之前；冷缓存下实测约 127–1129 秒（原生基线 161 秒），热缓存接近正常启动。本次最终复测设为 0，启动约 2 分钟，代价是首个请求批次承担一次性调优开销，4k 首轮因此低 5.2\%；报告值取后三轮，不含该开销。
+\item \textbf{启动耗时。}C500 冷启动实测 124 秒（清空调优库与 Triton 编译缓存），原生基线为 161 秒。早期版本在模型加载后默认执行 GEMM autotune 预热（\texttt{VLLM\_FL\_MM\_WARMUP=1}），把 FlagGems 首次遇到的分桶调优提前到服务就绪之前，冷启动因此长达 6--19 分钟；但当前路由把大 M prefill 交给 mcBLAS，预热的分桶在服务中大多不会用到，且官方脚本弃首轮，预热对成绩没有贡献。该开关现已默认关闭，仅作为可选路径保留。冷启动时首个请求批次承担一次性调优开销，4k 首轮因此低约 5\%，报告值取后三轮，不含该开销。
 
-\item \textbf{测量波动。}图~\ref{fig:rounds} 给出报告值所依据的逐轮数据。C500 4k 首轮为 11819.77 tok/s，比报告值低 5.2\%，按官方口径剔除；计入均值的后三轮中，C500 的极差为均值的 0.92\%（4k）和 0.07\%（16k），BI 16k 为 0.08\%，BI 第 2、3 次独立 4k 测量为 0.72\% 和 0.78\%。BI 第 1 次 4k 测量是服务启动后的首个场景，后三轮极差达 4.97\%，三轮均值比另两次低约 3\%；原因尚未完全定位，因此保留全部结果并采用三次的中位数，不只展示最佳值。16k 仅完成一次四轮测量，不据此估计跨次波动。
+\item \textbf{测量波动。}图~\ref{fig:rounds} 给出报告值所依据的逐轮数据。C500 4k 首轮为 11818.93 tok/s，比报告值低 5.1\%，按官方口径剔除；计入均值的后三轮中，C500 的极差为均值的 0.35\%（4k）和 0.02\%（16k），BI 16k 为 0.08\%，BI 第 2、3 次独立 4k 测量为 0.72\% 和 0.78\%。BI 第 1 次 4k 测量是服务启动后的首个场景，后三轮极差达 4.97\%，三轮均值比另两次低约 3\%；原因尚未完全定位，因此保留全部结果并采用三次的中位数，不只展示最佳值。16k 仅完成一次四轮测量，不据此估计跨次波动。
 \end{enumerate}
 
 \begin{figure}[!htbp]
@@ -795,7 +797,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \clearpage
 \appendix
 \section{代码与实验记录索引}
-源码仓库为插件 \texttt{xy200303/vllm-plugin-FL}（分支 \texttt{integration/vllm-plugin-fl}，提交 b5793cd4）和算子库 \texttt{xy200303/FlagGems}（分支 \texttt{integration/flaggems}，提交 ef516137）。算子库从镜像基线 \texttt{4df52d91} 开发。测量提交与交付提交的对应关系见 \secref{sec:provenance}。报告与实验记录保存在 \texttt{xy200303/minicpm-flagserve}。
+源码仓库为插件 \texttt{xy200303/vllm-plugin-FL}（分支 \texttt{integration/vllm-plugin-fl}，提交 58b750e）和算子库 \texttt{xy200303/FlagGems}（分支 \texttt{integration/flaggems}，提交 ef516137）。算子库从镜像基线 \texttt{4df52d91} 开发。测量提交与交付提交的对应关系见 \secref{sec:provenance}。报告与实验记录保存在 \texttt{xy200303/minicpm-flagserve}。
 
 \begin{table}[H]
 \centering\small

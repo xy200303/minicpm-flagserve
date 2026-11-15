@@ -123,12 +123,9 @@ NATIVE = {"C500": {"4k": 4210.20, "16k": 5867.59},
 OFFICIAL_TTFT = {"C500": {"4k": 3199.435, "16k": 27197.135},
                  "BI": {"4k": 11573.53, "16k": 599262.03}}
 
-C500_4K = log_rounds(HERE.parent / "docs" / "experiments" / "runs"
-                     / "c500-optimization-program"
-                     / "final-c500-warmup-off-20261116-003450-benchmark-partial.log")
-C500_16K = log_rounds(HERE.parent / "docs" / "experiments" / "runs"
-                      / "c500-optimization-program"
-                      / "final-c500-warmup-off-20261116-003450-benchmark-16k.log")
+RUN_FINAL = HERE.parent / "docs" / "experiments" / "runs" / "c500-final-58b750e"
+C500_4K = log_rounds(RUN_FINAL / "bench-4k.log")
+C500_16K = log_rounds(RUN_FINAL / "bench-16k.log")
 _bi1 = raw_rounds(RUNS / "image-baseline-align/bench/benchmark_results/"
                   "raw_runs_20261111_123240.csv")
 BI_4K_RUNS = [

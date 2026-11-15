@@ -1,0 +1,5 @@
+startup_seconds=124
+bench4k_exit=0
+bench16k_exit=0
+eval_exit=0
+done
