@@ -1,0 +1,6 @@
+startup_seconds=124
+(EngineCore pid=50325) INFO 11-16 05:36:14 [kv_cache_utils.py:2146] GPU KV cache size: 1,203,904 tokens
+bench4k_exit=0
+bench16k_exit=0
+eval_exit=143
+done

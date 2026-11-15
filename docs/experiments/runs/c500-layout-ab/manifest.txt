@@ -1,0 +1,27 @@
+date=2026-11-16T05:34:20+08:00
+commit=vllm-plugin-FL d69e766
+gems=ef5161373bc97c2ccabd1f6d51d92fb2a37ff814
+plugin_md5_repack=d67acfa53256b824ab98843824fb6ba5
+serve_command=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072
+env=<none>
+mx-smi  version: 2.3.1
+
+=================== MetaX System Management Interface Log ===================
+Timestamp                                         : Mon Nov 16 05:34:20 2026
+
+Attached GPUs                                     : 1
++---------------------------------------------------------------------------------+
+| MX-SMI 2.3.1                       Kernel Mode Driver Version: 3.8.30           |
+| MACA Version: 3.7.0.38             BIOS Version: 1.33.5.0                       |
+|------------------+-----------------+---------------------+----------------------|
+| Board       Name | GPU   Persist-M | Bus-id              | GPU-Util      sGPU-M |
+| Pwr:Usage/Cap    | Temp       Perf | Memory-Usage        | GPU-State            |
+|==================+=================+=====================+======================|
+| 0     MetaX C500 | 0           Off | 0000:37:00.0        | 0%          Disabled |
+| 74W / 350W       | 39C          P9 | 56231/65536 MiB     | Available            |
++------------------+-----------------+---------------------+----------------------+
+
++---------------------------------------------------------------------------------+
+               total        used        free      shared  buff/cache   available
+Mem:             128          12         115           0           0         115
+Swap:              0           0           0

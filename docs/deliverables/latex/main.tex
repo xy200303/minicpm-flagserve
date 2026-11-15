@@ -162,7 +162,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \toprule
 组件 & 仓库与分支 & 交付提交 & 内容 \\
 \midrule
-插件 & \texttt{vllm-plugin-FL}\newline\texttt{integration/vllm-plugin-fl} & \texttt{58b750e} & 双平台路由与 BI-A20/A48 接入 \\
+插件 & \texttt{vllm-plugin-FL}\newline\texttt{integration/vllm-plugin-fl} & \texttt{941fe10} & 双平台路由与 BI-A20/A48 接入 \\
 算子 & \texttt{FlagGems}\newline\texttt{integration/flaggems} & \texttt{ef516137} & 基于镜像 \texttt{4df52d91}；采样、GEMM、decode attention、配置缓存与测试 \\
 文档 & 文档仓库\newline\texttt{main} & — & 报告、实验台账与复现脚本 \\
 \bottomrule
@@ -173,7 +173,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 
 \textbf{BI-V150。}性能与精度测于交付提交的父提交（插件 \texttt{58bae94}、FlagGems \texttt{85b4ba82}）。交付提交此后只追加换行规范化，执行路径相同。
 
-\textbf{C500。}最终交付提交 \texttt{58b750e}/\texttt{ef516137} 于 2026-11-16 完成官方 4k、16k 各四轮 benchmark，全部请求成功；MATH-500 Level 3 完成 105/105，准确率 98.1\%。本次服务未设置额外环境变量。早期版本默认开启的启动期 GEMM 预热已改为可选且默认关闭：实测它把冷启动从 124 秒拉长到 6--19 分钟，而官方脚本弃首轮，预热对 4k/16k 吞吐与 TTFT 没有影响（\secref{sec:repro-notes}）。4k/16k 吞吐（后三轮均值，即官方脚本的汇总口径）为 12450.37/11095.14 tok/s，平均 TTFT 为 1629.09/18031.98 ms，原始证据见 C500 实验目录。BI-V150 的性能与精度仍采用交付提交父提交上的镜像对齐测量；由于当前 BI 评测实例不可用，最终提交复测尚未完成，这是当前报告的主要局限。
+\textbf{C500。}最终交付提交 \texttt{941fe10}/\texttt{ef516137}（与实测版本 \texttt{58b750e} 只差注释）于 2026-11-16 完成官方 4k、16k 各四轮 benchmark，全部请求成功；MATH-500 Level 3 完成 105/105，准确率 98.1\%。本次服务未设置额外环境变量。早期版本默认开启的启动期 GEMM 预热已改为可选且默认关闭：实测它把冷启动从 124 秒拉长到 6--19 分钟，而官方脚本弃首轮，预热对 4k/16k 吞吐与 TTFT 没有影响（\secref{sec:repro-notes}）。4k/16k 吞吐（后三轮均值，即官方脚本的汇总口径）为 12450.37/11095.14 tok/s，平均 TTFT 为 1629.09/18031.98 ms，原始证据见 C500 实验目录。BI-V150 的性能与精度仍采用交付提交父提交上的镜像对齐测量；由于当前 BI 评测实例不可用，最终提交复测尚未完成，这是当前报告的主要局限。
 
 C500 冷启动实测 124 秒（清空调优库与 Triton 编译缓存），原生栈为 161 秒；早期默认开启预热的版本曾达 6--19 分钟，现已默认关闭。
 
@@ -277,9 +277,9 @@ PyTorch & 2.10.0+corex.4.5.0 & 2.8.0+metax3.7.0.7 \\
 框架 / 编译器 & vLLM 0.24.0 / Triton 3.6.0 & vLLM 0.24.0 / Triton 3.0.0+metax3.7.0.7 \\
 芯片栈 / 驱动 & IX-ML 4.4.0 / 4.5.0 & MACA 3.7.0.38 / 3.8.30 \\
 软件包 & FlagTree 0.6.2a3+iluvatar3.6；evalscope 1.11.1 & evalscope 1.11.1 \\
-性能测量提交 & 58bae94 / 85b4ba82 & 58b750e / ef516137 \\
-精度测量提交 & 58bae94 / 85b4ba82 & 58b750e / ef516137 \\
-交付提交 & 58b750e / ef516137 & 58b750e / ef516137 \\
+性能测量提交 & 58bae94 / 85b4ba82 & 941fe10 / ef516137 \\
+精度测量提交 & 58bae94 / 85b4ba82 & 941fe10 / ef516137 \\
+交付提交 & 941fe10 / ef516137 & 941fe10 / ef516137 \\
 测量日期 & 2026-11-11 & 2026-11-16 \\
 \bottomrule
 \end{tabularx}
@@ -408,7 +408,7 @@ BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM �
 \end{figure}
 
 \subsection{GEMM 布局与路由（C500-opt2/C500-opt4/C500-opt6/C500-opt8/C500-opt11）}\label{sec:c500-gemm}
-MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS；仅保留 nn\_db 副本的单布局配置可选，但不是默认。2026-11-16 在当前交付栈上复测单布局（\texttt{VLLM\_FL\_NN\_MIN\_M=0}、\texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=1}）：KV 池由 1{,}111{,}744 增至 1{,}204{,}064 tokens，16k 后三轮均值 11130.01 对 11095.14、4k 为 12485.28 对 12450.37，两场景均高约 0.3\%，与跨次波动同量级；单布局会释放 nt 权重存储并改变 Parameter 形状，因此未改为默认。
+MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。默认配置为双布局：小 M（默认阈值 192）或缺少 nn 副本时回退 \texttt{F.linear}，大 M 按路由使用 Triton nn 或 mcBLAS。仅保留 nn 副本的单布局配置可选（\texttt{VLLM\_FL\_NN\_MIN\_M=0}、\texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=1}）：它释放 nt 存储，KV 池由 1{,}111{,}744 增至 1{,}204{,}064 tokens。2026-11-16 做了两次对照：首次 A/B 中单布局 16k 11130.01 对 11095.14、4k 12485.28 对 12450.37；随后把单布局设为默认值重跑官方用例，16k 为 11097.29、4k 为 12451.84，差异没有复现，故保持双布局，不为此引入 Parameter 形状变化。
 
 另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
@@ -797,7 +797,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \clearpage
 \appendix
 \section{代码与实验记录索引}
-源码仓库为插件 \texttt{xy200303/vllm-plugin-FL}（分支 \texttt{integration/vllm-plugin-fl}，提交 58b750e）和算子库 \texttt{xy200303/FlagGems}（分支 \texttt{integration/flaggems}，提交 ef516137）。算子库从镜像基线 \texttt{4df52d91} 开发。测量提交与交付提交的对应关系见 \secref{sec:provenance}。报告与实验记录保存在 \texttt{xy200303/minicpm-flagserve}。
+源码仓库为插件 \texttt{xy200303/vllm-plugin-FL}（分支 \texttt{integration/vllm-plugin-fl}，提交 941fe10）和算子库 \texttt{xy200303/FlagGems}（分支 \texttt{integration/flaggems}，提交 ef516137）。算子库从镜像基线 \texttt{4df52d91} 开发。测量提交与交付提交的对应关系见 \secref{sec:provenance}。报告与实验记录保存在 \texttt{xy200303/minicpm-flagserve}。
 
 \begin{table}[H]
 \centering\small
