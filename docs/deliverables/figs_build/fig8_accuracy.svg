@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="209.76378pt" height="170.07874pt" viewBox="0 0 209.76378 170.07874" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-16T06:36:48.607494</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 170.07874 
+L 209.76378 170.07874 
+L 209.76378 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 77.39 135.67874 
+L 200.76378 135.67874 
+L 200.76378 9 
+L 77.39 9 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="patch_3">
+    <path d="M -1661.058712 30.437941 
+L 172.724284 30.437941 
+L 172.724284 22.642326 
+L -1661.058712 22.642326 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_4">
+    <path d="M -1661.058712 49.926978 
+L 172.724284 49.926978 
+L 172.724284 42.131363 
+L -1661.058712 42.131363 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_5">
+    <path d="M -1661.058712 69.416015 
+L 137.02066 69.416015 
+L 137.02066 61.6204 
+L -1661.058712 61.6204 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #0f4d92"/>
+   </g>
+   <g id="patch_6">
+    <path d="M -1661.058712 88.905051 
+L 137.02066 88.905051 
+L 137.02066 81.109437 
+L -1661.058712 81.109437 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="patch_7">
+    <path d="M -1661.058712 108.394088 
+L 172.724284 108.394088 
+L 172.724284 100.598474 
+L -1661.058712 100.598474 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="patch_8">
+    <path d="M -1661.058712 127.883125 
+L 172.724284 127.883125 
+L 172.724284 120.087511 
+L -1661.058712 120.087511 
+z
+" clip-path="url(#p8caafd4f39)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="m525e45228d" d="M 0 0 
+L 0 3.5 
+" style="stroke: #000000; stroke-width: 0.8"/>
+      </defs>
+      <g>
+       <use xlink:href="#m525e45228d" x="96.082997" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="96.082997" y="147.539365" transform="rotate(-0 96.082997 147.539365)">94</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#m525e45228d" x="133.468991" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="133.468991" y="147.539365" transform="rotate(-0 133.468991 147.539365)">96</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#m525e45228d" x="170.854984" y="135.67874" style="stroke: #000000; stroke-width: 0.8"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="170.854984" y="147.539365" transform="rotate(-0 170.854984 147.539365)">98</text>
+     </g>
+    </g>
+    <g id="text_4">
+     <text style="font-size: 7.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="139.07689" y="158.434365" transform="rotate(-0 139.07689 158.434365)">MATH-500 Level 3 准确率（%）</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_4"/>
+     <g id="text_5">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="29.004352" transform="rotate(-0 73.89 29.004352)">C500 复测 1</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_5"/>
+     <g id="text_6">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="48.493389" transform="rotate(-0 73.89 48.493389)">C500 复测 2</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_6"/>
+     <g id="text_7">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="67.982426" transform="rotate(-0 73.89 67.982426)">C500 复测 3</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="87.485135" transform="rotate(-0 73.89 87.485135)">BI 页对齐 1</text>
+     </g>
+    </g>
+    <g id="ytick_5">
+     <g id="line2d_8"/>
+     <g id="text_9">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="106.974172" transform="rotate(-0 73.89 106.974172)">BI 页对齐 2</text>
+     </g>
+    </g>
+    <g id="ytick_6">
+     <g id="line2d_9"/>
+     <g id="text_10">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="73.89" y="126.54524" transform="rotate(-0 73.89 126.54524)">BI 镜像基线最终交付</text>
+     </g>
+    </g>
+   </g>
+   <g id="line2d_10">
+    <path d="M 114.775994 135.67874 
+L 114.775994 9 
+" clip-path="url(#p8caafd4f39)" style="fill: none; stroke-dasharray: 2.8,2.1; stroke-dashoffset: 0; stroke: #b64342; stroke-opacity: 0.9; stroke-width: 0.7"/>
+   </g>
+   <g id="patch_9">
+    <path d="M 77.39 135.67874 
+L 77.39 9 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_10">
+    <path d="M 77.39 135.67874 
+L 200.76378 135.67874 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="174.780514" y="28.221774" transform="rotate(-0 174.780514 28.221774)">98.10</text>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="174.780514" y="47.710811" transform="rotate(-0 174.780514 47.710811)">98.10</text>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="139.07689" y="67.199848" transform="rotate(-0 139.07689 67.199848)">96.19</text>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="139.07689" y="86.688885" transform="rotate(-0 139.07689 86.688885)">96.19</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="174.780514" y="106.177922" transform="rotate(-0 174.780514 106.177922)">98.10</text>
+   </g>
+   <g id="text_16">
+    <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start" x="174.780514" y="125.666959" transform="rotate(-0 174.780514 125.666959)">98.10</text>
+   </g>
+   <g id="text_17">
+    <g id="patch_11">
+     <path d="M 118.669243 18.258415 
+L 159.76854 18.258415 
+L 159.76854 10.655446 
+L 118.669243 10.655446 
+z
+" style="fill: #ffffff"/>
+    </g>
+    <text style="font-size: 6.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #b64342" x="119.449243" y="16.088024" transform="rotate(-0 119.449243 16.088024)">赛题门槛 95%</text>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p8caafd4f39">
+   <rect x="77.39" y="9" width="123.37378" height="126.67874"/>
+  </clipPath>
+ </defs>
+</svg>

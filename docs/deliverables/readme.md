@@ -10,7 +10,7 @@
 
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
-| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `941fe10` | C500 opt1–opt11、BI-V150 A1–A7、A20 与 A48 插件路由 |
+| `vllm-plugin-FL/` | `xy200303/vllm-plugin-FL` 的 `integration/vllm-plugin-fl` | `e4b5854` | C500 opt1–opt11、BI-V150 A1–A7、A20 与 A48 插件路由 |
 | `FlagGems/` | `xy200303/FlagGems` 的 `integration/flaggems` | `ef516137` | 基于官方镜像 `4df52d91`：C500 采样/GEMM 算子、BI-V150 A20/A31/A48/A60 算子与测试 |
 
 这两条分支用于后续集成；`xy200303/minicpm-flagserve` 的 `main` 保存报告、实验台账和复现文档，不承载运行时代码。两个源码仓库均为对应上游项目的 fork。
@@ -27,7 +27,7 @@ git clone --single-branch --branch integration/flaggems \
 
 > 为提高跨平台解压兼容性，本包将上游 `vllm-plugin-FL/vllm_fl/configs/moe/E=256,N=512,device_name=nvidia.json` 软链接展开为普通文件，内容与包内目标 `E=256,N=512,device_name=nvidia,model=Qwen3.6-35B-A3B-H100.json` 一致。这是打包处理，不是内核改动。源仓库的 Git 记录仍保留原软链接；提交 ZIP 不包含 `.git`，解压后该路径显示为普通 JSON 文件。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `941fe10` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12450.37 tok/s**，16k 后三轮均值 **11095.14 tok/s**，精度 **98.1%（105/105）**。默认 warmup=1 的启动成本过高问题、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105；同配置另一次为 98.1%，temperature=1.0 的采样波动）**。默认 warmup=1 的启动成本过高问题、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
 
 ## 0.1 环境要求与启动耗时
 
@@ -42,7 +42,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `941fe10` 和 FlagGems `ef516137`。BI 性能与精度在父提交 `58bae94`／`85b4ba82` 上测得，最终提交只规范化 CRLF；C500 数据使用其专用实测提交，详见上文。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `e4b5854` 和 FlagGems `ef516137`。BI 性能与精度在父提交 `58bae94`／`85b4ba82` 上测得，最终提交只规范化 CRLF；C500 数据使用其专用实测提交，详见上文。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -64,8 +64,8 @@ git clone --single-branch --branch integration/flaggems \
 
 | 平台 | 场景 | 官网基线 | 原生栈复测 | 优化版本实测 | 相对官网 |
 |---|---|---:|---:|---:|---:|
-| C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12450.37** | **2.45x** |
-| C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11095.14** | **1.58x** |
+| C500 | 4k `[4096,1024,64,256]` | 5089.645 | 4210.20 | **12451.84** | **2.45x** |
+| C500 | 16k `[16384,1024,64,128]` | 7029.675 | 5867.59 | **11097.29** | **1.58x** |
 | BI-V150 | 4k | 2028.01 | 1902.15 | **5292.46** | **2.61x** |
 | BI-V150 | 16k | 915.15 | 861.98 | **4618.41** | **5.05x** |
 
@@ -101,9 +101,9 @@ A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维�
 官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，测量提交为 `85b4ba82`；最终 `integration/flaggems` 为 `ef516137`，仅追加换行规范化。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低的原因尚未完全定位，因此报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 最终提交复测为 **98.1%**（105/105 请求成功）；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误。BI 最终提交精度未验证。已验证结果均 ≥ 0.95。
+C500 最终提交的多次评测为 **96.19%–98.1%**（105/105 请求成功，temperature=1.0 的采样波动）；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误。BI 最终提交精度未验证。已验证结果均 ≥ 0.95。
 
-**TTFT**：C500 最终提交 4k **1629.09 ms**（官网基线 3199.435 ms）、16k **18031.98 ms**
+**TTFT**：C500 最终提交 4k **1616.56 ms**（官网基线 3199.435 ms）、16k **17980.89 ms**
 （官网基线 27197.135 ms）；BI-V150 父提交历史测量 4k 为 **3908.25 ms**，16k 为 **118.76 s**
 （官网基线分别为 11573.53ms 和 599262.03ms）。C500 已按官网基线判断满足 `baseline +1%` 上限；BI 最终提交 TTFT 未验证。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，不替代官网基线判断。
 
@@ -179,7 +179,7 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 |---|---|
 | opt1/opt3 | **sort-free 采样链**：bf16 直读 + 温度折叠的 Gumbel-Max `argmax(x/T+g)`，<br>替换 eager PyTorch 的 fp32 全词表采样。`FlagGems/fused/sampler_fused.py` |
 | opt7/opt11 | **top-p 直方图缩放**：默认以单轮 1024-bin 质量直方图求 top-p 阈值，<br>与 mask 采样一趟完成；`fused/top_p_sample.py`。<br>消除每步约 1.6 ms 的 `_top_k_top_p_kernel` 与 lm_head 的冗余 cast |
-| opt2/opt4/opt6 | **双布局 GEMM**：默认小 M 回退 `F.linear`，大 M 走 nn/mcBLAS；<br>单布局（`VLLM_FL_NN_MIN_M=0` + `VLLM_FL_FREE_NT_WEIGHTS=1`）可释放 4 GB、KV 池 +8%，但两次官方复测差异未复现，保持双布局；`linear_nn_repack.py` |
+| opt2/opt4/opt6 | **单 nn 布局 GEMM**：只保留 `[K,N]` 副本并释放 nt 存储（-4 GB），全 M 走 mcBLAS；<br>KV 池 1,111,744 → 1,203,904 tokens（+8.3%），官方 64 并发下吞吐中性；`VLLM_FL_NN_MIN_M=192` + `VLLM_FL_FREE_NT_WEIGHTS=0` 可回到双布局；`linear_nn_repack.py` |
 | opt5 | **autotune 预热**：模型加载后按 (M,K,N) 触发一次，<br>避免运行时 autotune 抖动（4k +5.9%，见第 0 节启动耗时） |
 | opt8 | **prefill GEMM 直调 vendor mcBLAS**：`patches/mcblas_mm.py` 用 ctypes<br>直绑 `libmcblas` 的 `mcblasGemmEx`（cuBLAS 兼容 ABI），<br>注册为 custom op 保证 compiled 区域安全 |
 | opt10 | **消除 prefill 每层 DtoH 同步**：在 GPU 上对 `prefill_seq_lens`<br>执行 `cat` + `cumsum` 构建 attention metadata，消除每层两次隐式同步（4k +10.9%、16k +9.9%） |

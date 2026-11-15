@@ -290,9 +290,10 @@ def fig_a7_config():
 # 8/9. Constraint panels (half column, horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
-    labels = ["C500 复测 1", "C500 复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI 镜像基线最终交付"]
-    vals = [98.1, 98.1, 96.19, 98.1, 98.1]
-    colors = [HERO, HERO] + [P["violet"]] * 3
+    labels = ["C500 复测 1", "C500 复测 2", "C500 复测 3",
+              "BI 页对齐 1", "BI 页对齐 2", "BI 镜像基线最终交付"]
+    vals = [98.1, 98.1, 96.19, 96.19, 98.1, 98.1]
+    colors = [HERO] * 3 + [P["violet"]] * 3
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))
     y = np.arange(len(vals))[::-1]
     ax.barh(y, vals, height=0.40, color=colors,
@@ -300,13 +301,13 @@ def fig_accuracy():
     for yi, v in zip(y, vals):
         ax.text(v + 0.11, yi, f"{v:.2f}", va="center", ha="left", fontsize=7)
     ax.axvline(95.0, color=ACCENT, linewidth=0.7, linestyle=(0, (4, 3)), alpha=0.9)
-    ax.text(95.25, 4.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
+    ax.text(95.25, 5.62, "赛题门槛 95%", color=ACCENT, fontsize=6.5, ha="left",
             va="center", bbox=dict(facecolor="white", edgecolor="none", pad=0.8))
     ax.set_yticks(y)
     ax.set_yticklabels(labels, fontsize=7)
     ax.tick_params(axis="y", length=0)
     ax.set_xlim(93, 99.6)
-    ax.set_ylim(-0.6, 4.9)
+    ax.set_ylim(-0.6, 5.9)
     ax.set_xlabel("MATH-500 Level 3 准确率（%）", fontsize=7.5)
     ax.xaxis.set_major_locator(MaxNLocator(4))
     save(fig, "fig8_accuracy")
