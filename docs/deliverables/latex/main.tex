@@ -409,6 +409,49 @@ BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM �
 
 \subsection{GEMM 布局与路由（C500-opt2/C500-opt4/C500-opt6/C500-opt8/C500-opt11）}\label{sec:c500-gemm}
 MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。交付配置采用单 nn 布局：每个线性层只保留 $[K,N]$ 副本，全 M（含 decode）走 mcBLAS nn GEMM，并释放原 $(N,K)$ 存储，缺少 nn 副本或形状不满足条件时回退 \texttt{F.linear}。这一布局把权重副本从两份降到一份：MiniCPM5-2B 的线性层约 1.98B 参数，bf16 副本由 7.9 GB 降到 3.97 GB，回收的 3.97 GB 全部进入 KV 池，池容量由 1{,}111{,}744 增至 1{,}203{,}904 tokens（+8.3\%），131{,}072 token 单请求的最大并发由 8.48$\times$ 升至 9.19$\times$。官方两个用例固定 64 路并发，4k 只用到池子的 27\%、16k 为 1.114M 对 1.204M tokens，因此吞吐保持中性（4k 12451.84 对 12450.37、16k 11097.29 对 11095.14，均在 0.02\% 内），收益体现为长上下文与更高并发下的余量；同一路径的 MATH-500 Level 3 为 96.19\%--98.1\%（两次评测）。若需保守配置，\texttt{VLLM\_FL\_NN\_MIN\_M=192} 与 \texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=0} 可回到双布局。
+两种布局的存储方向与各自能走的流水见图~\ref{fig:nn-layout}。
+
+
+\begin{figure}[!htbp]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tikzpicture}[font=\scriptsize]
+  % ---- left: nt (native weight) ----
+  \draw[draw=mainblue, fill=mainblue!4] (0,0) rectangle (4.0,3.0);
+  \foreach \x in {0.5,1.0,...,3.5} \draw[mainblue!15] (\x,0) -- (\x,3.0);
+  \foreach \y in {0.5,1.0,...,2.5} \draw[mainblue!15] (0,\y) -- (4.0,\y);
+  \fill[accentred!15] (1.0,1.5) rectangle (2.5,2.5);
+  \draw[accentred, thick] (1.0,1.5) rectangle (2.5,2.5);
+  \node[above] at (2.0,3.05) {nt：原生 $W[N,K]$};
+  \node[left] at (-0.12,1.5) {$N$};
+  \node[below] at (2.0,-0.12) {$K$};
+  \node[accentred, align=center, text width=4.0cm] at (2.0,-0.9)
+    {tile 连续维为 $K$\\与 MMA 的 B 操作数相反};
+  \node[align=center, text width=4.0cm] at (2.0,-1.95)
+    {MACA 不生成 cp.async 流水\\88.9 TFLOPS};
+  % ---- arrow ----
+  \draw[flowarrow] (4.3,1.9) -- (7.4,1.9);
+  \node[mainblue] at (5.85,2.3) {装载时转置一次};
+  % ---- right: nn (repacked) ----
+  \begin{scope}[shift={(7.8,0)}]
+    \draw[draw=mainblue, fill=mainblue!4] (0,0) rectangle (4.0,3.0);
+    \foreach \x in {0.5,1.0,...,3.5} \draw[mainblue!15] (\x,0) -- (\x,3.0);
+    \foreach \y in {0.5,1.0,...,2.5} \draw[mainblue!15] (0,\y) -- (4.0,\y);
+    \fill[accentred!15] (1.0,1.0) rectangle (2.5,2.0);
+    \draw[accentred, thick] (1.0,1.0) rectangle (2.5,2.0);
+    \node[above] at (2.0,3.05) {nn：重排后 $W[K,N]$};
+    \node[left] at (-0.12,1.5) {$K$};
+    \node[below] at (2.0,-0.12) {$N$};
+    \node[accentred, align=center, text width=4.0cm] at (2.0,-0.9)
+      {tile 连续维为 $N$\\与 MMA 的 B 操作数一致};
+    \node[align=center, text width=4.0cm] at (2.0,-1.95)
+      {cp.async 流水：119.5 TFLOPS\\mcBLAS：152--197 TFLOPS};
+  \end{scope}
+\end{tikzpicture}%
+}
+\caption{权重布局与访存方向：nt 的 tile 连续维是 $K$，MACA 的流水 pass 不为该模式生成 cp.async 预取；重排成 nn 后 tile 与 MMA 操作数同向，可进入流水并直连 mcBLAS。转置只在装载时执行一次\label{fig:nn-layout}}
+\end{figure}
+
 
 另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
