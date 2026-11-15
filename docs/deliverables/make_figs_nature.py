@@ -290,7 +290,7 @@ def fig_a7_config():
 # 8/9. Constraint panels (half column, horizontal bars)
 # --------------------------------------------------------------------------- #
 def fig_accuracy():
-    labels = ["C500 当前复测 1", "C500 当前复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI 镜像基线最终交付"]
+    labels = ["C500 复测 1", "C500 复测 2", "BI 页对齐 1", "BI 页对齐 2", "BI 镜像基线最终交付"]
     vals = [98.1, 98.1, 96.19, 98.1, 98.1]
     colors = [HERO, HERO] + [P["violet"]] * 3
     fig, ax = plt.subplots(figsize=(7.4 * CM, 6.0 * CM))

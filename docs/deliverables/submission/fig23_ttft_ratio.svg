@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" width="207.523023pt" height="159.021411pt" viewBox="0 0 207.523023 159.021411" xmlns="http://www.w3.org/2000/svg" version="1.1">
+ <metadata>
+  <rdf:RDF xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+   <cc:Work>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:date>2026-11-16T03:19:09.887079</dc:date>
+    <dc:format>image/svg+xml</dc:format>
+    <dc:creator>
+     <cc:Agent>
+      <dc:title>Matplotlib v3.10.8, https://matplotlib.org/</dc:title>
+     </cc:Agent>
+    </dc:creator>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <defs>
+  <style type="text/css">*{stroke-linejoin: round; stroke-linecap: butt}</style>
+ </defs>
+ <g id="figure_1">
+  <g id="patch_1">
+   <path d="M 0 159.021411 
+L 207.523023 159.021411 
+L 207.523023 0 
+L 0 0 
+z
+" style="fill: #ffffff"/>
+  </g>
+  <g id="axes_1">
+   <g id="patch_2">
+    <path d="M 42.796094 133.12063 
+L 205.363023 133.12063 
+L 205.363023 2.16 
+L 42.796094 2.16 
+z
+" style="fill: #ffffff"/>
+   </g>
+   <g id="matplotlib.axis_1">
+    <g id="xtick_1">
+     <g id="line2d_1">
+      <defs>
+       <path id="me3ccd4ceb2" d="M 0 0 
+L 0 2.5 
+" style="stroke: #000000; stroke-width: 0.5"/>
+      </defs>
+      <g>
+       <use xlink:href="#me3ccd4ceb2" x="42.796094" y="133.12063" style="stroke: #000000; stroke-width: 0.5"/>
+      </g>
+     </g>
+     <g id="text_1">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="42.796094" y="143.981255" transform="rotate(-0 42.796094 143.981255)">0</text>
+     </g>
+    </g>
+    <g id="xtick_2">
+     <g id="line2d_2">
+      <g>
+       <use xlink:href="#me3ccd4ceb2" x="80.427327" y="133.12063" style="stroke: #000000; stroke-width: 0.5"/>
+      </g>
+     </g>
+     <g id="text_2">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="80.427327" y="143.981255" transform="rotate(-0 80.427327 143.981255)">25</text>
+     </g>
+    </g>
+    <g id="xtick_3">
+     <g id="line2d_3">
+      <g>
+       <use xlink:href="#me3ccd4ceb2" x="118.058561" y="133.12063" style="stroke: #000000; stroke-width: 0.5"/>
+      </g>
+     </g>
+     <g id="text_3">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="118.058561" y="143.981255" transform="rotate(-0 118.058561 143.981255)">50</text>
+     </g>
+    </g>
+    <g id="xtick_4">
+     <g id="line2d_4">
+      <g>
+       <use xlink:href="#me3ccd4ceb2" x="155.689795" y="133.12063" style="stroke: #000000; stroke-width: 0.5"/>
+      </g>
+     </g>
+     <g id="text_4">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="155.689795" y="143.981255" transform="rotate(-0 155.689795 143.981255)">75</text>
+     </g>
+    </g>
+    <g id="xtick_5">
+     <g id="line2d_5">
+      <g>
+       <use xlink:href="#me3ccd4ceb2" x="193.321028" y="133.12063" style="stroke: #000000; stroke-width: 0.5"/>
+      </g>
+     </g>
+     <g id="text_5">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="193.321028" y="143.981255" transform="rotate(-0 193.321028 143.981255)">100</text>
+     </g>
+    </g>
+    <g id="text_6">
+     <text style="font-size: 7.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: middle" x="124.079558" y="155.257114" transform="rotate(-0 124.079558 155.257114)">平均 TTFT 占官网基线的比例（%，越低越好）</text>
+    </g>
+   </g>
+   <g id="matplotlib.axis_2">
+    <g id="ytick_1">
+     <g id="line2d_6"/>
+     <g id="text_7">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="39.296094" y="30.782438" transform="rotate(-0 39.296094 30.782438)">C500 4k</text>
+     </g>
+    </g>
+    <g id="ytick_2">
+     <g id="line2d_7"/>
+     <g id="text_8">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="39.296094" y="59.884801" transform="rotate(-0 39.296094 59.884801)">C500 16k</text>
+     </g>
+    </g>
+    <g id="ytick_3">
+     <g id="line2d_8"/>
+     <g id="text_9">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="39.296094" y="88.987163" transform="rotate(-0 39.296094 88.987163)">BI-V150 4k</text>
+     </g>
+    </g>
+    <g id="ytick_4">
+     <g id="line2d_9"/>
+     <g id="text_10">
+      <text style="font-size: 7px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end" x="39.296094" y="118.089525" transform="rotate(-0 39.296094 118.089525)">BI-V150 16k</text>
+     </g>
+    </g>
+   </g>
+   <g id="patch_3">
+    <path d="M 42.796094 133.12063 
+L 42.796094 2.16 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_4">
+    <path d="M 42.796094 133.12063 
+L 205.363023 133.12063 
+" style="fill: none; stroke: #000000; stroke-width: 0.6; stroke-linejoin: miter; stroke-linecap: square"/>
+   </g>
+   <g id="patch_5">
+    <path d="M 42.796094 34.463622 
+L 120.263317 34.463622 
+L 120.263317 22.24063 
+L 42.796094 22.24063 
+z
+" clip-path="url(#p5ca44411e5)" style="fill: #0f4d92"/>
+   </g>
+   <g id="text_11">
+    <text style="font-size: 6.8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #272727" x="122.671716" y="29.98572" transform="rotate(-0 122.671716 29.98572)">51.5%（1.65 s）</text>
+   </g>
+   <g id="patch_6">
+    <path d="M 42.796094 63.565984 
+L 142.732727 63.565984 
+L 142.732727 51.342992 
+L 42.796094 51.342992 
+z
+" clip-path="url(#p5ca44411e5)" style="fill: #0f4d92"/>
+   </g>
+   <g id="text_12">
+    <text style="font-size: 6.8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #272727" x="145.141126" y="59.088082" transform="rotate(-0 145.141126 59.088082)">66.4%（18.06 s）</text>
+   </g>
+   <g id="patch_7">
+    <path d="M 42.796094 92.668346 
+L 93.626703 92.668346 
+L 93.626703 80.445354 
+L 42.796094 80.445354 
+z
+" clip-path="url(#p5ca44411e5)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="text_13">
+    <text style="font-size: 6.8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #272727" x="96.035102" y="88.190444" transform="rotate(-0 96.035102 88.190444)">33.8%（3.91 s）</text>
+   </g>
+   <g id="patch_8">
+    <path d="M 42.796094 121.770709 
+L 72.626974 121.770709 
+L 72.626974 109.547717 
+L 42.796094 109.547717 
+z
+" clip-path="url(#p5ca44411e5)" style="fill: #9a4d8e"/>
+   </g>
+   <g id="text_14">
+    <text style="font-size: 6.8px; font-family: 'Times New Roman', 'SimHei'; text-anchor: start; fill: #272727" x="75.035373" y="117.292806" transform="rotate(-0 75.035373 117.292806)">19.8%（118.76 s）</text>
+   </g>
+   <g id="text_15">
+    <text style="font-size: 6.5px; font-family: 'Times New Roman', 'SimHei'; text-anchor: end; fill: #b64342" x="192.568403" y="11.870185" transform="rotate(-0 192.568403 11.870185)">上限 101%</text>
+   </g>
+   <g id="line2d_10">
+    <path d="M 194.826277 133.12063 
+L 194.826277 2.16 
+" clip-path="url(#p5ca44411e5)" style="fill: none; stroke-dasharray: 2.8,2.1; stroke-dashoffset: 0; stroke: #b64342; stroke-width: 0.7"/>
+   </g>
+  </g>
+ </g>
+ <defs>
+  <clipPath id="p5ca44411e5">
+   <rect x="42.796094" y="2.16" width="162.566929" height="130.96063"/>
+  </clipPath>
+ </defs>
+</svg>

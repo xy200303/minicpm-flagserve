@@ -1,0 +1,67 @@
+date=2026-11-16T00:34:50+08:00
+experiment=final-commit-warmup-off
+serve_command=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072
+VLLM_FL_MM_WARMUP=0
+mx-smi  version: 2.3.1
+
+=================== MetaX System Management Interface Log ===================
+Timestamp                                         : Mon Nov 16 00:34:50 2026
+
+Attached GPUs                                     : 1
++---------------------------------------------------------------------------------+
+| MX-SMI 2.3.1                       Kernel Mode Driver Version: 3.8.30           |
+| MACA Version: 3.7.0.38             BIOS Version: 1.33.5.0                       |
+|------------------+-----------------+---------------------+----------------------|
+| Board       Name | GPU   Persist-M | Bus-id              | GPU-Util      sGPU-M |
+| Pwr:Usage/Cap    | Temp       Perf | Memory-Usage        | GPU-State            |
+|==================+=================+=====================+======================|
+| 0     MetaX C500 | 0           Off | 0000:37:00.0        | 0%          Disabled |
+| 61W / 350W       | 40C          P0 | 826/65536 MiB       | Available            |
++------------------+-----------------+---------------------+----------------------+
+
++---------------------------------------------------------------------------------+
+| Process:                                                                        |
+|  GPU                    PID         Process Name                 GPU Memory     |
+|                                                                  Usage(MiB)     |
+|=================================================================================|
+|  no process found                                                               |
++---------------------------------------------------------------------------------+
+
+End of Log
+               total        used        free      shared  buff/cache   available
+Mem:           128Gi        12Gi       115Gi          0B          0B       115Gi
+Swap:             0B          0B          0B
+b5793cd4477a530eb420c58bf2a4e5d742a8846c
+ef5161373bc97c2ccabd1f6d51d92fb2a37ff814
+Name: torch
+Version: 2.8.0+metax3.7.0.7
+Summary: Tensors and Dynamic neural networks in Python with strong GPU acceleration
+Home-page: https://pytorch.org/
+Author: Metax PyTorch Team
+Author-email: 
+License: BSD-3-Clause
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: filelock, fsspec, jinja2, networkx, setuptools, sympy, typing-extensions
+Required-by: causal_conv1d, compressed-tensors, deep_gemm, flash_attn, flash_mla, flashinfer, hstu_attn, mamba_ssm, mcoplib, mctlassEx, nixl, sageattention, spargeattention, spconv, torch_c_dlpack_ext, xgrammar
+---
+Name: vllm
+Version: 0.24.0+empty
+Summary: A high-throughput and memory-efficient inference and serving engine for LLMs
+Home-page: https://github.com/vllm-project/vllm
+Author: vLLM Team
+Author-email: 
+License: 
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: aiohttp, anthropic, blake3, cachetools, cbor2, cloudpickle, compressed-tensors, depyf, diskcache, einops, fastapi, filelock, ijson, jsonschema, lark, llguidance, lm-format-enforcer, mcp, mistral_common, model-hosting-container-standards, msgspec, ninja, numpy, openai, openai-harmony, opencv-python-headless, opentelemetry-api, opentelemetry-exporter-otlp, opentelemetry-sdk, opentelemetry-semantic-conventions-ai, outlines_core, partial-json-parser, pillow, prometheus-fastapi-instrumentator, prometheus_client, protobuf, psutil, py-cpuinfo, pybase64, pydantic, python-json-logger, pyyaml, pyzmq, regex, requests, safetensors, sentencepiece, setproctitle, setuptools, six, starlette, tiktoken, tokenizers, tqdm, transformers, typing_extensions, watchfiles, xgrammar
+Required-by: 
+---
+Name: triton
+Version: 3.0.0+metax3.7.0.7
+Summary: A language and compiler for custom Deep Learning operations
+Home-page: https://github.com/triton-lang/triton/
+Author: Philippe Tillet
+Author-email: phil@openai.com
+License: 
+Location: /opt/conda/lib/python3.12/site-packages
+Requires: filelock
+Required-by: mamba_ssm, mcoplib, xgrammar
