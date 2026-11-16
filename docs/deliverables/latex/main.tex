@@ -849,6 +849,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \caption{正确性验证的分层覆盖：内核数值与批量不变性属于算子级证据，采样分布属于分布级证据，端到端精度是唯一的交付判据；各层原始日志按 \S\ref{sec:correctness} 的索引归档\label{fig:correctness-layers}}
 \end{figure}
 
+\clearpage
 \section{合规对照与复现指南}\label{sec:compliance}
 \subsection{合规对照}
 \begin{table}[!htbp]
@@ -989,7 +990,7 @@ python3 vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \subsection{结果与原始证据对应表}
 下表路径均相对于 \href{https://github.com/xy200303/minicpm-flagserve}{文档仓库根目录}。证据目录保留汇总与逐轮数据、环境清单和运行日志；精度按评测 JSON 的 \texttt{metrics[0].score} 读取。
 
-\begin{table}[H]
+\begin{table}[!htbp]
 \centering\footnotesize
 \caption{报告结果、代码版本与原始证据索引}
 \begin{tabularx}{\linewidth}{@{}p{2.7cm}p{1.1cm}Y@{}}
