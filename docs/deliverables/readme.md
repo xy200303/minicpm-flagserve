@@ -25,9 +25,11 @@ git clone --single-branch --branch integration/flaggems \
 # 按上表 commit 重建源码后打包；提交 ZIP 不携带 .git，只剔除本机 build、__pycache__ 和虚拟环境
 ```
 
+> 为保证无 `.git` 的源码树也能构建，`FlagGems/pyproject.toml` 在 `[tool.setuptools_scm]` 下增加一行 `fallback_version = "5.3.5"`（插件原本已有该字段）。这行只在构建取版本时生效，不改变运行时行为，也不参与任何优化路径。
+>
 > 为提高跨平台解压兼容性，本包将上游 `vllm-plugin-FL/vllm_fl/configs/moe/E=256,N=512,device_name=nvidia.json` 软链接展开为普通文件，内容与包内目标 `E=256,N=512,device_name=nvidia,model=Qwen3.6-35B-A3B-H100.json` 一致。这是打包处理，不是内核改动。源仓库的 Git 记录仍保留原软链接；提交 ZIP 不包含 `.git`，解压后该路径显示为普通 JSON 文件。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105）；2026-10-25 的早期交付栈两次为 98.1%，差异来自 temperature=1.0 的采样波动**。默认 warmup=1 的启动成本过高问题、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105）；2026-10-25 的早期交付栈两次为 98.1%，差异来自 temperature=1.0 的采样波动**。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
 
 ## 0.1 环境要求与启动耗时
 
