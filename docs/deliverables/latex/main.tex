@@ -442,7 +442,7 @@ MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 p
 
 另修复 \texttt{vocab\_parallel\_embedding} 在 import 时绑定原版 \texttt{dispatch\_unquantized\_gemm} 导致 lm\_head 未进入优化路由的问题。2026-10-25 复测该形状时，FlagGems Triton 为 667 $\mu$s，直接 mcBLAS 为 430 $\mu$s（1.55$\times$）；同次原生 \texttt{torch.mm} 为 385 $\mu$s，说明 mcBLAS 的收益是相对于 FlagGems 路径，而不是超过所有 vendor 实现。
 
-只有已经生成 nn 副本且形状满足条件的线性层才进入新路径。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
+nn 副本只对 $N$ 在 512--16384 之间、无 bias 的线性层建立，其余层保留原路径；lm\_head 的 $N$ 超出该上限，由独立标志单独放行。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
 
 \begin{reportcode}{\texttt{linear\_nn\_repack.py:112-136}：按形状在 vendor、Triton 与 stock 之间路由}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=112,lastline=136]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
@@ -514,7 +514,7 @@ BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通
 \end{figure}
 
 \subsection{prefill attention 与 host 路径（BI-A1/BI-A3/BI-A6）}\label{sec:bi-prefill}
-针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
+针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。不满足 dtype、头数、页大小或因果掩码条件的调用回退 vLLM 原生路径。内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
 \begin{reportcode}{\texttt{vendor\_flash\_attn.py:46-57}：同一 Triton program 收集一页 K 与 V}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=46,lastline=57]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
@@ -634,7 +634,7 @@ BI-A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k �
 \subsection{双累加器门控融合与 K 连续权重预打包（BI-A48/BI-A60）}\label{sec:bi-a60}
 BI-A48 使用两个独立的 FP32 累加器分别计算 gate/up，共享 A tile 加载，并直接写出 \(gate\cdot\mathrm{sigmoid}(gate)\cdot up\)，避免中间激活的额外读写。官方 4k 两组中位数由 5201.98 增至 5237.32 tok/s（+0.679\%），16k 由 4524.55 增至 4556.53 tok/s（+0.707\%），两种场景的 TTFT 均改善，MATH-500 Level 3 为 98.1\%。
 
-BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=32\)、\(BN=128\)，gate/up 分别重排为 \([K/BK,N/BN,BN,BK]\)，即同一 tile 内的 K 维连续。内核以 \([BK,BN]\) 逻辑形状执行 \texttt{tl.dot}，写回时使用全局 \texttt{rn} 偏移；K、N 可整除时进入该路径，否则回退 A48。预打包结果按权重地址、设备、dtype、形状和 stride 缓存，缓存项保留原权重引用，稳态 decode 不重复转换。图~\ref{fig:a60-layout} 对比了两种布局下一个 B tile 的物理位置：原布局中它分散在 32 个相距 $N$ 个元素的行段里，预打包后是一段连续的 4096 个元素（bf16 下为 8 KB）。
+BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=32\)、\(BN=128\)，gate/up 分别重排为 \([K/BK,N/BN,BN,BK]\)，即同一 tile 内的 K 维连续。内核以 \([BK,BN]\) 逻辑形状执行 \texttt{tl.dot}，写回时使用全局 \texttt{rn} 偏移；K、N 可整除时进入该路径，否则回退 A48。插件侧还按 M 派发：$M\le128$ 与 $M\ge1024$ 走融合内核，$128<M<1024$ 的混合批回退原 gate/up 路径；官方用例的 decode 为 64、prefill 为数千 token，主要形状落在启用区间。预打包结果按权重地址、设备、dtype、形状和 stride 缓存，缓存项保留原权重引用，稳态 decode 不重复转换。图~\ref{fig:a60-layout} 对比了两种布局下一个 B tile 的物理位置：原布局中它分散在 32 个相距 $N$ 个元素的行段里，预打包后是一段连续的 4096 个元素（bf16 下为 8 KB）。
 
 \begin{figure}[!htbp]
 \centering

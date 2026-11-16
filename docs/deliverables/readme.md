@@ -96,7 +96,7 @@ A48 双累加器门控融合在两组同日交错 A/B 中继续取得小幅正�
 **111534.41 → 110251.38ms**。A48 的 MATH-500 为 **98.1%**，105/105 成功、0 错误。
 原始数据见 `docs/experiments/runs/a48-dual-acc-silu-mul/`。
 
-A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维连续，缓存仅构建一次并保留原权重引用。开发期在公开 tag 基线上的两组同日 A/B 为 4k **5238.28 → 5314.15 tok/s（+1.448%）**、16k **4551.39 → 4620.25 tok/s（+1.513%）**；该历史数据见 `docs/experiments/runs/a60-tile-packed/`。
+A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维连续，缓存仅构建一次并保留原权重引用。插件侧按 M 派发：M≤128 与 M≥1024 走融合内核，128–1024 之间的混合批回退原路径。开发期在公开 tag 基线上的两组同日 A/B 为 4k **5238.28 → 5314.15 tok/s（+1.448%）**、16k **4551.39 → 4620.25 tok/s（+1.513%）**；该历史数据见 `docs/experiments/runs/a60-tile-packed/`。
 
 官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，测量提交为 `85b4ba82`；最终 `integration/flaggems` 为 `ef516137`，仅追加换行规范化。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低的原因尚未完全定位，因此报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
@@ -270,6 +270,7 @@ evalscope eval --model minicpm \
 2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
 3. 启动参数：`vllm serve` 命令行与 4.3 节一致，不追加其它参数或环境变量。
 4. 缓存：serve 日志中的 prefix cache 命中率应低于 1%；命中偏高说明复用了上次的 KV，需要新起服务重测。
+5. 生效核对：BI-V150 的 serve 日志应出现 `fl iluvatar: vendor flash prefill ENGAGED`、`Iluvatar dual-accumulator MLP fusion enabled` 与周期性的 `decode_attn_fast slice: used=...`；C500 的日志应显示 KV 池 1,203,904 tokens，且启动阶段没有 `patch failed` 警告。缺少这些行说明对应路径没有生效。
 
 ## 5. 实验记录与事实来源
 
