@@ -187,10 +187,18 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 
 ### 4.1 安装
 
+把压缩包里的两个目录替换到 `/workspace`，分别在各自目录执行官方给的同一条命令
+（非可编辑安装，不需要 `.git` 元数据）：
+
 ```bash
-cd vllm-plugin-FL && pip install -e . --no-build-isolation
-cd ../FlagGems && pip install -e . --no-build-isolation
+cd /workspace/vllm-plugin-FL && pip install --no-build-isolation .
+cd /workspace/FlagGems       && pip install --no-build-isolation .
 ```
+
+插件的 `pyproject.toml` 原本就有 `fallback_version`，FlagGems 为此新增一行；两处只影响构建取版本，不改运行时行为。
+若环境里的 setuptools 偏旧、报 `project.license` 配置错误，先执行
+`pip install -U "setuptools>=75,<77"` 再重跑上面的命令；需要改动即生效时可把命令换成
+`pip install -e . --no-build-isolation`。
 
 ### 4.2 环境变量
 

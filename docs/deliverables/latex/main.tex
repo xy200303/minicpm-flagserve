@@ -871,19 +871,16 @@ TTFT 不高于官网基线加 1\% & 两平台 4k、16k 实测均低于对应官�
 \end{table}
 
 \subsection{复现步骤}
-先取得两个集成分支（保留完整历史），再分别以可编辑模式安装：
+提交包内已含两个源码目录，替换到 \texttt{/workspace} 后按官方命令安装即可；也可从两个集成分支取得同一份代码，用于核对完整历史。
 
-\begin{reportcode}{源码获取与安装}
+\begin{reportcode}{安装（与官网同一条命令）}
 \begin{minted}{bash}
-git clone --single-branch --branch integration/vllm-plugin-fl \
-  https://github.com/xy200303/vllm-plugin-FL.git vllm-plugin-FL
-git clone --single-branch --branch integration/flaggems \
-  https://github.com/xy200303/FlagGems.git FlagGems
-
-cd vllm-plugin-FL && pip install -e . --no-build-isolation
-cd ../FlagGems   && pip install -e . --no-build-isolation
+cd /workspace/vllm-plugin-FL && pip install --no-build-isolation .
+cd /workspace/FlagGems       && pip install --no-build-isolation .
 \end{minted}
 \end{reportcode}
+
+压缩包不含 \texttt{.git}：插件的 \texttt{pyproject.toml} 原本就有 \texttt{fallback\_version}，FlagGems 为此新增一行，两者只影响构建取版本；若环境内 setuptools 偏旧、报 \texttt{project.license} 配置错误，先执行 \texttt{pip install -U "setuptools>=75,<77"}。
 
 两平台均设置 \texttt{VLLM\_PLUGINS=fl}。C500 还需以下环境变量；当镜像已有其他版本的插件时，同时固定源码路径，避免加载到非交付目录：
 
