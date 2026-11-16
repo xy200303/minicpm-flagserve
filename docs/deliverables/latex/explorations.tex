@@ -53,15 +53,10 @@ BI-V150 的 A48 用双 FP32 累加器把 gate/up GEMM 与 SwiGLU 融在一个 Tr
 RELU/BIAS/GELU/HARDSWISH，没有 SiLU，也没有双输入乘法，无法在库内完成
 \(\mathrm{silu}(gate)\cdot up\)。
 
-在 C500 上实测（M=2048、N=12288、K=2048，bf16）：
-
-\begin{itemize}[leftmargin=2em]
-\item 现状：mcBLAS GEMM 522 $\mu$s 加独立 \texttt{silu\_and\_mul} 175 $\mu$s
-（151 MB 流量，862 GB/s），合计 697 $\mu$s/层；
-\item 融合 Triton：同形状 GEMM 为 707 $\mu$s，epilogue 在寄存器内完成，约 707 $\mu$s/层。
-\end{itemize}
+在 C500 上实测（M=2048、N=12288、K=2048，bf16）：现状为 mcBLAS GEMM 522 $\mu$s 加独立 \texttt{silu\_and\_mul} 175 $\mu$s
+（151 MB 流量，862 GB/s），合计 697 $\mu$s/层；融合 Triton 的同形状 GEMM 为 707 $\mu$s，epilogue 在寄存器内完成，约 707 $\mu$s/层。
 
 融合省下的 175 $\mu$s 小于 GEMM 变慢的 185 $\mu$s，净增约 10 $\mu$s/层
-（42 层约 $+0.4$ ms/步，$+0.3\%$）。因此不做移植：A48 的收益依赖 Triton GEMM，
-C500 的 GEMM 引擎是 mcBLAS，两者的 epilogue 能力不可叠加。
+（42 层约 $+0.4$ ms/步）。A48 的收益依赖 Triton GEMM，
+C500 走 mcBLAS，两者的 epilogue 能力不可叠加，故不移植。
 \end{sloppypar}

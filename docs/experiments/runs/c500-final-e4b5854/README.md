@@ -29,11 +29,12 @@
 ## 精度
 
 MATH-500 Level 3：**96.19%（101/105）**，`math_500.json`。
-同配置另一次评测为 98.1%（103/105），差异来自官方 temperature=1.0 的采样波动；两次均高于 0.95 门槛。
+同日、同 FlagGems、双布局提交 `58b750e` 的另一次评测为 103/105（98.1%）；nn 布局只改权重存放方式、不改变数值，差异更可能来自官方 temperature=1.0 的采样波动。两次均高于 0.95 门槛（官方基线 0.962）。
 
 ## 文件
 
-- `bench-4k.log` / `bench-16k.log`：官方 benchmark 原始输出
-- `serve.log`：服务日志（KV 池、running/waiting、prefix cache）
+- `bench-4k.log` / `bench-16k.log`：官方 benchmark 原始输出（含逐轮与汇总）
 - `eval.log` / `math_500.json`：精度评测
-- `timing.txt` / `manifest.txt`：启动耗时与实例信息
+- `timing.txt` / `manifest.txt`：启动耗时、KV 池大小与实例信息
+
+**缺档说明**：本轮 serve 日志与 benchmark 原始 CSV 未回传到本地，prefix cache 命中率无法就本轮单独核实；相邻两轮（`c500-final-58b750e`、`c500-optimization-program`）的 serve 日志命中率峰值为 0.7%。`timing.txt` 里的 `eval_exit=143` 是首次评测被外层超时终止的记录，随后重跑成功，结果以 `eval.log` 与 `math_500.json` 为准（`status.txt` 记 `eval_exit=0`）。

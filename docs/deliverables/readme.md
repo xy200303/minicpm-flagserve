@@ -29,7 +29,7 @@ git clone --single-branch --branch integration/flaggems \
 >
 > 为提高跨平台解压兼容性，本包将上游 `vllm-plugin-FL/vllm_fl/configs/moe/E=256,N=512,device_name=nvidia.json` 软链接展开为普通文件，内容与包内目标 `E=256,N=512,device_name=nvidia,model=Qwen3.6-35B-A3B-H100.json` 一致。这是打包处理，不是内核改动。源仓库的 Git 记录仍保留原软链接；提交 ZIP 不包含 `.git`，解压后该路径显示为普通 JSON 文件。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105）；2026-10-25 的早期交付栈两次为 98.1%，差异来自 temperature=1.0 的采样波动**。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%**（101/105）；同日、同 FlagGems、双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性。2026-10-25 的早期交付栈两次为 98.1%。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
 
 ## 0.1 环境要求与启动耗时
 
@@ -180,7 +180,7 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 | opt1/opt3 | **sort-free 采样链**：bf16 直读 + 温度折叠的 Gumbel-Max `argmax(x/T+g)`，<br>替换 eager PyTorch 的 fp32 全词表采样。`FlagGems/fused/sampler_fused.py` |
 | opt7/opt11 | **top-p 直方图缩放**：默认以单轮 1024-bin 质量直方图求 top-p 阈值，<br>与 mask 采样一趟完成；`fused/top_p_sample.py`。<br>消除每步约 1.6 ms 的 `_top_k_top_p_kernel` 与 lm_head 的冗余 cast |
 | opt2/opt4/opt6 | **单 nn 布局 GEMM**：只保留 `[K,N]` 副本并释放 nt 存储（-4 GB），全 M 走 mcBLAS；<br>KV 池 1,111,744 → 1,203,904 tokens（+8.3%），官方 64 并发下吞吐中性；`VLLM_FL_NN_MIN_M=192` + `VLLM_FL_FREE_NT_WEIGHTS=0` 可回到双布局；`linear_nn_repack.py` |
-| opt5 | **autotune 预热**：模型加载后按 (M,K,N) 触发一次，<br>避免运行时 autotune 抖动（4k +5.9%，见第 0 节启动耗时） |
+| opt5 | **autotune 预热（可选，默认关闭）**：模型加载后按 (M,K,N) 触发一次，<br>避免运行时 autotune 抖动。早期默认开启时 4k 曾有 +5.9% 的单次记录，<br>但当前路由下分桶大多走不到，官方口径无收益，且冷启动被拉长到 6–19 分钟 |
 | opt8 | **prefill GEMM 直调 vendor mcBLAS**：`patches/mcblas_mm.py` 用 ctypes<br>直绑 `libmcblas` 的 `mcblasGemmEx`（cuBLAS 兼容 ABI），<br>注册为 custom op 保证 compiled 区域安全 |
 | opt10 | **消除 prefill 每层 DtoH 同步**：在 GPU 上对 `prefill_seq_lens`<br>执行 `cat` + `cumsum` 构建 attention metadata，消除每层两次隐式同步（4k +10.9%、16k +9.9%） |
 | opt11 | lm_head nn 布局路由 + top-p zoom 单轮 1024-bin 定稿 |
@@ -189,32 +189,33 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 
 ### 4.1 安装
 
-把压缩包里的两个目录替换到 `/workspace`，分别在各自目录执行官方给的同一条命令
-（非可编辑安装，不需要 `.git` 元数据）：
+在官方镜像的原 Python 环境中操作，先备份原源码目录，再将包内两个目录完整替换到 `/workspace`，不要叠加解压到旧源码中。官网给出的安装选项为 `pip install --no-build-isolation`；以下补上当前目录 `.`。
+
+两个项目的构建工具版本要求不同：插件要求 `setuptools>=77.0.3,<81`，FlagGems 要求 `setuptools>=64,<77`。禁用构建隔离时须按安装顺序分别准备，不能用同一个 setuptools 版本满足两份声明：
 
 ```bash
+python -m pip install "setuptools>=77.0.3,<81" "setuptools-scm>=8,<10" "wheel==0.46.2"
 cd /workspace/vllm-plugin-FL && pip install --no-build-isolation .
-cd /workspace/FlagGems       && pip install --no-build-isolation .
+python -m pip install "setuptools>=64,<77" "setuptools-scm>=8,<10" "wheel==0.46.2"
+cd /workspace/FlagGems && pip install --no-build-isolation .
+python -m pip check
 ```
 
-插件的 `pyproject.toml` 原本就有 `fallback_version`，FlagGems 为此新增一行；两处只影响构建取版本，不改运行时行为。
-若环境里的 setuptools 偏旧、报 `project.license` 配置错误，先执行
-`pip install -U "setuptools>=75,<77"` 再重跑上面的命令；需要改动即生效时可把命令换成
-`pip install -e . --no-build-isolation`。
+使用镜像自带的厂商 PyTorch、Triton、vLLM，不另外安装通用 GPU 依赖或可选 extras。插件的 `fallback_version` 已由上游提供，FlagGems 增加该字段以支持不含 `.git` 的源码构建。构建工具检查不替代目标 GPU 上的服务启动和评测。
 
 ### 4.2 环境变量
 
-天数（Iluvatar）与 C500 均需保留 `VLLM_PLUGINS=fl`。若镜像已有其他插件版本，
-同时设置 `PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src`，确保加载交付源码。
-C500 的完整环境变量为：
+沿用官方镜像初始化的 PATH、MACA/COREX 和动态库环境，仅按官网设置：
 
 ```bash
-export PATH=/opt/conda/bin:$PATH
-export MACA_PATH=/opt/maca
-export MACA_HOME=/opt/maca
-export LD_LIBRARY_PATH=/opt/maca/lib:/opt/maca/lib64
 export VLLM_PLUGINS=fl
-export PYTHONPATH=/workspace/vllm-plugin-FL:/workspace/FlagGems/src
+```
+
+不要覆盖镜像的 `LD_LIBRARY_PATH`，也不要用 `PYTHONPATH` 将旧源码放在已安装包之前。安装后在 `/workspace` 核对模块实际位置，确认使用当前 Python 环境中的安装产物：
+
+```bash
+cd /workspace
+python -c 'import vllm_fl, flag_gems; print(vllm_fl.__file__); print(flag_gems.__file__)'
 ```
 
 ### 4.3 启动（与官方一致，一字未改）
@@ -259,18 +260,15 @@ evalscope eval --model minicpm \
 
 结果在 `/workspace/evalscope-datasets/level3/<timestamp>/reports/minicpm/math_500.json`；当前 evalscope 版本的精度字段为 `metrics[0].score`。
 
-**数据集准备**：`math_500` 由 evalscope 自动下载；离线实例可提前把数据集放到
-`/workspace/evalscope-datasets/math_500`，上面命令的 `dataset_id` 即指向该目录。
-评测子集为 Level 3，共 105 题。
+**数据集准备**：上述命令显式使用本地目录 `/workspace/evalscope-datasets/math_500`。运行前确认官方镜像已提供该数据集；目录缺失时先准备数据，不依赖该命令自动下载。评测子集为 Level 3，共 105 题。
 
 ### 4.6 结果校验
 
-1. 吞吐：官方脚本逐轮打印 total tokens/s，按四轮去首、后三轮均值与第 1 节表格比对；
-   同一实例的多次测量波动一般在 1% 以内。原始逐轮 CSV 在 `--work-dir` 同级目录，可自行复算。
+1. 吞吐：按四轮去首、后三轮均值与第 1 节比对，保留所有逐轮结果。按上述工作目录运行时，原始 CSV 位于 `/workspace/benchmark_results/raw_runs_<timestamp>.csv`，汇总为同目录 `summary_<timestamp>.csv`。波动与场景、实例有关，历史测量也有超过 1% 的情况。
 2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
-3. 启动参数：`vllm serve` 命令行与 4.3 节一致，不追加其它参数或环境变量。
-4. 缓存：serve 日志中的 prefix cache 命中率应低于 1%；命中偏高说明复用了上次的 KV，需要新起服务重测。
-5. 生效核对：BI-V150 的 serve 日志应出现 `fl iluvatar: vendor flash prefill ENGAGED`、`Iluvatar dual-accumulator MLP fusion enabled` 与周期性的 `decode_attn_fast slice: used=...`；C500 的日志应显示 KV 池 1,203,904 tokens，且启动阶段没有 `patch failed` 警告。缺少这些行说明对应路径没有生效。
+3. 启动参数：`vllm serve` 命令行与 4.3 节一致，沿用镜像环境与默认优化开关。
+4. 缓存：记录 prefix cache 命中率；本报告最终测量低于 1%，这是实测状态而非官方额外门槛。异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
+5. 生效核对：检查 `patch failed` 或回退警告。BI 的 `vendor flash prefill ENGAGED` 记录首次进入该分支，不能单独证明执行成功；还需核对后续异常。`decode_attn_fast slice` 仅每累计 4000 次混合步路径调用输出一次，缺少该行不能判定纯 decode 路径失效。C500 的 1,203,904 tokens 是本次实例的 KV 池测量值，不是固定验收值；池大小还受可用显存影响。安装路径、日志和实际负载的内核执行情况应结合判断。
 
 ## 5. 实验记录与事实来源
 
@@ -287,7 +285,7 @@ evalscope eval --model minicpm \
 
 | 结果 | 原始证据 |
 |---|---|
-| C500 实测性能 | `docs/experiments/runs/c500-next-optimization/c500-current-{4k,16k}-a1/summary.csv` 及各自 serve／bench 日志 |
+| C500 最终提交性能与精度 | `docs/experiments/runs/c500-final-e4b5854/` 下的 `bench-4k.log`、`bench-16k.log`、`math_500.json`、服务日志和 manifest |
 | C500 本机原生基线 | `docs/experiments/runs/c500-final-audit/healthy-baseline-{raw,summary}.csv` 与 serve／bench 日志 |
 | C500 两次精度与微基准 | `docs/experiments/runs/c500-final-audit/` 下的 `healthy-eval1-math500.json`、`healthy-eval2-math500.json`、`micro-healthy.json` |
 | BI-V150 两组 A7/A20 | `docs/experiments/runs/bi-final-audit/{1-a7,1-a20,2-a7,2-a20}/benchmark_results/` 及同级 serve／bench 日志 |
