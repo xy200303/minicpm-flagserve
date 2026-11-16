@@ -175,6 +175,18 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 代码位于 `vllm_fl/dispatch/backends/vendor/metax/` 与
 `FlagGems/src/flag_gems/`（`fused/`、`runtime/backend/_metax/`）。
 
+改动分**算子层**与**执行路径层**。算子层交付两类自研内核：
+
+- **采样链两个 Triton 内核**（`FlagGems/fused/sampler_fused.py`、`fused/top_p_sample.py`）：
+  bf16 直读 + 温度折叠的 Gumbel-Max，以及以 1024-bin 质量直方图定位 top-p 阈值的单趟采样。
+  B=64、词表 130560 时 **4.086 → 0.381 ms（10.7×）**，采样族占 GPU busy 由 **38.8% 降到 5.1%**。
+- **GEMM 内核族 10 个**（`FlagGems/runtime/backend/_metax/ops/mm.py`）：通用 nn/nt 三布局、
+  split-K 三件套、双缓冲 nt/nn 各两件。decode 形状下 qkv 110→56.4 µs、o_proj →57.6、
+  gate_up →72.2、down →91.3 µs，**层合计 442→277 µs**。最终热路径经实测改由 mcBLAS 承担
+  （mcBLAS 152–197 TFLOPS，Triton nn 为 119.5），内核族保留为回退与参考实现。
+
+执行路径层的改动见下表。
+
 | 项 | 内容 |
 |---|---|
 | opt1/opt3 | **sort-free 采样链**：bf16 直读 + 温度折叠的 Gumbel-Max `argmax(x/T+g)`，<br>替换 eager PyTorch 的 fp32 全词表采样。`FlagGems/fused/sampler_fused.py` |
