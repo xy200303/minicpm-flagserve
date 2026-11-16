@@ -1,0 +1,39 @@
+\definecolor{mainblue}{HTML}{245A81}
+\definecolor{accentred}{HTML}{B24E44}
+\definecolor{biviolet}{HTML}{76639B}
+\definecolor{codeteal}{HTML}{247D78}
+\definecolor{codegray}{HTML}{596879}
+\definecolor{lightgrey}{HTML}{C5CFD8}
+\definecolor{codebg}{HTML}{F4F7FA}
+\definecolor{reportink}{HTML}{243447}
+\setmainfont{Times New Roman}
+\setsansfont{Times New Roman}
+\setmonofont[Scale=0.88]{Consolas}
+\ctexset{
+  section={format=\Large\rmfamily\heiti\mdseries\color{mainblue}, beforeskip=1.3em, afterskip=0.6em},
+  subsection={format=\large\rmfamily\heiti\mdseries\color{reportink}, beforeskip=1em, afterskip=0.4em},
+  subsubsection={format=\normalsize\rmfamily\heiti\mdseries\color{reportink}}
+}
+\setlength{\headheight}{16pt}
+\fancyhead[L]{\footnotesize\sffamily\color{codegray} MiniCPM5-2B · 双国产芯片推理优化}
+\fancyhead[R]{\footnotesize\sffamily\color{codegray} XLANG2026}
+\fancyfoot[C]{\footnotesize\sffamily\color{codegray}\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\captionsetup{font={small,stretch=1.15},labelfont={bf,color=mainblue},textfont={color=reportink},labelsep=quad,format=hang,justification=raggedright,singlelinecheck=true,skip=8pt}
+\captionsetup[sub]{font={small,stretch=1.1},justification=centering,skip=5pt}
+\setlength{\textfloatsep}{16pt plus 3pt minus 3pt}
+\setlength{\floatsep}{14pt plus 2pt minus 2pt}
+\setlength{\intextsep}{14pt plus 2pt minus 2pt}
+\renewcommand{\arraystretch}{1.12}
+\setlength{\aboverulesep}{0.5ex}
+\setlength{\belowrulesep}{0.7ex}
+\tikzset{
+  every picture/.append style={font=\sffamily\small},
+  every node/.append style={text=reportink},
+  flowbox/.style={draw=mainblue!45,fill=mainblue!5,rounded corners=3pt,line width=0.55pt,align=center,font=\sffamily\small,inner sep=6pt,minimum height=0.88cm},
+  flowsmall/.style={flowbox,font=\sffamily\scriptsize,inner sep=5pt},
+  flowarrow/.style={-{Latex[length=2mm]},line width=0.7pt,draw=mainblue!80},
+  flownote/.style={font=\sffamily\scriptsize,text=codegray,align=center},
+  reportpanel/.style={draw=lightgrey!65,fill=codebg,rounded corners=4pt,line width=0.5pt},
+  reportnode/.style={draw=mainblue!40,fill=white,rounded corners=3pt,minimum height=0.78cm,text width=2.55cm,align=center,inner sep=5pt,font=\sffamily\small}
+}

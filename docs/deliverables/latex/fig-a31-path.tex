@@ -1,0 +1,30 @@
+\begin{tikzpicture}[font=\rmfamily\small]
+% ---------- 优化前 ----------
+\draw[lightgrey,line width=0.4pt] (-0.25,2.05) rectangle (12.55,3.95);
+\node[anchor=west,text=accentred,font=\rmfamily\small] at (0,3.62) {优化前};
+\node[anchor=west,text=codegray,font=\rmfamily\scriptsize] at (1.35,3.62) {每遇到一个新 shape 就重新反射整库};
+\node[anchor=center] (a) at (1.45,2.98) {新 shape};
+\node[anchor=center] (b) at (4.35,2.98) {\texttt{get\_config}};
+\node[anchor=center,text=accentred] (c) at (7.85,2.98) {automap 全库反射};
+\node[anchor=center] (d) at (11.6,2.98) {SQLite 配置库};
+\draw[-{Latex[length=1.5mm]},codegray] (a) -- (b);
+\draw[-{Latex[length=1.5mm]},codegray] (b) -- (c);
+\draw[-{Latex[length=1.5mm]},codegray] (c) -- (d);
+\node[anchor=west,text=codegray,font=\rmfamily\scriptsize] at (1.45,2.36)
+  {一次全库反射约 4.2 s；profile 累计 \texttt{get\_config} 65.14 s、全库反射 53.76 s（两项分别统计）};
+
+% ---------- 优化后 ----------
+\draw[lightgrey,line width=0.4pt] (-0.25,-0.05) rectangle (12.55,1.72);
+\node[anchor=west,text=codeteal,font=\rmfamily\small] at (0,1.44) {优化后};
+\node[anchor=west,text=codegray,font=\rmfamily\scriptsize] at (1.35,1.44) {同一 shape 只反射一次，其余走进程内缓存};
+\node[anchor=center] (e) at (1.45,0.78) {配置请求};
+\node[anchor=center] (f) at (4.35,0.78) {进程内缓存};
+\node[anchor=center,text=codeteal] (g) at (8.35,0.78) {命中：直接返回};
+\draw[-{Latex[length=1.5mm]},codegray] (e) -- (f);
+\draw[-{Latex[length=1.5mm]},codegray] (f) -- (g);
+\node[anchor=west,text=codegray,font=\rmfamily\scriptsize] at (4.35,0.2)
+  {未命中：只反射目标表，4.2 s $\rightarrow$ 26 ms};
+
+\node[anchor=west,text=codegray,font=\rmfamily\scriptsize] at (0,-0.55)
+  {\texttt{\_index\_linearized} 累计 66.03 s $\rightarrow$ 4.47 s；单表加载 4212.64 ms $\rightarrow$ 26.35 ms};
+\end{tikzpicture}%

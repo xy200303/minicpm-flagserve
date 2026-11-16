@@ -1,4 +1,3 @@
-\clearpage
 \section{未采用的后续候选}\label{sec:explorations}
 BI-A50 至 BI-A58 探索了厂商分页接口、decode 分段配置和组件组合。表~\ref{tab:bi-late} 按验证层级列出结果；接口探针、微基准和端到端对照的证据强度不同。
 
@@ -26,25 +25,28 @@ A50/A51 未取得有效性能结果，不能视作性能回退。A52/A53 只有�
 
 \subsection{C500：量化与投机的复核}\label{sec:quant-spec}
 赛题允许自行开发的量化策略，但禁止通过修改 \texttt{vllm serve} 超参开启量化或投机采样；
-投机采样还需要 MiniCPM5-2B 以外的 draft 模型，与模型限制冲突，因此不作为交付路径。
-为避免只凭历史结论排除，本队在最终栈上重测了权重量化的收益上限。
+投机采样另有独立的负面结论：n-gram / prompt-lookup 不需要 draft 模型，我们在 BI-V150 的 4k 诊断切片上测过（A10/A11），
+接受率 100\%、接受长度 6.0、A/G 63.1\%，但 CPU proposer 每步约 43 ms，stock ngram\_gpu 又绕过
+FULL\_DECODE\_ONLY，净吞吐降到 107.68 output tok/s（并发 8）；自训 draft 模型属于规则禁止范围。
+因此投机采样不进入交付路径。
+为避免只凭历史结论排除，我们在最终栈上重测了权重量化的收益上限。
 在 C500 上对四个线性形状比较 bf16 与 int8（\texttt{torch.\_int\_mm}）：
 
 \begin{itemize}[leftmargin=2em]
-\item M=64（decode）：int8 GEMM 为 33.8/32.8/63.1/58.9 $\mu$s，
-bf16 为 33.3/30.0/56.3/53.4 $\mu$s，int8 并不更快；
-\item M=2048（prefill）：int8 GEMM 快 1.25--1.42 倍，
-但 per-token 激活量化约 165 $\mu$s、int32 反量化为 76--358 $\mu$s，
-两步合计使总时间反而变为 bf16 的 1.7--2.6 倍。
+\item M=64（decode）：int8 GEMM 为 33.9/33.3/62.5/58.8 $\mu$s，
+bf16 为 32.3/29.7/55.4/52.6 $\mu$s，int8 慢 5\%--13\%，还要额外做量化与反量化；
+\item M=2048（prefill）：int8 GEMM 快 1.26--1.42 倍，
+但 per-token 激活量化 166 $\mu$s（K=6144 时 368 $\mu$s）、int32 反量化 76--358 $\mu$s，
+两步合计使总时间变为 bf16 的 1.7--2.6 倍。
 \end{itemize}
 
 decode 受权重与 KV 带宽约束，prefill 受 attention 与反量化开销约束，在这套栈上
-W8A8 没有可兑现的端到端空间；BI-V150 上的 A27 也给出同向结论（隔离内 1.82 倍，
+W8A8 拿不到端到端收益；BI-V150 上的 A27 也给出同向结论（隔离内 1.82 倍，
 接入引擎后 $-19.1\%$）。据此关闭量化方向，不再进入候选。微基准脚本与输出见
 \path{docs/experiments/runs/c500-quant-probe/}。
 
 \subsection{C500：A48 门控融合的移植评估}\label{sec:a48-port}
-egin{sloppypar}
+\begin{sloppypar}
 BI-V150 的 A48 用双 FP32 累加器把 gate/up GEMM 与 SwiGLU 融在一个 Triton 内核里，
 省掉中间激活的写回。这套做法搬到 C500 的前提是 GEMM 也由 Triton 执行，
 但 C500 的 gate\_up 走 mcBLAS（152--197 TFLOPS），且 mcBLAS 的 epilogue 只有

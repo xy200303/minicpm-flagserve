@@ -1,0 +1,26 @@
+\begin{tikzpicture}[font=\sffamily\small]
+\draw[reportpanel] (-0.4,-0.1) rectangle (13.4,3.85);
+\node[anchor=west,font=\sffamily\bfseries,text=mainblue] at (0,3.45) {01\quad 查表一次，定位物理页};
+\node[anchor=west] at (0,2.7) {\texttt{block\_table}};
+\foreach \i/\v in {0/2,1/0,2/1} {
+ \draw[draw=mainblue!40,fill=white,rounded corners=2pt] ({3+\i*1},2.35) rectangle ++(0.85,0.65);
+ \node at ({3.425+\i},2.675) {\v};
+}
+\draw[codeteal,line width=1pt,rounded corners=2pt] (2.95,2.3) rectangle (3.9,3.05);
+\node[anchor=west,text=codeteal] at (6.4,2.675) {逻辑块 0 $\rightarrow$ 物理页 2};
+\foreach \p in {0,1,2} {
+ \node[text=codegray] at ({\p*4.5+2},1.85) {物理页 \p};
+ \draw[draw=mainblue!40,fill=mainblue!10] ({\p*4.5},0.6) rectangle ++(2,0.85);
+ \draw[draw=biviolet!50,fill=biviolet!12] ({\p*4.5+2},0.6) rectangle ++(2,0.85);
+ \node[text=mainblue,font=\sffamily\bfseries] at ({\p*4.5+1},1.025) {K};
+ \node[text=biviolet,font=\sffamily\bfseries] at ({\p*4.5+3},1.025) {V};
+}
+\draw[codeteal,line width=1pt,rounded corners=2pt] (8.94,0.54) rectangle (13.06,1.51);
+\node[text=codegray,font=\sffamily\scriptsize] at (10,0.2) {$[0,E)$};
+\node[text=codegray,font=\sffamily\scriptsize] at (12,0.2) {$[E,2E)$};
+\node[anchor=west,font=\sffamily\bfseries,text=mainblue] at (0,-0.65) {02\quad 同一 program 顺序加载 K / V 两段};
+\node[anchor=west,text=codegray] at (0,-1.2) {一页 $2E$ 个元素，$E=bs\cdot hkv\cdot d$；V 紧跟 K，无需再次查表。};
+\node[reportnode,text width=3.6cm,fill=mainblue!5] at (1.9,-2.15) {GPU\quad 106 $\rightarrow$ 62 $\mu$s};
+\node[reportnode,text width=3.6cm,fill=biviolet!6,draw=biviolet!40] at (6.5,-2.15) {host\quad 68 $\rightarrow$ 37 $\mu$s};
+\node[reportnode,text width=3.6cm,fill=codeteal!6,draw=codeteal!40] at (11.1,-2.15) {逐位一致\quad bit-exact};
+\end{tikzpicture}%

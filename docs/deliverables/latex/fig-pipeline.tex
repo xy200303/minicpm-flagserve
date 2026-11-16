@@ -1,0 +1,21 @@
+\begin{tikzpicture}[font=\small]
+  \node[flowbox, text width=3.25cm, minimum height=1.05cm] (serve) at (0,0)
+    {\texttt{vllm serve}\\[1pt]官方启动参数};
+  \node[flowbox, text width=3.25cm, minimum height=1.05cm] (dispatch) at (4.15,0)
+    {vllm-plugin-FL\\[1pt]dispatch / hook};
+  \node[flowbox, text width=3.25cm, minimum height=1.05cm] (kernels) at (8.3,0)
+    {FlagGems / vendor\\[1pt]Triton · mcBLAS\\ixAttnBkd};
+  \node[flowbox, text width=3.25cm, minimum height=1.05cm] (gpu) at (12.45,0)
+    {BI-V150 / C500\\[1pt]GPU 执行};
+  \node[flowsmall, text width=3.25cm] (fallback) at (4.15,-2.05)
+    {stock 路径\\按实现回退};
+  \node[flowsmall, text width=3.25cm] (evidence) at (8.3,-2.05)
+    {profile · A/B · 精度\\CSV · 日志 · 单测};
+  \draw[flowarrow] (serve) -- (dispatch);
+  \draw[flowarrow] (dispatch) -- (kernels);
+  \draw[flowarrow] (kernels) -- (gpu);
+  \draw[flowarrow, dashed] (dispatch) -- (fallback);
+  \draw[flowarrow, dashed] (kernels) -- (evidence);
+  \node[flownote] at (6.2,-2.95)
+    {回退路径与测试记录随代码交付，按实验编号归档};
+\end{tikzpicture}%

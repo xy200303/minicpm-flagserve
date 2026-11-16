@@ -27,7 +27,7 @@ git clone --single-branch --branch integration/flaggems \
 
 > 为提高跨平台解压兼容性，本包将上游 `vllm-plugin-FL/vllm_fl/configs/moe/E=256,N=512,device_name=nvidia.json` 软链接展开为普通文件，内容与包内目标 `E=256,N=512,device_name=nvidia,model=Qwen3.6-35B-A3B-H100.json` 一致。这是打包处理，不是内核改动。源仓库的 Git 记录仍保留原软链接；提交 ZIP 不包含 `.git`，解压后该路径显示为普通 JSON 文件。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105；同配置另一次为 98.1%，temperature=1.0 的采样波动）**。默认 warmup=1 的启动成本过高问题、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%（105/105）；2026-10-25 的早期交付栈两次为 98.1%，差异来自 temperature=1.0 的采样波动**。默认 warmup=1 的启动成本过高问题、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
 
 ## 0.1 环境要求与启动耗时
 
@@ -42,7 +42,7 @@ git clone --single-branch --branch integration/flaggems \
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
 
-除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `e4b5854` 和 FlagGems `ef516137`。BI 性能与精度在父提交 `58bae94`／`85b4ba82` 上测得，最终提交只规范化 CRLF；C500 数据使用其专用实测提交，详见上文。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
+除特别说明外，上述为最终复测实例的实际配置，不代表官网规定了相同 CPU 型号或内存容量。C500 CPU 型号来自同镜像开发实例记录，最终复测 manifest 未重复采集该字段；BI 的 Triton 版本取运行时 `triton.__version__`。当前交付为插件 `e4b5854` 和 FlagGems `ef516137`。BI 性能与精度在父提交 `58bae94`／`85b4ba82` 上测得；最终提交随后规范换行并调整 Metax 侧默认开关，BI 执行路径不变；C500 数据使用其专用实测提交，详见上文。天数 FlagTree 为 `0.6.2a3+iluvatar3.6`，FlagGems 重放基线为镜像提交 `4df52d91`。
 
 **C500 内存说明（实测，非官方约束）**：在模力方舟 **64 GB CPU 内存**规格实例上，
 **纯镜像原版** `vllm serve` 也会在 inductor 编译阶段被内核 OOM killer 杀掉
@@ -50,11 +50,9 @@ git clone --single-branch --branch integration/flaggems \
 被杀时 GPU 显存仅 858 MiB）。128 GB 规格实例全程稳定。
 日志支持的直接原因是 **CPU 内存达到容器限制**，不是 GPU 显存耗尽；原版也可复现，因此不能归因于我们的 nn 布局改动。但这不足以排除 vLLM／编译器版本对内存峰值的影响，尚未完成跨版本定位。
 
-**启动耗时**：C500 首次启动需要执行 GEMM autotune 预热。实测记录约
-**127–1129 秒**，原生基线为 **161 秒**；预热时间随实例和缓存状态变化，不能用单值估计。
-**请耐心等待，不要误判为卡死**。如不需要预热可设 `VLLM_FL_MM_WARMUP=0`：
-启动约 2 分钟，但首个请求批次要承担一次性的调优开销（本次 4k 首轮因此低 5.2%）；
-官方 benchmark 脚本按 `SKIP_FIRST=1` 弃首轮，后三轮不受影响。
+**启动耗时**：C500 冷启动实测约 **124 秒**（清空调优库与 Triton 编译缓存），原生基线为 **161 秒**。
+早期默认开启的 GEMM autotune 预热会把启动拉长到 6–19 分钟，现已默认关闭；
+需要在启动期完成分桶调优时设 `VLLM_FL_MM_WARMUP=1`。官方 benchmark 弃首轮，预热开关不影响后三轮成绩。
 
 ## 1. 性能结果
 
@@ -101,7 +99,7 @@ A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维�
 官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，测量提交为 `85b4ba82`；最终 `integration/flaggems` 为 `ef516137`，仅追加换行规范化。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低的原因尚未完全定位，因此报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 最终提交的多次评测为 **96.19%–98.1%**（105/105 请求成功，temperature=1.0 的采样波动）；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误。BI 最终提交精度未验证。已验证结果均 ≥ 0.95。
+C500 最终提交为 **96.19%**（105/105 请求成功）；2026-10-25 的早期交付栈两次为 **98.1%**；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误。BI 最终提交精度未验证。已验证结果均 ≥ 0.95。
 
 **TTFT**：C500 最终提交 4k **1616.56 ms**（官网基线 3199.435 ms）、16k **17980.89 ms**
 （官网基线 27197.135 ms）；BI-V150 父提交历史测量 4k 为 **3908.25 ms**，16k 为 **118.76 s**
@@ -251,6 +249,18 @@ evalscope eval --model minicpm \
 
 结果在 `/workspace/evalscope-datasets/level3/<timestamp>/reports/minicpm/math_500.json`；当前 evalscope 版本的精度字段为 `metrics[0].score`。
 
+**数据集准备**：`math_500` 由 evalscope 自动下载；离线实例可提前把数据集放到
+`/workspace/evalscope-datasets/math_500`，上面命令的 `dataset_id` 即指向该目录。
+评测子集为 Level 3，共 105 题。
+
+### 4.6 结果校验
+
+1. 吞吐：官方脚本逐轮打印 total tokens/s，按四轮去首、后三轮均值与第 1 节表格比对；
+   同一实例的多次测量波动一般在 1% 以内。原始逐轮 CSV 在 `--work-dir` 同级目录，可自行复算。
+2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
+3. 启动参数：`vllm serve` 命令行与 4.3 节一致，不追加其它参数或环境变量。
+4. 缓存：serve 日志中的 prefix cache 命中率应低于 1%；命中偏高说明复用了上次的 KV，需要新起服务重测。
+
 ## 5. 实验记录与事实来源
 
 当前交付策略以本文第 2、3 节和实际代码为准。历史探索记录仅用于追溯，
@@ -258,7 +268,7 @@ evalscope eval --model minicpm \
 `docs/deliverables/audit-2026-10-25.md` 只是当时的事实审计，最终提交以本说明和
 `docs/experiments/runs/image-baseline-align/` 为准。
 
-下表路径指向本项目开发仓库中的实验台账；官方提交 ZIP 按要求只包含源码、
+下表路径指向文档与实验记录仓库（https://github.com/xy200303/minicpm-flagserve）中的台账；官方提交 ZIP 按要求只包含源码、
 本说明和 `report.pdf`，不会重复打包大体积原始日志。评审复现以本文命令、
 报告中的关键结果和提交源码为准；BI-V150 最终提交复测完成后再更新相应条目。
 
