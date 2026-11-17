@@ -249,7 +249,27 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072
 ```
 
-### 4.4 性能评测
+### 4.4 简单冒烟测试（可选）
+
+启动后先用赛题页面给出的最小请求确认服务可用，再跑正式评测：
+
+```python
+import requests
+response = requests.post(
+    'http://127.0.0.1:9031/v1/chat/completions',
+    headers={'Content-Type': 'application/json'},
+    json={
+        'model': 'minicpm',
+        'messages': [{'role': 'user', 'content': 'introduce llm'}],
+        'max_tokens': 256,
+    },
+)
+print(response.json())
+```
+
+返回 `choices[0].message.content` 非空即说明模型加载、插件路由和采样链都正常。若这里就报错，先查 serve 日志里的 `patch failed` 与回退记录，不要继续跑 benchmark。
+
+### 4.5 性能评测
 
 ```bash
 cd /workspace
@@ -262,7 +282,7 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 `input_len` 的负载**可能命中 prefix cache**，须查看 serve 日志确认，不能认定必然命中。
 正式评测保持官方 `input_len` 和四轮脚本不变，并记录缓存命中率；需要独立复测时，在新启动的 serve 上重新执行完整官方脚本，不通过更改输入长度规避缓存。
 
-### 4.5 精度评测
+### 4.6 精度评测
 
 ```bash
 evalscope eval --model minicpm \
@@ -292,7 +312,7 @@ PY
 
 预期输出 `500 {1: 43, 2: 90, 3: 105, 4: 128, 5: 134}`；`level` 是整数，评测按 `subset_list: ["Level 3"]` 取其中 105 题。
 
-### 4.6 结果校验
+### 4.7 结果校验
 
 1. 吞吐：按四轮去首、后三轮均值与第 1 节比对，保留所有逐轮结果。按上述工作目录运行时，原始 CSV 位于 `/workspace/benchmark_results/raw_runs_<timestamp>.csv`，汇总为同目录 `summary_<timestamp>.csv`。波动与场景、实例有关，历史测量也有超过 1% 的情况。
 2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
