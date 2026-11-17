@@ -366,6 +366,27 @@ prefill 指输入预填充，decode 指逐 token 解码；host 指 CPU 侧，ven
 
 BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM 路由检查分布和数值误差，并复测 MATH-500。不满足精度要求的改动不进入交付分支。
 
+\subsection{关键算法的数学表述}\label{sec:math}
+三处改动依赖的等价关系与近似边界如下；其余优化属于布局与调度改写，不引入新的数值近似。
+
+\textbf{Gumbel-Max 与温度折叠。}对温度 $T>0$，
+\begin{equation}
+\arg\max_i\left(\frac{x_i}{T}+g_i\right)=\arg\max_i\left(x_i+Tg_i\right),
+\end{equation}
+其中 $g_i=-\log(-\log u_i)$、$u_i\sim\mathcal{U}(0,1)$。因此内核可以直接在 bf16 logits 上计算 $x_i+Tg_i$ 取 argmax，省去先除后加与一次 fp32 提升；$T<10^{-5}$ 时退化为贪心解码，与 \texttt{torch.argmax} 完全一致。
+
+\textbf{top-p 阈值。}在 $N_b=1024$ 个等宽 bin 上累计质量 $\hat m_j$，取
+\begin{equation}
+b^\star=\min\Big\{b:\textstyle\sum_{j\ge b}\hat m_j\ \ge\ pZ\Big\},\qquad \tau=\text{bin}_{b^\star}\ \text{的下沿},
+\end{equation}
+只保留 $x_i\ge\tau$ 的 token。取下沿而非 bin 中心，保证保留质量不小于 $pZ$；残差只来自对 $\exp(-60)$ 以下尾质量的截断，因此该步是保守裁剪，不是无偏重采样。
+
+\textbf{分段在线 softmax 的归并。}各段独立算出 $(m_s,\ell_s,o_s)$ 后，
+\begin{equation}
+m=\max_s m_s,\qquad \ell=\sum_s \ell_s\,2^{m_s-m},\qquad o=\sum_s o_s\,2^{m_s-m},
+\end{equation}
+指数以 2 为底（$\log_2 e$ 已折进 attention scale），可直接走 MUFU；归并只搬运 $(m,\ell,o)$ 三个量，不落完整 attention 矩阵，这也是 split-KV 能在近似线性的开销内完成的原因。
+
 \section{沐曦 C500：采样链、GEMM 路由与 host 同步消除}\label{sec:c500}
 \subsection{瓶颈分析}
 初始 profile 显示，C500 的主要开销集中在采样、GEMM 和 attention。采样尾部采用 eager PyTorch 实现，包括 bf16$\rightarrow$fp32 cast、温度缩放、130560 词表排序和 gumbel-argmax；部分 GEMM 存在布局与路由失配；prefill 的隐式 DtoH 同步则造成 GPU 空闲。

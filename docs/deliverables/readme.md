@@ -58,6 +58,21 @@ git clone --single-branch --branch integration/flaggems \
 早期默认开启的 GEMM autotune 预热会把启动拉长到 6–19 分钟，现已默认关闭；
 需要在启动期完成分桶调优时设 `VLLM_FL_MM_WARMUP=1`。官方 benchmark 弃首轮，预热开关不影响后三轮成绩。
 
+## 0.2 提交包结构与预期结果
+
+解压后为 `XLANG2026/{FlagGems, vllm-plugin-FL, readme.md, report.pdf}`，与赛题要求的 `参赛队伍名/{FlagGems, readme.md, report.pdf, vllm-plugin-FL}` 一致。两个源码目录同时包含 C500 与 BI-V150 的改动，不需要按平台拆分。
+
+复现时应看到的结果（官方用例、四轮去首）：
+
+| 平台 | 4k total tok/s | 16k total tok/s | MATH-500 Level 3 |
+|---|---:|---:|---:|
+| 沐曦 C500（64 GB 显存 / 128 GB 内存） | ≈ 12451 | ≈ 11097 | ≈ 0.96 |
+| 天数 BI-V150（32 GB 显存） | ≈ 5191 | ≈ 4512 | ≈ 0.97–0.98 |
+
+同机型同镜像下 ±3% 属正常波动（BI 历史三次 4k 测量落在 5131–5293）。若结果明显低于该区间，先按 4.7 节检查 prefix cache 命中与回退日志，再判断是否复现失败。
+
+完整流程的时间预算（单卡实例）：安装约 1 分钟、服务启动约 1 分钟、4k 四轮约 17 分钟、16k 四轮约 33 分钟、MATH-500 约 15 分钟，合计约 1 小时。
+
 ## 1. 性能结果
 
 官方用例 `[input_len, output_len, concurrency, num_prompts]`，使用
@@ -319,6 +334,17 @@ PY
 3. 启动参数：`vllm serve` 命令行与 4.3 节一致，沿用镜像环境与默认优化开关。
 4. 缓存：记录 prefix cache 命中率；本报告最终测量低于 1%，这是实测状态而非官方额外门槛。异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
 5. 生效核对：检查 `patch failed` 或回退警告。BI 的 `vendor flash prefill ENGAGED` 记录首次进入该分支，不能单独证明执行成功；还需核对后续异常。`decode_attn_fast slice` 仅每累计 4000 次混合步路径调用输出一次，缺少该行不能判定纯 decode 路径失效。C500 的 1,203,904 tokens 是本次实例的 KV 池测量值，不是固定验收值；池大小还受可用显存影响。安装路径、日志和实际负载的内核执行情况应结合判断。
+
+### 4.8 常见问题
+
+| 现象 | 原因 | 处理 |
+|---|---|---|
+| `import flag_gems` 报 `No module named 'flag_gems.fused.DSA'` | 用了未包含占位 `__init__.py` 的旧包，或把新包叠加解压到旧源码目录 | 用本包解压到干净目录后重新安装；本包已在 `FlagGems/src/flag_gems/fused/DSA/` 放入占位文件 |
+| `pip check` 报 setuptools 版本不符 | 插件要求 `>=77.0.3,<81`、FlagGems 要求 `>=64,<77`，两者没有交集 | 按 4.1 的顺序分两次安装；装完可执行 `pip install "setuptools>=77.0.3,<81"` 恢复，不影响已装好的两个包 |
+| C500 启动阶段进程被杀 | 64 GB CPU 内存实例在 Inductor 编译期触顶，纯镜像原版同样会复现 | 换 ≥128 GB 内存的实例 |
+| 吞吐偏高且 TTFT 异常低 | prefix cache 命中（benchmark 用 seed=0） | 新起 serve 重测，或换 `input_len` 后再测 |
+| 首次启动或首轮很慢 | Triton 内核首次遇到形状时 JIT 编译 | 正常现象；官方脚本弃首轮，报告值取后三轮 |
+| BI 上出现 `patch failed` 或回退记录 | 插件路由未命中，走了原始路径 | 核对启动时 `VLLM_PLUGINS=fl`、安装路径与 4.7 节的生效检查项 |
 
 ## 5. 实验记录与事实来源
 
