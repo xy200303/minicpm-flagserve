@@ -17,8 +17,11 @@ ModuleNotFoundError: No module named 'flag_gems.fused.DSA'
 ## 修复
 
 交付包在 `FlagGems/src/flag_gems/fused/DSA/__init__.py` 补一个只含注释的占位文件，
-不改变运行时行为。修复后 ZIP 条目数 5,194（原 5,193），md5
-`dcf95c35f40d8230fe2dc6705513ccfe`。
+不改变运行时行为。修复后 ZIP 条目数 5,194（原 5,193）；该次验证用的中间包 md5
+`dcf95c35f40d8230fe2dc6705513ccfe`。最终提交包（readme 与报告更新后）md5
+`dc4cf968c74d04e3307f5aec4fbb5b0e`，已用全新解包再次执行同一套安装并确认
+`import vllm_fl, flag_gems` 成功。安装与复测的完整回放见
+`docs/experiments/runs/bi-final-official-replay-20261117/`。
 
 ## 验证过程（在 BI-V150 实例上，系统 Python 3.12）
 
