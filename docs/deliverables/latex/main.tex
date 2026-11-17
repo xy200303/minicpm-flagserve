@@ -366,14 +366,26 @@ prefill 指输入预填充，decode 指逐 token 解码；host 指 CPU 侧，ven
 
 BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM 路由检查分布和数值误差，并复测 MATH-500。不满足精度要求的改动不进入交付分支。
 
-\subsection{关键算法的数学表述}\label{sec:math}
-三处改动依赖的等价关系与近似边界如下；其余优化属于布局与调度改写，不引入新的数值近似。
+\section{沐曦 C500：采样链、GEMM 路由与 host 同步消除}\label{sec:c500}
+\subsection{瓶颈分析}
+初始 profile 显示，C500 的主要开销集中在采样、GEMM 和 attention。采样尾部采用 eager PyTorch 实现，包括 bf16$\rightarrow$fp32 cast、温度缩放、130560 词表排序和 gumbel-argmax；部分 GEMM 存在布局与路由失配；prefill 的隐式 DtoH 同步则造成 GPU 空闲。
 
-\textbf{Gumbel-Max 与温度折叠。}对温度 $T>0$，
+图~\ref{fig:hotpath} 将 C500-opt1 前后同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）。采样族由 14.61 s 降至 1.24 s，占内核时间的比例由 38.8\% 降至 5.1\%；GEMM 与 attention 的绝对时间分别为 13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s。该图对应 C500-opt1 阶段，后续优化分别针对 GEMM 路由、attention 和 prefill 同步展开。
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.86\linewidth]{fig14_op_hotpath.pdf}
+\caption{C500-opt1 前后热路径的算子族构成：按内核时间占比（右列为绝对时间变化）\label{fig:hotpath}}
+\end{figure}
+
+\subsection{免排序的采样链（C500-opt1/C500-opt3/C500-opt7/C500-opt11）}\label{sec:c500-sampler}
+采样链由自研 Triton 内核 \texttt{FlagGems/fused/sampler\_fused.py} 与 \texttt{top\_p\_sample.py} 实现，包括三项优化：直接读取 bf16 logits 并把温度折进 Gumbel-Max\cite{gumbel}、以单轮 1024-bin 质量直方图定位 top-p 阈值、在官方 B=64 形状下采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。前两项的数学依据如下。
+
+\textbf{温度折叠。}对 $T>0$，
 \begin{equation}
 \arg\max_i\left(\frac{x_i}{T}+g_i\right)=\arg\max_i\left(x_i+Tg_i\right),
 \end{equation}
-其中 $g_i=-\log(-\log u_i)$、$u_i\sim\mathcal{U}(0,1)$。因此内核可以直接在 bf16 logits 上计算 $x_i+Tg_i$ 取 argmax，省去先除后加与一次 fp32 提升；$T<10^{-5}$ 时退化为贪心解码，与 \texttt{torch.argmax} 完全一致。
+其中 $g_i=-\log(-\log u_i)$、$u_i\sim\mathcal{U}(0,1)$。于是内核直接在 bf16 logits 上计算 $x_i+Tg_i$ 取 argmax，省去先除后加与一次 fp32 提升；$T<10^{-5}$ 时退化为贪心，与 \texttt{torch.argmax} 完全一致。
 
 \textbf{top-p 阈值。}在 $N_b=1024$ 个等宽 bin 上累计质量 $\hat m_j$，取
 \begin{equation}
@@ -381,26 +393,7 @@ b^\star=\min\Big\{b:\textstyle\sum_{j\ge b}\hat m_j\ \ge\ pZ\Big\},\qquad \tau=\
 \end{equation}
 只保留 $x_i\ge\tau$ 的 token。取下沿而非 bin 中心，保证保留质量不小于 $pZ$；残差只来自对 $\exp(-60)$ 以下尾质量的截断，因此该步是保守裁剪，不是无偏重采样。
 
-\textbf{分段在线 softmax 的归并。}各段独立算出 $(m_s,\ell_s,o_s)$ 后，
-\begin{equation}
-m=\max_s m_s,\qquad \ell=\sum_s \ell_s\,2^{m_s-m},\qquad o=\sum_s o_s\,2^{m_s-m},
-\end{equation}
-指数以 2 为底（$\log_2 e$ 已折进 attention scale），可直接走 MUFU；归并只搬运 $(m,\ell,o)$ 三个量，不落完整 attention 矩阵，这也是 split-KV 能在近似线性的开销内完成的原因。
-
-\section{沐曦 C500：采样链、GEMM 路由与 host 同步消除}\label{sec:c500}
-\subsection{瓶颈分析}
-初始 profile 显示，C500 的主要开销集中在采样、GEMM 和 attention。采样尾部采用 eager PyTorch 实现，包括 bf16$\rightarrow$fp32 cast、温度缩放、130560 词表排序和 gumbel-argmax；部分 GEMM 存在布局与路由失配；prefill 的隐式 DtoH 同步则造成 GPU 空闲。
-
-图~\ref{fig:hotpath} 将 C500-opt1 前后同一基准（641 步）两次 profile 的 GPU 内核时间按算子族聚合（源：\path{docs/baselines/metax-c500/profile_baseline.txt} 与 \texttt{profile\_post\_opt1.txt}）。采样族由 14.61 s 降至 1.24 s，占内核时间的比例由 38.8\% 降至 5.1\%；GEMM 与 attention 的绝对时间分别为 13.82$\rightarrow$13.81 s、7.19$\rightarrow$7.22 s。该图对应 C500-opt1 阶段，后续优化分别针对 GEMM 路由、attention 和 prefill 同步展开。
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\linewidth]{fig14_op_hotpath.pdf}
-\caption{C500-opt1 前后热路径的算子族构成：按内核时间占比（右列为绝对时间变化）\label{fig:hotpath}}
-\end{figure}
-
-\subsection{免排序的采样链（C500-opt1/C500-opt3/C500-opt7/C500-opt11）}\label{sec:c500-sampler}
-采样链由自研 Triton 内核 \texttt{FlagGems/fused/sampler\_fused.py} 与 \texttt{top\_p\_sample.py} 实现，包括三项优化：（1）直接读取 bf16 logits，将温度折叠进 Gumbel-Max\cite{gumbel}，利用 $\arg\max(x/T+g)=\arg\max(x+Tg)$，并在 $T<10^{-5}$ 时退化为 $\arg\max$；（2）以单轮 1024-bin 质量直方图定位 top-p 阈值 $\tau$ 所在 bin，并保守取 bin 下沿，在忽略 $\exp(-60)$ 截断尾质量的近似下保证保留集质量不小于 $p\cdot Z$；（3）在官方 B=64 形状下采用词表维 split-parallel（32 splits $\times$ BLOCK 4096）。2026-10-25 在 C500 实测代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，加速约 10.7 倍（图~\ref{fig:sampler-bench}）。
+2026-10-25 在 C500 实测代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，加速约 10.7 倍（图~\ref{fig:sampler-bench}）。
 
 \begin{figure}[!htbp]
 \centering
@@ -601,7 +594,11 @@ BI-A7 之后，decode attention 仍占整步的主要时间。在同一 harness 
 \caption{BI-A20 paged decode attention 的分段执行与归并流程\label{fig:a20-flow}}
 \end{figure}
 
-下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 按 $\exp2(m_i-m)$ 加权归并。
+下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 归并。若第 $s$ 段得到 $(m_s,\ell_s,o_s)$，归并即
+\begin{equation}
+m=\max_s m_s,\qquad \ell=\sum_s \ell_s\,2^{m_s-m},\qquad o=\sum_s o_s\,2^{m_s-m},
+\end{equation}
+指数以 2 为底（$\log_2 e$ 已折进 attention scale），可直接走 MUFU；归并只搬运 $(m,\ell,o)$ 三个标量，不落完整 attention 矩阵，这也是 split-KV 能在近似线性的开销内完成的原因。
 
 \begin{reportcode}{\texttt{paged\_decode\_attention.py:169-193}：页对齐主循环与 base-2 在线 softmax}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=169,lastline=193]{python}{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
