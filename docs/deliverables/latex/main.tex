@@ -116,14 +116,15 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-\setlength{\parindent}{2em}
 \raggedright
+\setlength{\parindent}{2em}
 本研究在 FlagOS 上优化 MiniCPM5-2B 于天数 BI-V150 和沐曦曦云 C500 的推理吞吐。模型、服务参数和评测脚本保持官方设置。C500 优化采样、矩阵乘法（GEMM）布局与 prefill 元数据；BI-V150 接入厂商 attention、重写分页 decode attention，并优化配置查询和门控矩阵乘法。
 
 C500 最终交付提交的 4k/16k 总吞吐为 12451.84/11097.29 tok/s，分别达到官网基线的 2.45/1.58 倍；BI-V150 父提交（2026-11-11）的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍，交付提交复测为 5191.26/4511.90 tok/s（\secref{sec:repro-notes}）。按官方指标取两场景平均，C500 为 11774.57 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。C500 最终提交的 MATH-500 Level 3 为 96.19\%，早期交付栈为 98.1\%；BI 父提交为 98.1\%、交付提交复测为 97.1\%；C500 最终复测的平均 TTFT 为 1616.56/17980.89 ms（4k/16k）。
 
 C500 数值测于交付提交（实测提交 \texttt{d69e766} 与交付提交 \texttt{e4b5854} 仅差注释），服务参数与官网命令完全一致，未设置额外环境变量。BI 数值测于交付提交的父提交，后续提交包含换行规范化及 Metax 默认开关调整，BI 路径未改动；交付提交已于 2026-11-17 在 BI-V150 上复测，结果见 \secref{sec:repro-notes}。
 
+\par\smallskip
 \noindent\textbf{关键词：}国产芯片；推理吞吐；算子融合；paged decode attention；shape-aware dispatch
 \end{abstract}
 \addcontentsline{toc}{section}{摘要}
