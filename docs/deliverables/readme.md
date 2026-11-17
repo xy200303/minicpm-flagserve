@@ -28,8 +28,10 @@ git clone --single-branch --branch integration/flaggems \
 > 为保证无 `.git` 的源码树也能构建，`FlagGems/pyproject.toml` 在 `[tool.setuptools_scm]` 下增加一行 `fallback_version = "5.3.5"`（插件原本已有该字段）。这行只在构建取版本时生效，不改变运行时行为，也不参与任何优化路径。
 >
 > 为提高跨平台解压兼容性，本包将上游 `vllm-plugin-FL/vllm_fl/configs/moe/E=256,N=512,device_name=nvidia.json` 软链接展开为普通文件，内容与包内目标 `E=256,N=512,device_name=nvidia,model=Qwen3.6-35B-A3B-H100.json` 一致。这是打包处理，不是内核改动。源仓库的 Git 记录仍保留原软链接；提交 ZIP 不包含 `.git`，解压后该路径显示为普通 JSON 文件。
+>
+> 本包在 `FlagGems/src/flag_gems/fused/DSA/` 下补了一个只含注释的 `__init__.py`。原因：上游 `setup.py` 用 `find_packages("src")` 发现包，该目录缺此文件时不会被打进 wheel，而 `fused/__init__.py` 又会 `import flag_gems.fused.DSA.bin_topk`，导致按官网命令 `pip install --no-build-isolation .` 装完后 `import flag_gems` 报 `ModuleNotFoundError`。上游 `4df52d91` 结构相同、`setup.py` 未改，属于上游打包缺陷；该文件不改变运行时行为，也不参与任何优化路径。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%**（101/105）；同日、同 FlagGems、双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性。2026-10-25 的早期交付栈两次为 98.1%。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值仍待当前最终提交在可用 BI 实例上复测，不能把历史 BI 数据冒充本轮最终提交结果。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在最终交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试，并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%**（101/105）；同日、同 FlagGems、双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性。2026-10-25 的早期交付栈两次为 98.1%。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值为父提交测量；**2026-11-17 已在 BI-V150 上用交付 ZIP 解包的源码树完成复测**：4k/16k 后三轮均值 5162.05/4515.29 tok/s，TTFT 4093.62/111762.43 ms，MATH-500 98.1%（105/105），落在 11-11 三次 4k 测量（5131.78/5292.46/5292.99）的区间内。逐轮数据、日志与 manifest 见 `docs/experiments/runs/bi-final-retest-20261117/`。
 
 ## 0.1 环境要求与启动耗时
 
@@ -81,7 +83,7 @@ git clone --single-branch --branch integration/flaggems \
 TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
 C500 的本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**，最终提交实测相对其
-分别为 **2.96x** 和 **1.89x**。BI-V150 的官方开发与评测环境均为 **32 GB**；BI 表中数值仍是父提交历史测量，最终提交复测未验证。
+分别为 **2.96x** 和 **1.89x**。BI-V150 的官方开发与评测环境均为 **32 GB**；BI 表中数值为父提交测量，交付提交复测（2026-11-17）为 5162.05/4515.29 tok/s，见第 0 节。
 两组 A20/A7 对照分别为：4k **3855.31 → 4087.91（+6.0%）**、
 **3840.80 → 4722.22（+22.9%）**；16k **3568.31 → 4520.19（+26.7%）**、
 **3570.61 → 4520.10（+26.6%）**。两组均列出，不用单组高值代替整体结果。
@@ -101,11 +103,11 @@ A60 在 A48 基础上将 gate/up 权重按 `BK×BN` 预打包，tile 内 K 维�
 官方天数镜像确认使用 FlagGems `4df52d91` 后，完整 A20+A31+A48+A60 栈已重放到该提交，测量提交为 `85b4ba82`；最终 `integration/flaggems` 为 `ef516137`，仅追加换行规范化。最终 4k 三次独立四轮测量为 **5131.78 / 5292.46 / 5292.99 tok/s**，中位数 **5292.46 tok/s**、TTFT **3908.25 ms**；16k 四轮汇总为 **4618.41 tok/s**、TTFT **118761.15 ms**。首测偏低的原因尚未完全定位，因此报告保留全部三次结果。完整证据见 `docs/experiments/runs/image-baseline-align/`。
 
 **精度（MATH-500 Level 3，evalscope 官方原命令，105 题）**：
-C500 最终提交为 **96.19%**（105/105 请求成功）；2026-10-25 的早期交付栈两次为 **98.1%**；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误。BI 最终提交精度未验证。已验证结果均 ≥ 0.95。
+C500 最终提交为 **96.19%**（105/105 请求成功）；2026-10-25 的早期交付栈两次为 **98.1%**；BI-V150 父提交镜像对齐栈为 **98.1%**，105/105 成功、0 错误；交付提交复测（2026-11-17）同为 **98.1%**（105/105）。已验证结果均 ≥ 0.95。
 
 **TTFT**：C500 最终提交 4k **1616.56 ms**（官网基线 3199.435 ms）、16k **17980.89 ms**
 （官网基线 27197.135 ms）；BI-V150 父提交历史测量 4k 为 **3908.25 ms**，16k 为 **118.76 s**
-（官网基线分别为 11573.53ms 和 599262.03ms）。C500 已按官网基线判断满足 `baseline +1%` 上限；BI 最终提交 TTFT 未验证。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，不替代官网基线判断。
+（官网基线分别为 11573.53ms 和 599262.03ms）。C500 已按官网基线判断满足 `baseline +1%` 上限；BI 交付提交复测的平均 TTFT 为 4093.62/111762.43 ms，同样低于官网基线。同日 A/B 中 BI 4k 两组 TTFT 差异为 +2.1% 和 −1.9%，该对照用于分离 A20 收益，不替代官网基线判断。
 
 ## 2. 天数 BI-V150 改动
 
@@ -307,6 +309,7 @@ evalscope eval --model minicpm \
 | BI-V150 A60 性能与精度 | `docs/experiments/runs/a60-tile-packed/` 下的 `official-{4k,16k}-summary.json`、逐轮原始工件、`gems-tests-v5.log` 与 `eval/` |
 | BI-V150 镜像对齐最终复测 | `docs/experiments/runs/image-baseline-align/` 下的 `bench-evidence.tar.gz`、`eval-evidence.tar.gz`、`tests.tar.gz` 与 `manifest.txt` |
 | 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
+| BI-V150 交付提交复测（2026-11-17） | `docs/experiments/runs/bi-final-retest-20261117/` 下的 `raw_runs_20261117_120914.csv`、`summary_20261117_120914.csv`、`bench.log`、`serve.log`、`eval.log`、`math_500.json` 与 `manifest.txt` |
 
 官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-11-11）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。
 

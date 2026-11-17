@@ -1,0 +1,24 @@
+date=2026-11-17
+host=8f8a906a307e
+connection=lab_inst_01M4FD35QY8BTB1ZCEV4F09BEB@ssh.flagos.io
+gpu=Iluvatar BI-V150 / 32768 MiB
+ixml=4.4.0 / driver 4.5.0
+cpu_cores=112
+ram=503 GiB
+torch=2.10.0
+vllm=0.24.0
+INFO 11-17 13:26:52 [__init__.py:46] - fl -> vllm_fl:register
+INFO 11-17 13:26:52 [__init__.py:49] All plugins in this group will be loaded. Set `VLLM_PLUGINS` to control which plugins to load.
+INFO 11-17 13:26:59 [__init__.py:237] Platform plugin fl is activated
+0.24.0
+triton=3.6.0
+evalscope=1.11.1
+source_zip=/workspace/XLANG2026.zip md5=77ae16d542bdbc5cfe0d67ee3363fac4
+source_tree=/workspace/final-retest/XLANG2026 (FlagGems ef516137 / vllm-plugin-FL e4b5854, 无 .git)
+install=editable (pip install -e --no-build-isolation)，原因：非可编辑安装会漏装 flag_gems/fused/DSA（上游 setup.py 用 find_packages，该目录无 __init__.py）
+serve_cmd=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072 --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
+kv_cache_tokens=523248
+prefix_cache_max=0.3%
+bench_4k_rounds=4847.8 / 5155.4 / 5135.73 / 5195.03  -> post3 mean 5162.05 tok/s, TTFT 4093.62 ms
+bench_16k_rounds=4422.26 / 4516.74 / 4516.16 / 4512.97 -> post3 mean 4515.29 tok/s, TTFT 111762.43 ms
+math500=0.981 (105/105)
