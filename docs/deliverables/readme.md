@@ -217,6 +217,8 @@ python -m pip check
 
 使用镜像自带的厂商 PyTorch、Triton、vLLM，不另外安装通用 GPU 依赖或可选 extras。插件的 `fallback_version` 已由上游提供，FlagGems 增加该字段以支持不含 `.git` 的源码构建。构建工具检查不替代目标 GPU 上的服务启动和评测。
 
+**编译与执行流程**：两个包都是纯 Python + Triton，没有需要单独编译的 C++ 扩展，`pip install` 完成构建即安装完毕；Triton 内核在首次遇到对应形状时 JIT 编译，因此首次启动或首轮 benchmark 偏慢属正常，官方脚本弃首轮也正是为此。`pip check` 在干净镜像上除镜像自带的 3 条版本偏差（compressed-tensors、fastapi、opencv-python-headless）外不应有输出，出现其他缺失依赖说明安装环境不完整。安装完成后用 `python -c import` 确认模块位置，再进入 4.3 启动。
+
 ### 4.2 环境变量
 
 沿用官方镜像初始化的 PATH、MACA/COREX 和动态库环境，仅按官网设置：
@@ -274,7 +276,21 @@ evalscope eval --model minicpm \
 
 结果在 `/workspace/evalscope-datasets/level3/<timestamp>/reports/minicpm/math_500.json`；当前 evalscope 版本的精度字段为 `metrics[0].score`。
 
-**数据集准备**：上述命令显式使用本地目录 `/workspace/evalscope-datasets/math_500`。运行前确认官方镜像已提供该数据集；目录缺失时先准备数据，不依赖该命令自动下载。评测子集为 Level 3，共 105 题。
+**数据集准备**：上述命令显式使用本地目录 `/workspace/evalscope-datasets/math_500`，不使用自动下载。
+
+- 镜像已带该数据集时（推荐）：目录下应有 `eval.yaml`、`test.jsonl`、`README.md`，其中 `test.jsonl` 共 500 行。
+- 需要自备时：把 MATH-500 的 `test.jsonl`（字段为 `problem`、`solution`、`answer`、`subject`、`level`、`unique_id`）与 `eval.yaml` 放进同一目录，并把 `--dataset-args` 的 `dataset_id` 指向该目录。
+- 子集自检（Level 3 必须正好 105 题，与报告口径一致）：
+
+```bash
+python - <<'PY'
+import json, collections
+rows = [json.loads(l) for l in open('/workspace/evalscope-datasets/math_500/test.jsonl')]
+print(len(rows), dict(collections.Counter(r['level'] for r in rows)))
+PY
+```
+
+预期输出 `500 {1: 43, 2: 90, 3: 105, 4: 128, 5: 134}`；`level` 是整数，评测按 `subset_list: ["Level 3"]` 取其中 105 题。
 
 ### 4.6 结果校验
 
