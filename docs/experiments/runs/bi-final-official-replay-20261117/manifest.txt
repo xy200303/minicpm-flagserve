@@ -14,5 +14,5 @@ install=按 readme 4.1 原命令：pip install --no-build-isolation .（非可�
 serve_cmd=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072 --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
 kv_cache_tokens=523344
 bench_4k_rounds=5153.39 / 5202.97 / 5184.0 / 5186.8 -> post3 mean 5191.26 tok/s, TTFT 4050.56 ms
-bench_16k_rounds=4444.74 / 4514.34 / 4512.79 / 4513.36 -> post3 mean 4511.90 tok/s, TTFT 111878.60 ms
-math500=0.971 (105/105)
+bench_16k_rounds=4444.74 / 4514.34 / 4512.79 / 4508.57 -> post3 mean 4511.90 tok/s, TTFT 111878.60 ms
+math500=0.9714 (102/105 correct, 105/105 requests succeeded)
