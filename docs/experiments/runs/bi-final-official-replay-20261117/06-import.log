@@ -1,0 +1,5 @@
+vllm_fl: /usr/local/lib/python3.12/site-packages/vllm_fl/__init__.py
+flag_gems: /usr/local/lib/python3.12/site-packages/flag_gems/__init__.py
+vllm 0.24.0+empty has requirement fastapi[standard]<0.137.0,>=0.133.0, but you have fastapi 0.139.2.
+vllm 0.24.0+empty has requirement opencv-python-headless>=4.13.0, but you have opencv-python-headless 4.11.0.86.
+vllm 0.24.0+empty has requirement setuptools<81.0.0,>=77.0.3; python_version > "3.11", but you have setuptools 76.1.0.

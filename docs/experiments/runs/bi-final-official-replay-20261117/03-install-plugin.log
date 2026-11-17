@@ -1,0 +1,17 @@
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple
+Processing ./.
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: pyyaml in /usr/local/lib/python3.12/site-packages (from vllm-plugin-fl==0.0.0) (6.0.1)
+Building wheels for collected packages: vllm-plugin-fl
+  Building wheel for vllm-plugin-fl (pyproject.toml): started
+  Building wheel for vllm-plugin-fl (pyproject.toml): finished with status 'done'
+  Created wheel for vllm-plugin-fl: filename=vllm_plugin_fl-0.0.0-py3-none-any.whl size=485384 sha256=1e304259a7bc9a32d03e4fb7d6450108260290e48d91ad6770fd42dbd3e31d7f
+  Stored in directory: /root/.cache/pip/wheels/ef/83/b3/dcde1a5ff70afc67457c839fb6148b730eedb3cdda262a74fb
+Successfully built vllm-plugin-fl
+Installing collected packages: vllm-plugin-fl
+Successfully installed vllm-plugin-fl-0.0.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 26.1.2 -> 26.3
+[notice] To update, run: pip install --upgrade pip

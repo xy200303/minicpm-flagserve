@@ -1,0 +1,9 @@
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+xgrammar 0.2.3 requires triton; platform_system == "Linux" and platform_machine == "x86_64", which is not installed.
+vllm 0.24.0+empty requires compressed-tensors==0.17.0, but you have compressed-tensors 0.15.0.1 which is incompatible.
+vllm 0.24.0+empty requires fastapi[standard]<0.137.0,>=0.133.0, but you have fastapi 0.139.2 which is incompatible.
+vllm 0.24.0+empty requires opencv-python-headless>=4.13.0, but you have opencv-python-headless 4.11.0.86 which is incompatible.
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 26.1.2 -> 26.3
+[notice] To update, run: pip install --upgrade pip

@@ -1,0 +1,18 @@
+date=2026-11-17 (official replay)
+host=8f8a906a307e
+connection=lab_inst_01M4FD35QY8BTB1ZCEV4F09BEB@ssh.flagos.io
+gpu=Iluvatar BI-V150 / 32768 MiB
+ixml=4.4.0 / driver 4.5.0
+cpu_cores=112
+ram=503 GiB
+torch=2.10.0
+vllm=0.24.0
+triton=3.6.0
+evalscope=1.11.1
+source_zip=/workspace/XLANG2026-v2.zip md5=dcf95c35f40d8230fe2dc6705513ccfe
+install=按 readme 4.1 原命令：pip install --no-build-isolation .（非可编辑），两包均装入 site-packages
+serve_cmd=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072 --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}'
+kv_cache_tokens=523344
+bench_4k_rounds=5153.39 / 5202.97 / 5184.0 / 5186.8 -> post3 mean 5191.26 tok/s, TTFT 4050.56 ms
+bench_16k_rounds=4444.74 / 4514.34 / 4512.79 / 4513.36 -> post3 mean 4511.90 tok/s, TTFT 111878.60 ms
+math500=0.971 (105/105)

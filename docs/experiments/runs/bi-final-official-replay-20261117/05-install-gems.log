@@ -1,0 +1,22 @@
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple
+Processing ./.
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: packaging>=26.0 in /usr/local/lib/python3.12/site-packages (from flag_gems==5.3.5) (26.2)
+Requirement already satisfied: PyYAML==6.0.1 in /usr/local/lib/python3.12/site-packages (from flag_gems==5.3.5) (6.0.1)
+Requirement already satisfied: sqlalchemy==2.0.48 in /usr/local/lib/python3.12/site-packages (from flag_gems==5.3.5) (2.0.48)
+Requirement already satisfied: numpy in /usr/local/lib/python3.12/site-packages (from flag_gems==5.3.5) (1.26.4)
+Requirement already satisfied: greenlet>=1 in /usr/local/lib/python3.12/site-packages (from sqlalchemy==2.0.48->flag_gems==5.3.5) (3.5.5)
+Requirement already satisfied: typing-extensions>=4.6.0 in /usr/local/lib/python3.12/site-packages (from sqlalchemy==2.0.48->flag_gems==5.3.5) (4.16.0)
+Building wheels for collected packages: flag_gems
+  Building wheel for flag_gems (pyproject.toml): started
+  Building wheel for flag_gems (pyproject.toml): finished with status 'done'
+  Created wheel for flag_gems: filename=flag_gems-5.3.5-py3-none-any.whl size=7491195 sha256=3a9a4495ef6732184e91a1bb24f20f287906f7f0e420911917722c6c4230583e
+  Stored in directory: /tmp/pip-ephem-wheel-cache-i59uj9jb/wheels/91/a9/a1/7703ea437fcec7d8e4b331a28de88dce44a9d7726e4cc511f4
+Successfully built flag_gems
+Installing collected packages: flag_gems
+Successfully installed flag_gems-5.3.5
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 26.1.2 -> 26.3
+[notice] To update, run: pip install --upgrade pip
