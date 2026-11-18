@@ -266,6 +266,23 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072
 ```
 
+**官方复核时的前缀缓存开关**：赛事方在**性能测试**的启动命令上额外加 `--no-enable-prefix-caching`，**数学评测不加**。两平台分别对应：
+
+```bash
+# 性能测试用（天数）
+vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
+  --gpu-memory-utilization 0.85 --max-model-len 131072 \
+  --compilation-config '{"cudagraph_mode": "FULL_DECODE_ONLY"}' \
+  --no-enable-prefix-caching
+
+# 性能测试用（沐曦 C500）
+vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
+  --gpu-memory-utilization 0.85 --max-model-len 131072 \
+  --no-enable-prefix-caching
+```
+
+本说明与报告中的数字是在**默认（启用前缀缓存）**的命令下测得的；实测命中率峰值为 C500 相邻两轮 0.7%、BI 两次复测 0.3%，因此加该开关后结果应落在同一波动范围内。若要严格对齐官方口径，按上面两条命令启动后重跑 4.2 的 benchmark 即可。
+
 ### 4.4 简单冒烟测试（可选）
 
 启动后先用赛题页面给出的最小请求确认服务可用，再跑正式评测：
@@ -334,7 +351,7 @@ PY
 1. 吞吐：按四轮去首、后三轮均值与第 1 节比对，保留所有逐轮结果。按上述工作目录运行时，原始 CSV 位于 `/workspace/benchmark_results/raw_runs_<timestamp>.csv`，汇总为同目录 `summary_<timestamp>.csv`。波动与场景、实例有关，历史测量也有超过 1% 的情况。
 2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
 3. 启动参数：`vllm serve` 命令行与 4.3 节一致，沿用镜像环境与默认优化开关。
-4. 缓存：记录 prefix cache 命中率；本报告各次测量的峰值远低于 1%（BI 两次复测为 0.3%），这是实测状态而非官方额外门槛。C500 最终轮的 serve 日志未回传，无法就本轮单独核实，相邻两轮峰值为 0.7%。异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
+4. 缓存：记录 prefix cache 命中率；本报告各次测量的峰值远低于 1%（BI 两次复测为 0.3%），这是实测状态而非官方额外门槛。C500 最终轮的 serve 日志未回传，无法就本轮单独核实，相邻两轮峰值为 0.7%。官方性能复核会用 `--no-enable-prefix-caching` 关闭前缀缓存，因此该指标只影响本队自测对照，不影响官方口径；异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
 5. 生效核对：检查 `patch failed` 或回退警告。BI 的 `vendor flash prefill ENGAGED` 记录首次进入该分支，不能单独证明执行成功；还需核对后续异常。`decode_attn_fast slice` 仅每累计 4000 次混合步路径调用输出一次，缺少该行不能判定纯 decode 路径失效。C500 的 1,203,904 tokens 是本次实例的 KV 池测量值，不是固定验收值；池大小还受可用显存影响。安装路径、日志和实际负载的内核执行情况应结合判断。
 
 ### 4.8 常见问题

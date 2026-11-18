@@ -901,7 +901,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \toprule
 赛题约束 & 本项目做法 \\
 \midrule
-服务参数与基线一致 & 两平台使用官网命令；C500 不添加编译配置 \\
+服务参数与基线一致 & 两平台使用官网命令，未设额外环境变量；C500 不添加编译配置。官方性能复核在启动命令后追加 \texttt{--no-enable-prefix-caching}，本提交未加，实测命中率 <1\% \\
 额外环境变量 & 无；服务命令与官网一致 \\
 不得调 benchmark 脚本 & 保留官方脚本；结果按实测轮次汇总，并标明单次测量 \\
 不得直接合并上游分支 & 从指定分支和镜像基线开发，BI 算子基线为 \texttt{4df52d91} \\
@@ -939,7 +939,6 @@ export VLLM_PLUGINS=fl
 \end{reportcode}
 
 启动命令与官网完全一致，天数在官方命令后追加编译配置，C500 不追加：
-
 \begin{reportcode}{官方启动命令（与基线一致）}
 \begin{minted}{bash}
 # 天数 BI-V150
@@ -952,6 +951,8 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --gpu-memory-utilization 0.85 --max-model-len 131072
 \end{minted}
 \end{reportcode}
+
+官方性能复核会在上述命令后追加 \texttt{--no-enable-prefix-caching}（精度评测不加）。本报告的数字在默认命令下测得，实测命中率最高为 C500 相邻两轮 0.7\%、BI 两次复测 0.3\%，因此两种口径的差异落在运行波动内；需要严格对齐时，按追加该开关的命令重跑评测即可。
 
 性能评测执行官方脚本并传入两个官方用例：
 
