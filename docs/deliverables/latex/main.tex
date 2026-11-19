@@ -177,7 +177,7 @@ C500 numbers were measured on the delivered commit, whose measured binary differ
 两种芯片在指令集、访存层次、运行时和算子库方面存在差异，通用 GPU 上的常用配置不一定适用。例如，Triton 默认的 \texttt{num\_warps=4, num\_stages=3} 在 BI-V150 的 decode attention 上并非合适选择。优化过程先用 profile 和微基准定位瓶颈，再修改内核或执行路径，最后通过官方 benchmark 和 MATH-500 评测端到端效果。
 
 \subsection{任务定义}
-本赛题要求在不改变模型、不降低精度的前提下，提升 MiniCPM5-2B 在两指定国产芯片上的推理总吞吐（total tokens/s）。优化必须落在框架与算子内部，且需具备实际开发量：KV Cache 与动态批处理、算子融合、内核重写、自研量化策略等均在允许范围内；直接 merge 上游分支、修改 benchmark 脚本、或在缺乏算子优化的情况下切换算子均被禁止。
+本赛题要求在不改变模型、不降低精度的前提下，提升 MiniCPM5-2B 在两指定国产芯片上的推理总吞吐（total tokens/s）。优化必须落在框架与算子内部，且需具备实际开发量：KV Cache 与动态批处理、算子融合、内核重写、自研量化策略等均在允许范围内。直接 merge 上游分支、修改 benchmark 脚本、或在缺乏算子优化的情况下切换算子，均被禁止。
 
 \subsection{评测口径}
 官方性能场景、精度与延迟约束见表~\ref{tab:protocol}。
@@ -996,7 +996,7 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \section{结论}
 本工作表明，两款芯片需要不同的优化组合：C500 主要受益于采样融合、GEMM 布局与 prefill 同步消除；BI-V150 则需要同时处理 attention 内核布局、CPU 侧配置访问和门控计算的数据搬运。优化不仅发生在单个内核内部，也发生在权重准备、元数据生成和框架接入边界。
 
-实验得到两点方法上的结论。第一，端到端验证优先于局部加速：BI-A36 微基准更快，完整服务却回退，因此未采用。第二，收益具有场景依赖性：配置缓存改善 4k，16k 基本持平；不同历史阶段的对照相互独立，相加不能得到最终增益。
+实验给出了两点方法上的结论。BI-A36 的微基准更快，完整服务却回退，所以端到端验证优先于局部加速。收益也依赖场景：配置缓存改善 4k、对 16k 基本持平，不同历史阶段的对照彼此独立，逐项收益不能直接相加。
 
 测量结果与约束判定见表~\ref{tab:throughput}、表~\ref{tab:ttft}。BI 的复测值落在父提交三次 4k 测量的区间内，16k 比父提交单次测量低 2.3\%（\secref{sec:repro-notes}）。后续工作转向 prefill 分块与更多芯片上的适用性。
 

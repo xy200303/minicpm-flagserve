@@ -33,7 +33,9 @@ git clone --single-branch --branch integration/flaggems \
 >
 > 打包元数据的差异：上游把不少文件标记为 `100755`，Windows 打包无法保留该位，因此本 ZIP 显式给 `*.sh`、`*.bash`、`*.py` 标记 `755`，其余文件 `644`；文本行尾除 `pyproject.toml`（CRLF）外均为 LF。逐文件内容与两个提交一致，可用 `git diff --ignore-all-space` 核对。
 
-**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在交付 commit `e4b5854` / `ef516137` 上按官方固定参数完成 4k、16k 四轮测试（实测二进制为 `d69e766`，与 `e4b5854` 只差注释），并完成 MATH-500 Level 3。服务命令与官网完全一致，未设置额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选且默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k 后三轮均值 **11097.29 tok/s**，精度 **96.19%**（101/105）；同日、同 FlagGems、双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性。2026-10-25 的早期交付栈两次为 98.1%。早期默认开启预热时的启动成本、逐轮数据和完整日志见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。下表中的 BI-V150 数值为父提交测量；**2026-11-17 已按本说明的官方安装与评测命令在 BI-V150 上完成复测**：4k/16k 后三轮均值 5191.26/4511.90 tok/s，TTFT 4050.56/111878.60 ms，MATH-500 97.1%（102/105 正确，105/105 请求成功），其中 4k 值落在 11-11 三次 4k 测量（5131.78/5292.46/5292.99）的区间内，16k 比父提交单次 4618.41 低 2.3%；同日另一次可编辑安装的复测为 5162.05/4515.29 tok/s、98.1%，两次相差小于 0.6%。逐轮数据、日志与 manifest 见 `docs/experiments/runs/bi-final-official-replay-20261117/` 与 `docs/experiments/runs/bi-final-retest-20261117/`。
+**C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在交付 commit `e4b5854` / `ef516137` 上完成 4k、16k 各四轮测试，实测二进制 `d69e766` 与 `e4b5854` 只差注释。服务命令与官网一致，未设额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选、默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k **11097.29 tok/s**，MATH-500 **96.19%**（101/105）。同日双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性；2026-10-25 的早期交付栈两次也是 98.1%。逐轮数据、日志与 manifest 见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。
+
+下表中的 BI-V150 数值取自父提交（2026-11-11）。2026-11-17 按本说明的安装与评测命令在 BI-V150 上复测：4k/16k 后三轮均值 5191.26/4511.90 tok/s，TTFT 4050.56/111878.60 ms，MATH-500 97.1%（102/105 正确，105/105 请求成功）。4k 落在 11-11 三次测量（5131.78/5292.46/5292.99）的区间内，16k 比单次 4618.41 低 2.3%；同日可编辑安装下另测一次为 5162.05/4515.29 tok/s、98.1%，两次差 0.6% 以内。数据与日志见 `docs/experiments/runs/bi-final-official-replay-20261117/` 与 `docs/experiments/runs/bi-final-retest-20261117/`。
 
 ## 0.1 环境要求与启动耗时
 
@@ -79,7 +81,7 @@ git clone --single-branch --branch integration/flaggems \
 
 官方用例 `[input_len, output_len, concurrency, num_prompts]`，使用
 `vllm bench serve`，无计时埋点。当前 C500 复测与历史 opt 系列均采用 4 轮去首、
-后三轮均值；prefix cache 命中情况逐次检查，各次最终复测低于 1%。
+后三轮均值；prefix cache 命中情况逐次检查，实测峰值低于 1%（C500 最终轮日志未回传，见 4.7 第 4 条）。
 
 | 平台 | 场景 | 官网基线 | 原生栈复测 | 优化版本实测 | 相对官网 |
 |---|---|---:|---:|---:|---:|
