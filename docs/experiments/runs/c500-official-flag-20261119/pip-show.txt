@@ -1,0 +1,6 @@
+Name: flag_gems
+Version: 5.3.5
+Location: /opt/conda/lib/python3.12/site-packages
+Name: vllm-plugin-fl
+Version: 0.0.0
+Location: /opt/conda/lib/python3.12/site-packages

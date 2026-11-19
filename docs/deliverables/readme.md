@@ -234,6 +234,8 @@ cd /workspace/FlagGems && pip install --no-build-isolation .
 python -m pip check
 ```
 
+**实例无外网时**：跳过上面三行 `pip install "setuptools..."`，直接用镜像自带的 `setuptools 80.10.2`、`setuptools-scm 10.0.5`、`wheel 0.45.1` 跑两条 `pip install --no-build-isolation .`。2026-11-19 在一台无 PyPI 的 C500 实例上按此路径装完，`import flag_gems, vllm_fl` 正常，日志见 `docs/experiments/runs/c500-official-flag-20261119/install-*.log`。
+
 使用镜像自带的厂商 PyTorch、Triton、vLLM，不另外安装通用 GPU 依赖或可选 extras。插件的 `fallback_version` 已由上游提供，FlagGems 增加该字段以支持不含 `.git` 的源码构建。构建工具检查不替代目标 GPU 上的服务启动和评测。
 
 **编译与执行流程**：两个包都是纯 Python + Triton，没有需要单独编译的 C++ 扩展，`pip install` 完成构建即安装完毕；Triton 内核在首次遇到对应形状时 JIT 编译，因此首次启动或首轮 benchmark 偏慢属正常，官方脚本弃首轮也正是为此。`pip check` 在干净镜像上除镜像自带的 3 条版本偏差（compressed-tensors、fastapi、opencv-python-headless）外不应有输出，出现其他缺失依赖说明安装环境不完整。安装完成后用 `python -c import` 确认模块位置，再进入 4.3 启动。
@@ -361,6 +363,7 @@ PY
 | 现象 | 原因 | 处理 |
 |---|---|---|
 | `import flag_gems` 报 `No module named 'flag_gems.fused.DSA'` | 用了未包含占位 `__init__.py` 的旧包，或把新包叠加解压到旧源码目录 | 用本包解压到干净目录后重新安装；本包已在 `FlagGems/src/flag_gems/fused/DSA/` 放入占位文件 |
+| `pip install "setuptools>=77.0.3,<81"` 报网络错误 | 实例无外网，PyPI 不可达 | 跳过这步，用镜像自带的 setuptools 直接 `pip install --no-build-isolation .`，见 4.1 |
 | `pip check` 报 setuptools 版本不符 | 插件要求 `>=77.0.3,<81`、FlagGems 要求 `>=64,<77`，两者没有交集 | 按 4.1 的顺序分两次安装；装完可执行 `pip install "setuptools>=77.0.3,<81"` 恢复，不影响已装好的两个包 |
 | C500 启动阶段进程被杀 | 64 GB CPU 内存实例在 Inductor 编译期触顶，纯镜像原版同样会复现 | 换 ≥128 GB 内存的实例 |
 | 吞吐偏高且 TTFT 异常低 | prefix cache 命中（benchmark 用 seed=0） | 新起 serve 重测，或换 `input_len` 后再测 |

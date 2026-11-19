@@ -1,0 +1,14 @@
+Looking in indexes: http://mirrors.aliyun.com/pypi/simple, https://mirrors.aliyun.com/pypi/simple/
+Processing /workspace/official-check/XLANG2026/vllm-plugin-FL
+  Preparing metadata (pyproject.toml): started
+  Preparing metadata (pyproject.toml): finished with status 'done'
+Requirement already satisfied: pyyaml in /opt/conda/lib/python3.12/site-packages (from vllm-plugin-fl==0.0.0) (6.0.1)
+Building wheels for collected packages: vllm-plugin-fl
+  Building wheel for vllm-plugin-fl (pyproject.toml): started
+  Building wheel for vllm-plugin-fl (pyproject.toml): finished with status 'done'
+  Created wheel for vllm-plugin-fl: filename=vllm_plugin_fl-0.0.0-py3-none-any.whl size=485384 sha256=183f50447d35ea3dd511f078ef99a1be7a3d18bcfc3217170cf91f37747d54e8
+  Stored in directory: /root/.cache/pip/wheels/c5/2b/9b/8c3d708c8bfb8df66dcb45e401c560d4074149c33370addae2
+Successfully built vllm-plugin-fl
+Installing collected packages: vllm-plugin-fl
+Successfully installed vllm-plugin-fl-0.0.0
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable.It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.

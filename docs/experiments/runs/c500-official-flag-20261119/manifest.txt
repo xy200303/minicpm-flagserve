@@ -16,3 +16,7 @@ prefix_cache_hit=0.0%
 bench_4k_rounds=11234.24 / 12479.51 / 12458.26 / 12353.16 -> post3 mean 12430.31 tok/s, TTFT 1625.04 ms
 bench_16k_rounds=11098.84 / 11109.47 / 11108.61 / 11100.18 -> post3 mean 11106.09 tok/s, TTFT 17996.83 ms
 compare_report_default_cache=4k 12451.84 (-0.17%), 16k 11097.29 (+0.08%)
+pypi_reachable=no（实例无外网，pip download 失败）
+install_note=跳过 readme 4.1 的 setuptools 版本安装，直接用镜像自带的 setuptools 80.10.2 / setuptools-scm 10.0.5，按 pip install --no-build-isolation . 依次装插件与 FlagGems
+install_logs=install-plugin.log / install-flaggems.log / pip-show.txt / import-check.txt
+import_check=flag_gems 与 vllm_fl 均从 site-packages 导入成功，未设置 FLAGGEMS_VENDOR

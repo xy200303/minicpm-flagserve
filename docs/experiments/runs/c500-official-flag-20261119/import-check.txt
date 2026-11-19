@@ -1,0 +1,42 @@
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/opt/conda/lib/python3.12/site-packages/flag_gems/__init__.py", line 21, in <module>
+    from flag_gems import testing  # noqa: F401
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/flag_gems/testing/__init__.py", line 17, in <module>
+    from flag_gems import runtime
+  File "/opt/conda/lib/python3.12/site-packages/flag_gems/runtime/__init__.py", line 19, in <module>
+    from .configs_loader import TunedConfigLoader
+  File "/opt/conda/lib/python3.12/site-packages/flag_gems/runtime/configs_loader.py", line 20, in <module>
+    import triton
+  File "/opt/conda/lib/python3.12/site-packages/triton/__init__.py", line 8, in <module>
+    from .runtime import (
+  File "/opt/conda/lib/python3.12/site-packages/triton/runtime/__init__.py", line 1, in <module>
+    from .autotuner import (Autotuner, Config, Heuristics, autotune, heuristics)
+  File "/opt/conda/lib/python3.12/site-packages/triton/runtime/autotuner.py", line 13, in <module>
+    from ..testing import do_bench, do_bench_cudagraph
+  File "/opt/conda/lib/python3.12/site-packages/triton/testing.py", line 7, in <module>
+    from . import language as tl
+  File "/opt/conda/lib/python3.12/site-packages/triton/language/__init__.py", line 4, in <module>
+    from . import math
+  File "/opt/conda/lib/python3.12/site-packages/triton/language/math.py", line 1, in <module>
+    from . import core
+  File "/opt/conda/lib/python3.12/site-packages/triton/language/core.py", line 10, in <module>
+    from ..runtime.jit import jit
+  File "/opt/conda/lib/python3.12/site-packages/triton/runtime/jit.py", line 12, in <module>
+    from ..runtime.driver import driver
+  File "/opt/conda/lib/python3.12/site-packages/triton/runtime/driver.py", line 1, in <module>
+    from ..backends import backends
+  File "/opt/conda/lib/python3.12/site-packages/triton/backends/__init__.py", line 50, in <module>
+    backends = _discover_backends()
+               ^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/triton/backends/__init__.py", line 44, in _discover_backends
+    driver = _load_module(name, os.path.join(root, name, 'driver.py'))
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/triton/backends/__init__.py", line 12, in _load_module
+    spec.loader.exec_module(module)
+  File "/opt/conda/lib/python3.12/site-packages/triton/backends/metax/driver.py", line 30, in <module>
+    maca_include_dir = [os.path.join(maca_home_dirs(), "include")]
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen posixpath>", line 76, in join
+TypeError: expected str, bytes or os.PathLike object, not NoneType
