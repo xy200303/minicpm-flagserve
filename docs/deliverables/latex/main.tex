@@ -901,7 +901,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \toprule
 赛题约束 & 本项目做法 \\
 \midrule
-服务参数与基线一致 & 两平台使用官网命令，未设额外环境变量；C500 不添加编译配置。官方性能复核在启动命令后追加 \texttt{--no-enable-prefix-caching}，本提交未加，实测命中率 <1\% \\
+服务参数与基线一致 & 两平台使用官网命令，未设额外环境变量；C500 不添加编译配置。官方性能复核追加 \texttt{--no-enable-prefix-caching}，本提交已按该口径复测为 12430.31/11106.09 tok/s（$-0.17\%$/$+0.08\%$） \\
 额外环境变量 & 无；服务命令与官网一致 \\
 不得调 benchmark 脚本 & 保留官方脚本；结果按实测轮次汇总，并标明单次测量 \\
 不得直接合并上游分支 & 从指定分支和镜像基线开发，BI 算子基线为 \texttt{4df52d91} \\
@@ -952,7 +952,7 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
 \end{minted}
 \end{reportcode}
 
-官方性能复核会在上述命令后追加 \texttt{--no-enable-prefix-caching}（精度评测不加）。本报告的数字在默认命令下测得，实测命中率最高为 C500 相邻两轮 0.7\%、BI 两次复测 0.3\%，因此两种口径的差异落在运行波动内；需要严格对齐时，按追加该开关的命令重跑评测即可。
+官方性能复核会在上述命令后追加 \texttt{--no-enable-prefix-caching}（精度评测不加）。2026-11-19 已按该口径在 C500 上完整复测 4k/16k，结果与默认命令相差 $-0.17\%$ / $+0.08\%$，详见 \secref{sec:repro-notes} 第（6）条。
 
 性能评测执行官方脚本并传入两个官方用例：
 
@@ -978,7 +978,9 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 \item \textbf{测量波动。}图~\ref{fig:rounds} 给出报告值所依据的逐轮数据。C500 4k 首轮为 11805.31 tok/s，比报告值低 5.2\%，按官方口径剔除；计入均值的后三轮中，C500 的极差为均值的 0.31\%（4k）和 0.05\%（16k），BI 16k 为 0.08\%，BI 第 2、3 次独立 4k 测量为 0.72\% 和 0.78\%。BI 第 1 次 4k 测量是服务启动后的首个场景，后三轮极差达 4.97\%，三轮均值比另两次低约 3\%；原因尚未完全定位，因此保留全部结果并采用三次的中位数，不只展示最佳值。父提交的 16k 只完成一次四轮测量，不据此估计跨次波动；交付提交的 16k 复测另有一次（4511.90 tok/s）。
 
 {\sloppy\hbadness=10000 \item \textbf{BI-V150 交付提交复测。}2026-11-17 在 BI-V150（32 GB）上，按交付包 \texttt{readme.md} 的原始安装命令（\texttt{pip install --no-build-isolation .}，非可编辑）安装交付 ZIP 解包出的源码树，再用官方启动命令与官方评测脚本完成 4k/16k 各四轮与 MATH-500：4k 逐轮 5153.39 / 5202.97 / 5184.00 / 5186.80，后三轮均值 \textbf{5191.26 tok/s}、TTFT 4050.56 ms；16k 逐轮 4444.74 / 4514.34 / 4512.79 / 4508.57，后三轮均值 \textbf{4511.90 tok/s}、TTFT 111878.60 ms；精度 \textbf{97.1\%}（102/105 正确，105/105 请求成功），prefix cache 峰值 0.3\%，KV 池 523,344 tokens。同日另一次可编辑安装的复测为 5162.05/4515.29 tok/s、98.1\%，两次相差小于 0.6\%，两者的 4k 值都落在父提交 11-11 三次 4k 测量（5131.78/5292.46/5292.99）的区间内，16k 均比父提交单次低约 2.3\%，因此表~\ref{tab:throughput} 与表~\ref{tab:ttft} 仍取父提交中位数。复测中确认了上游 \texttt{setup.py} 的 \texttt{find\_packages} 不会打包缺 \texttt{\_\_init\_\_.py} 的 \texttt{flag\_gems/fused/DSA}，交付包已补占位文件，本次非可编辑安装后可正常导入。证据见文档仓库 \path{docs/experiments/runs/bi-final-official-replay-20261117/} 与 \path{docs/experiments/runs/bi-final-retest-20261117/}。
-\par}\end{enumerate}
+\item \textbf{C500 官方口径复测。}2026-11-19 在 C500 上按官网启动命令追加 \texttt{--no-enable-prefix-caching}（官方性能复核口径）重测 4k/16k：逐轮 11234.24 / 12479.51 / 12458.26 / 12353.16 与 11098.84 / 11109.47 / 11108.61 / 11100.18，后三轮均值 \textbf{12430.31} / \textbf{11106.09 tok/s}、TTFT 1625.04 / 17996.83 ms，prefix cache 命中率 0.0\%，KV 池 1,202,096 tokens。与默认命令的 12451.84 / 11097.29 相差 $-0.17\%$ / $+0.08\%$，说明该开关对本提交无实质影响。证据见 \path{docs/experiments/runs/c500-official-flag-20261119/}。
+\par}
+\end{enumerate}
 
 \begin{figure}[!htbp]
 \centering

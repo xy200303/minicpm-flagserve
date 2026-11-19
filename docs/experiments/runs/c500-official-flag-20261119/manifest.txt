@@ -1,0 +1,18 @@
+date=2026-11-19
+host=3e0b369b0c50
+connection=root+vm-ms4w0nbOxgDekRLr@140.207.205.81
+gpu=MetaX C500 / 64 GiB (mx-smi: MX-SMI 2.3.1, MACA 3.7.0.38, driver 3.8.30)
+cpu_cores=128
+ram=120 GiB
+torch=2.8.0+metax3.7.0.7
+vllm=0.24.0
+triton=3.0.0
+source_zip=/workspace/XLANG2026.zip md5=dcf1a1b15d978566af6f4f3f162a8738
+install=readme 4.1 原命令 pip install --no-build-isolation .（非可编辑），两个包均装入 site-packages
+serve_cmd=vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm --gpu-memory-utilization 0.85 --max-model-len 131072 --no-enable-prefix-caching
+flag=官方性能复核口径：追加 --no-enable-prefix-caching；精度评测不加
+kv_cache_tokens=1202096
+prefix_cache_hit=0.0%
+bench_4k_rounds=11234.24 / 12479.51 / 12458.26 / 12353.16 -> post3 mean 12430.31 tok/s, TTFT 1625.04 ms
+bench_16k_rounds=11098.84 / 11109.47 / 11108.61 / 11100.18 -> post3 mean 11106.09 tok/s, TTFT 17996.83 ms
+compare_report_default_cache=4k 12451.84 (-0.17%), 16k 11097.29 (+0.08%)

@@ -281,7 +281,7 @@ vllm serve /workspace/MiniCPM5-2B --port 9031 --served-model-name minicpm \
   --no-enable-prefix-caching
 ```
 
-本说明与报告中的数字是在**默认（启用前缀缓存）**的命令下测得的；实测命中率峰值为 C500 相邻两轮 0.7%、BI 两次复测 0.3%，因此加该开关后结果应落在同一波动范围内。若要严格对齐官方口径，按上面两条命令启动后重跑 4.2 的 benchmark 即可。
+2026-11-19 已按官方口径（追加该开关）在 C500 上完整复测：4k/16k 后三轮均值 **12430.31 / 11106.09 tok/s**、平均 TTFT 1625.04 / 17996.83 ms，prefix cache 命中率 **0.0%**；与默认命令的 12451.84 / 11097.29 相差 **−0.17% / +0.08%**，说明该开关对本次提交无实质影响。逐轮数据与日志见 `docs/experiments/runs/c500-official-flag-20261119/`。
 
 ### 4.4 简单冒烟测试（可选）
 
@@ -391,6 +391,7 @@ PY
 | BI-V150 镜像对齐最终复测 | `docs/experiments/runs/image-baseline-align/` 下的 `bench-evidence.tar.gz`、`eval-evidence.tar.gz`、`tests.tar.gz` 与 `manifest.txt` |
 | 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
 | BI-V150 交付提交复测（2026-11-17） | `docs/experiments/runs/bi-final-official-replay-20261117/`（按官方安装与评测命令的完整回放：安装日志、逐轮 CSV、bench/serve/eval 日志、MATH-500 JSON、manifest）与 `docs/experiments/runs/bi-final-retest-20261117/`（同日可编辑安装的对照） |
+| C500 官方口径复测（2026-11-19） | `docs/experiments/runs/c500-official-flag-20261119/` 下的 `raw_runs_20261119_112157.csv`、`summary_20261119_112157.csv`、`bench.log`、`serve.log` 与 `manifest.txt`（启动命令追加 `--no-enable-prefix-caching`） |
 
 官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-11-11）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。
 
