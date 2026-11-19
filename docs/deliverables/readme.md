@@ -6,7 +6,7 @@
 
 ## 0. 交付版本与打包方式
 
-本包不是手工拼接的文件集合，而是从以下两个固定 Git 分支按 commit 重建的完整源码树；开发仓库保留完整提交历史，官方可按下表的 commit 在对应 fork 中执行 `git log`、`git show`、`git diff` 核对开发过程。为避免提交包携带仓库元数据，官方 ZIP 不包含 `.git` 目录：
+本包从以下两个固定 Git 分支按 commit 重建；开发仓库保留完整提交历史，官方可按下表的 commit 在对应 fork 中执行 `git log`、`git show`、`git diff` 核对开发过程。为避免提交包携带仓库元数据，官方 ZIP 不包含 `.git` 目录：
 
 | 目录 | 仓库分支 | 固定 commit | 内容 |
 |---|---|---|---|
@@ -100,7 +100,7 @@ git clone --single-branch --branch integration/flaggems \
 TTFT 由 4.33 s 增至 111.64 s，长上下文成本体现在这些分项指标中。
 
 C500 的本机原生基线为 4k **4210.20**、16k **5867.59 tok/s**，最终提交实测相对其
-分别为 **2.96x** 和 **1.89x**。BI-V150 的官方开发与评测环境均为 **32 GB**；BI 表中数值为父提交测量，交付提交复测（2026-11-17）为 5191.26/4511.90 tok/s，见第 0 节。
+分别为 **2.96x** 和 **1.89x**。BI-V150 的官方开发与评测环境均为 **32 GB**；BI 表中数值为父提交测量；交付提交的复测值见第 0 节。
 两组 A20/A7 对照分别为：4k **3855.31 → 4087.91（+6.0%）**、
 **3840.80 → 4722.22（+22.9%）**；16k **3568.31 → 4520.19（+26.7%）**、
 **3570.61 → 4520.10（+26.6%）**。两组均列出，不用单组高值代替整体结果。
@@ -142,7 +142,7 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 `impl/decode_attn_pin.py`：仅对 3D 路径 pin `num_warps=1 / num_stages=1`，
 输出与 stock **bit-exact**。开关 `VLLM_FL_DISABLE_DECODE_PIN=1`。
 
-### A20：自研 paged decode attention 内核（本轮最大单项收益）
+### A20：自研 paged decode attention 内核（最大单项收益）
 
 算子本体在 FlagGems：`FlagGems/src/flag_gems/fused/paged_decode_attention.py`
 （Triton 实现，已在 `fused/__init__.py` 注册）。插件侧为薄封装与派发：
@@ -168,7 +168,7 @@ prefill 走 `ixformer.flash_attn_varlen_func`，KV 用 Triton `_dual_gather_kern
 - `src/flag_gems/utils/models/sql.py`：从全库 automap reflection 改为只加载目标表；配置表不存在时仍返回 `None` 并进入 autotune，保持原回退语义。
 - 真实配置库单表加载 **4212.64→26.35ms**；host profile 的 `_index_linearized` 累计时间 **66.03→4.47s**。
 - 官方 4k 中位数 **4563.26→5209.06 tok/s（+14.15%）**，16k 持平；MATH-500 **98.1%**。
-- 16k 的原版配置获取约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此端到端未显著提升。
+- 16k 的原版配置获取约 48.47s，但 A31 后总 host 时间仅从 148.42s 降至 141.48s，attention metadata、copy 与设备计算成为主要部分，因此端到端没有提升。
 - 该优化只改变配置和 host 元数据访问，不改变算子选择、模型计算、采样参数或官方启动命令。
 
 ### A48：双累加器 gate/up GEMM＋SiLU 门控融合
@@ -351,7 +351,7 @@ PY
 1. 吞吐：按四轮去首、后三轮均值与第 1 节比对，保留所有逐轮结果。按上述工作目录运行时，原始 CSV 位于 `/workspace/benchmark_results/raw_runs_<timestamp>.csv`，汇总为同目录 `summary_<timestamp>.csv`。波动与场景、实例有关，历史测量也有超过 1% 的情况。
 2. 精度：`math_500.json` 的 `metrics[0].score` 应不低于 0.95；105/105 是请求成功数，不是答对题数。
 3. 启动参数：`vllm serve` 命令行与 4.3 节一致，沿用镜像环境与默认优化开关。
-4. 缓存：记录 prefix cache 命中率；本报告各次测量的峰值远低于 1%（BI 两次复测为 0.3%），这是实测状态而非官方额外门槛。C500 最终轮的 serve 日志未回传，无法就本轮单独核实，相邻两轮峰值为 0.7%。官方性能复核会用 `--no-enable-prefix-caching` 关闭前缀缓存，因此该指标只影响本队自测对照，不影响官方口径；异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
+4. 缓存：记录 prefix cache 命中率；本报告各次测量的峰值远低于 1%（BI 两次复测为 0.3%），这是实测状态而非官方额外门槛。C500 最终轮的 serve 日志未回传，无法就那一次单独核实，相邻两轮峰值为 0.7%。官方性能复核会用 `--no-enable-prefix-caching` 关闭前缀缓存，因此该指标只影响本队自测对照，不影响官方口径；异常偏高时检查是否复用同一服务的重复负载，必要时新起服务重测。
 5. 生效核对：检查 `patch failed` 或回退警告。BI 的 `vendor flash prefill ENGAGED` 记录首次进入该分支，不能单独证明执行成功；还需核对后续异常。`decode_attn_fast slice` 仅每累计 4000 次混合步路径调用输出一次，缺少该行不能判定纯 decode 路径失效。C500 的 1,203,904 tokens 是本次实例的 KV 池测量值，不是固定验收值；池大小还受可用显存影响。安装路径、日志和实际负载的内核执行情况应结合判断。
 
 ### 4.8 常见问题
