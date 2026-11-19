@@ -31,6 +31,8 @@ git clone --single-branch --branch integration/flaggems \
 >
 > 本包在 `FlagGems/src/flag_gems/fused/DSA/` 下补了一个只含注释的 `__init__.py`。原因：上游 `setup.py` 用 `find_packages("src")` 发现包，该目录缺此文件时不会被打进 wheel，而 `fused/__init__.py` 又会 `import flag_gems.fused.DSA.bin_topk`，导致按官网命令 `pip install --no-build-isolation .` 装完后 `import flag_gems` 报 `ModuleNotFoundError`。上游 `4df52d91` 结构相同、`setup.py` 未改，属于上游打包缺陷；该文件不改变运行时行为，也不参与任何优化路径。
 >
+> 交付包在 commit 之上另有 4 处审查修复：`FlagGems/fused/top_p_sample.py` 的空 split NaN 防护（`_row_stats_partial` / `_row_stats_reduce`）；`LinearNNRepack` 的重排条件排除带 bias 的层；`_dual_gather_kernel` 仅在每页元素数为 4096 的整数倍时启用（否则走 `index_select`）；`flag_gems/utils/models/sql.py` 的进程内缓存键改用 `short_name`。四处在 2026-11-19 的 C500 上装包验证：`import flag_gems, vllm_fl` 正常，`fused_top_p_sample` 在 vocab=151936（会触发空 split 的形状）下输出合法、不同 top-p 的选点分布符合预期。
+>
 > 打包元数据的差异：上游把不少文件标记为 `100755`，Windows 打包无法保留该位，因此本 ZIP 显式给 `*.sh`、`*.bash`、`*.py` 标记 `755`，其余文件 `644`；文本行尾除 `pyproject.toml`（CRLF）外均为 LF。逐文件内容与两个提交一致，可用 `git diff --ignore-all-space` 核对。
 
 **C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在交付 commit `e4b5854` / `ef516137` 上完成 4k、16k 各四轮测试，实测二进制 `d69e766` 与 `e4b5854` 只差注释。服务命令与官网一致，未设额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选、默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k **11097.29 tok/s**，MATH-500 **96.19%**（101/105）。同日双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性；2026-10-25 的早期交付栈两次也是 98.1%。逐轮数据、日志与 manifest 见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。
