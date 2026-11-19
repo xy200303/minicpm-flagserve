@@ -367,7 +367,7 @@ BI-V150 & 门控融合与 K 连续权重预打包 & 中间结果读写与加载�
 
 这些改动不只是切换已有算子：实现同时包含新内核、权重布局转换、同步消除、缓存和框架接入。按输入形状派发时保留适用范围检查与原始路径；具体数值语义和验证结果在对应小节说明。
 
-本工作的创新点集中在三处。BI-V150 的分段 paged decode attention 内核（\secref{sec:bi-a20}）按（seq, kv\_head, 段）组织工作单元，用 base-2 在线 softmax，并把段边界按整页对齐，使 PV 的 MMA 布局转换留在 warp 内，有效带宽由 286 提升到 457 GB/s。C500 的免排序采样链内核（\secref{sec:c500-sampler}）以 1024-bin 质量直方图定位 top-p 阈值，在同一趟内完成 Gumbel-Max，替代 eager 全词表排序，4.086 ms 降到 0.381 ms。两侧共用的按形状派发与权重布局改造（\secref{sec:c500-gemm}、\secref{sec:bi-a60}）把内核改写与路由选择解耦，新增路径都带可观测回退。这三处都能独立复现，各有同日的内核级与端到端证据；按赛题的评判维度，前两处属于算子与内核层的编译优化，第三处属于系统级调度与派发，都不依赖量化、投机采样或服务参数调整。
+本工作的创新点集中在三处。BI-V150 的分段 paged decode attention 内核（\secref{sec:bi-a20}）按（seq, kv\_head, 段）组织工作单元，用 base-2 在线 softmax，并把段边界按整页对齐（页大小等于 BLOCK\_N 时），使 PV 的 MMA 布局转换留在 warp 内，有效带宽由 286 提升到 457 GB/s。C500 的免排序采样链内核（\secref{sec:c500-sampler}）以 1024-bin 质量直方图定位 top-p 阈值，在同一趟内完成 Gumbel-Max，替代 eager 全词表排序，4.086 ms 降到 0.381 ms。两侧共用的按形状派发与权重布局改造（\secref{sec:c500-gemm}、\secref{sec:bi-a60}）把内核改写与路由选择解耦，新增路径都带可观测回退。这三处都能独立复现，各有同日的内核级与端到端证据；按赛题的评判维度，前两处属于算子与内核层的编译优化，第三处属于系统级调度与派发，都不依赖量化、投机采样或服务参数调整。
 
 \section{研究方法与实验设计}\label{sec:method}
 \subsection{实验标识与证据组织}
@@ -413,15 +413,15 @@ BI-A6 双 gather、BI-A7 发射配置要求逐位一致；采样融合与 GEMM �
 \begin{equation}
 \arg\max_i\left(\frac{x_i}{T}+g_i\right)=\arg\max_i\left(x_i+Tg_i\right),\label{eq:gumbel}
 \end{equation}
-其中 $g_i=-\log(-\log u_i)$、$u_i\sim\mathcal{U}(0,1)$。式~\eqref{eq:gumbel} 说明内核可以直接在 bf16 logits 上计算 $x_i+Tg_i$ 取 argmax，省去先除后加与一次 fp32 提升；$T<10^{-5}$ 时退化为贪心，与 \texttt{torch.argmax} 完全一致。
+其中 $g_i=-\log(-\log u_i)$、$u_i\sim\mathcal{U}(0,1)$。式~\eqref{eq:gumbel} 说明内核可以直接读 bf16 logits，在寄存器内转 fp32 计算 $x_i+Tg_i$ 取 argmax，省去整张 fp32 logits 的物化与两趟额外的逐元素遍历；top-p 掩码仍需 $x_i/T$；$T<10^{-5}$ 时退化为贪心，与 \texttt{torch.argmax} 完全一致。
 
-\textbf{top-p 阈值。}在 $N_b=1024$ 个等宽 bin 上累计质量 $\hat m_j$，取
+\textbf{top-p 阈值。}记 $m=\max_i x_i/T$、$Z=\sum_i e^{x_i/T-m}$，把 $[m-60,m]$ 等分为 $N_b=1024$ 个 bin，$\hat m_j$ 为落入第 $j$ 个 bin 的 $e^{x_i/T-m}$ 之和。取
 \begin{equation}
-b^\star=\min\left\{b:\sum_{j\ge b}\hat m_j\ \ge\ pZ\right\},\qquad \tau=\text{bin}_{b^\star}\ \text{的下沿},\label{eq:topp}
+b^\star=\max\left\{b:\sum_{j\ge b}\hat m_j\ \ge\ pZ\right\},\qquad \tau=\text{bin}_{b^\star}\ \text{的下沿},\label{eq:topp}
 \end{equation}
-式~\eqref{eq:topp} 的阈值只保留 $x_i/T\ge\tau$ 的 token。取下沿而非 bin 中心，保证保留质量不小于 $pZ$；残差只来自对 $\exp(-60)$ 以下尾质量的截断，因此该步是保守裁剪，不是无偏重采样。
+式~\eqref{eq:topp} 的阈值只保留 $x_i/T\ge\tau$ 的 token。取下沿而非 bin 中心，保证保留质量不小于 $pZ$；残差只来自对 $\exp(-60)$ 以下尾质量的截断。若因该截断无解（$p=1$ 时可能发生），$b^\star$ 取下界 0、保留全部 token。该步是保守裁剪，不是无偏重采样。
 
-2026-10-25 在 C500 实测代码上复测，B=64、词表 130560 时，同语义 PyTorch top-p 对照为 4.086 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，加速约 10.7 倍（图~\ref{fig:sampler-bench}）。
+2026-10-25 在 C500 实测代码上复测，B=64、词表 130560 时，sort 版 PyTorch 参考为 4.086 ms，vLLM eager 采样尾部为 1.95 ms，\texttt{fused\_top\_p\_sample} 为 0.381 ms，分别快 10.7 与 5.1 倍（图~\ref{fig:sampler-bench}）。
 
 \begin{figure}[!htbp]
 \centering
@@ -446,15 +446,15 @@ b^\star=\min\left\{b:\sum_{j\ge b}\hat m_j\ \ge\ pZ\right\},\qquad \tau=\text{bi
 
 图~\ref{fig:topp} 中的阈值取所在 bin 的下沿；忽略 $\exp(-60)$ 截断尾质量时，保留集质量不小于 $pZ$，因此该下界带截断近似限定。采样分数写成 $x+Tg$，与先算 $x/T$ 再加 $g$ 的 argmax 等价。对应实现如下。
 
-\begin{reportcode}{\texttt{top\_p\_sample.py:180-198}：反向 cumsum 定位阈值并保守取下沿}
-\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=180,lastline=198]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\begin{reportcode}{\texttt{top\_p\_sample.py:171-206}：反向 cumsum 定位阈值并保守取下沿}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=171,lastline=206]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
 \end{reportcode}
 
-\begin{reportcode}{\texttt{top\_p\_sample.py:241-249}：温度折叠的 Gumbel-Max 与 top-p mask}
-\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=241,lastline=249]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
+\begin{reportcode}{\texttt{top\_p\_sample.py:213-249}：温度折叠的 Gumbel-Max 与 top-p mask}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=213,lastline=249]{python}{\GemsCode/src/flag_gems/fused/top_p_sample.py}
 \end{reportcode}
 
-正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在核集内（含直方图粒度 slack），与原实现的 TV 距离处于纯采样噪声区间。
+正确性方面，greedy 与 \texttt{torch.argmax} 完全一致；top-p 样本全部落在阈值定义的保留集内；该集合是精确 top-p 集的超集（跨阈值的 bin 整体保留），与原实现的 TV 距离与纯采样噪声同量级。
 
 \begin{figure}[!htbp]
 \centering
@@ -463,7 +463,7 @@ b^\star=\min\left\{b:\sum_{j\ge b}\hat m_j\ \ge\ pZ\right\},\qquad \tau=\text{bi
 \end{figure}
 
 \subsection{GEMM 布局与路由（C500-opt2/C500-opt4/C500-opt6/C500-opt8/C500-opt11）}\label{sec:c500-gemm}
-MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。交付配置采用单 nn 布局：每个线性层只保留 $[K,N]$ 副本，全 M（含 decode）走 mcBLAS nn GEMM，并释放原 $(N,K)$ 存储，缺少 nn 副本或形状不满足条件时回退 \texttt{F.linear}。这一布局把权重副本从两份降到一份：MiniCPM5-2B 的线性层约 1.98B 参数，bf16 副本由 7.9 GB 降到 3.97 GB，回收的 3.97 GB 全部进入 KV 池，池容量由 1{,}111{,}744 增至 1{,}203{,}904 tokens（+8.3\%），131{,}072 token 单请求的最大并发由 8.48$\times$ 升至 9.19$\times$。官方两个用例固定 64 路并发，4k 只用到池子的 27\%、16k 为 1.114M 对 1.204M tokens，因此吞吐保持中性（4k 12451.84 对 12450.37、16k 11097.29 对 11095.14，均在 0.02\% 内），收益体现为长上下文与更高并发下的余量；同一路径的 MATH-500 Level 3 在最终提交上为 96.19\%，早期双布局版本为 98.1\%。若需保守配置，\texttt{VLLM\_FL\_NN\_MIN\_M=192} 与 \texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=0} 可回到双布局。
+MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 prefill 大 M 的 126 组配置扫描中，其耗时为 vendor mcBLAS 的 1.35–1.67 倍；四种 prefill 形状的 vendor 计算吞吐约为 152–197 TFLOPS。FlagGems 接管 \texttt{aten::mm} 后，原路由无法直接调用 vendor GEMM。为此，prefill 大 M 通过 ctypes 调用 libmcblas 的 \texttt{mcblasGemmEx}（cuBLAS 兼容 ABI），并注册为 custom op 以适配 compiled 区域。交付配置采用单 nn 布局：每个线性层只保留 $[K,N]$ 副本，全 M（含 decode）走 nn 布局：bf16、绑定可用且激活连续时调 mcBLAS，否则回退 \texttt{torch.mm}（FlagGems Triton）；随后释放原 $(N,K)$ 存储，缺少 nn 副本或形状不满足条件时回退 \texttt{F.linear}。这一布局把权重副本从两份降到一份：MiniCPM5-2B 的线性层约 1.98B 参数，bf16 副本由 7.9 GB 降到 3.97 GB，回收的 3.97 GB 全部进入 KV 池，池容量由 1{,}111{,}744 增至 1{,}203{,}904 tokens（+8.3\%），131{,}072 token 单请求的最大并发由 8.48$\times$ 升至 9.19$\times$。官方两个用例固定 64 路并发，4k 只用到池子的 27\%、16k 为 1.114M 对 1.204M tokens，因此吞吐保持中性（4k 12451.84 对 12450.37、16k 11097.29 对 11095.14，均在 0.02\% 内），收益体现为长上下文与更高并发下的余量；同一路径的 MATH-500 Level 3 在最终提交上为 96.19\%，早期双布局版本为 98.1\%。若需保守配置，\texttt{VLLM\_FL\_NN\_MIN\_M=192} 与 \texttt{VLLM\_FL\_FREE\_NT\_WEIGHTS=0} 可回到双布局。
 两种布局的存储方向与各自能走的流水见图~\ref{fig:nn-layout}。
 
 
@@ -512,14 +512,14 @@ MACA Triton \texttt{mm\_kernel} 的高性能流水主要适配 nn 布局。在 p
 
 nn 副本只对 $N$ 在 512--16384 之间、无 bias 的线性层建立，其余层保留原路径；lm\_head 的 $N$ 超出该上限，由独立标志单独放行。lm\_head 通过独立的 \texttt{\_fl\_always\_nn} 标志使用 nn 副本，避免被通用 N 上限排除。
 
-\begin{reportcode}{\texttt{linear\_nn\_repack.py:112-136}：按形状在 vendor、Triton 与 stock 之间路由}
-\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=112,lastline=136]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
+\begin{reportcode}{\texttt{linear\_nn\_repack.py:121-145}：M 决定是否走 nn 布局，dtype 与绑定可用性决定 mcBLAS 还是 Triton}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=121,lastline=145]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/linear_nn_repack.py}
 \end{reportcode}
 
 ctypes 绑定把行主序的 $C=A B$ 转写成列主序的 $C^T=B^T A^T$，因此不需要改变模型的数学结果；\texttt{register\_fake} 让编译器在 fake tensor 阶段仍能推导输出形状。
 
-\begin{reportcode}{\texttt{mcblas\_mm.py:85-103}：直接调用 mcBLAS，保持原 GEMM 语义}
-\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=85,lastline=103]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
+\begin{reportcode}{\texttt{mcblas\_mm.py:85-105}：直接调用 mcBLAS，保持原 GEMM 语义}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=85,lastline=105]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/metax/patches/mcblas_mm.py}
 \end{reportcode}
 
 \subsection{消除 prefill 每层 DtoH 同步（C500-opt10）}\label{sec:c500-sync}
@@ -576,7 +576,7 @@ BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通
 \end{figure}
 
 \subsection{prefill attention 与 host 路径（BI-A1/BI-A3/BI-A6）}\label{sec:bi-prefill}
-针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。不满足 dtype、头数、页大小或因果掩码条件的调用回退 vLLM 原生路径。内核级实测在所有 kv 长度上均快 12–20 倍。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
+针对上述瓶颈，接入 vendor ixAttnBkd 内核，并确认其 causal 语义为 bottom-right（cmt=2），与 vLLM 的 chunk prefill 对齐。不满足 dtype、因果掩码、真实滑窗、softcap、sinks、fp8 KV、cascade 或非 decoder 注意力的调用回退 vLLM 原生路径。内核级实测 kv=2048 为 434 对 5273 $\mu$s（12$\times$）、16k 为 3.5 对 36.8 ms（10.5$\times$）。配套地，builder 一次性完成每步 decode/prefill 划分，避免每层两次 D2H；KV 用自研 Triton \texttt{\_dual\_gather\_kernel} 一次完成 K+V 分页收集（bit-exact，GPU 106$\rightarrow$62 $\mu$s、host 68$\rightarrow$37 $\mu$s），varlen 分支用 out= 直写消除 copy-out，每请求发射数由 4 降为 2。
 
 \begin{reportcode}{\texttt{vendor\_flash\_attn.py:46-57}：同一 Triton program 收集一页 K 与 V}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=46,lastline=57]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/vendor_flash_attn.py}
@@ -594,7 +594,7 @@ BI-V150 的瓶颈随优化阶段发生变化。初始 16k prefill 中，vLLM 通
 
 
 \subsection{decode unified-attention 发射配置重构（BI-A7）}\label{sec:bi-a7}
-stock Triton 默认 \texttt{num\_warps=4, num\_stages=3}。扫描结果表明，该配置在 BI-V150 上并不合适，软件流水线在各 warp 档上均未带来收益。对 3D 主内核与 reduce\_segments 逐档扫描后，将 3D flash-decoding 路径固定为 w1 s1，保持 TILE=16、SEG=16，2D 路径不变；输出与 stock 逐位一致。
+stock Triton 默认 \texttt{num\_warps=4, num\_stages=3}。扫描结果表明，该配置在 BI-V150 上并不合适，软件流水线在各 warp 档上均未带来收益。对 3D 主内核与 reduce\_segments 逐档扫描后，将 3D flash-decoding 路径固定为 w1 s1，保持 TILE=16、SEG=16；2D 路径与 reduce\_segments 保持 stock 配置，输出与 stock 逐位一致。
 
 \begin{reportcode}{\texttt{decode\_attn\_pin.py:35-47}：只包住 3D 内核的发射配置，2D 路径不变}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=35,lastline=47]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_pin.py}
@@ -622,14 +622,14 @@ BI-A7 之后，decode attention 仍占整步的主要时间。在同一 harness 
 \caption{BI-A20 paged decode attention 的分段执行与归并流程\label{fig:a20-flow}}
 \end{figure}
 
-下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 归并。若第 $s$ 段得到 $(m_s,\ell_s,o_s)$，归并即
+下面的主循环展示了三个直接针对瓶颈的选择：页边界对齐后 \texttt{page} 只需标量加载；\texttt{exp2} 代替 \texttt{exp}；每段只写自己的 \texttt{SEG\_ACC/SEG\_MAX/SEG\_SUM}，最后由 combine 归并。若第 $s$ 段得到未归一的 $o_s=\sum_{t\in s}e^{x_t-m_s}v_t$ 与 $\ell_s=\sum_{t\in s}e^{x_t-m_s}$，空段取 $m_s=-\infty$、$\ell_s=o_s=0$，归并即
 \begin{equation}
 m=\max_s m_s,\qquad \ell=\sum_s \ell_s\,2^{m_s-m},\qquad o=\frac{1}{\ell}\sum_s o_s\,2^{m_s-m},\label{eq:merge}
 \end{equation}
-式~\eqref{eq:merge} 的指数以 2 为底（$\log_2 e$ 已折进 attention scale），可直接走 MUFU；归并只搬运 $(m,\ell,o)$ 三个量，不落完整 attention 矩阵，这也是 split-KV 能在近似线性的开销内完成的原因。
+式~\eqref{eq:merge} 的指数以 2 为底（$\log_2 e$ 已折进 attention scale），可直接走 MUFU；归并只搬运各段的 $(m_s,\ell_s,o_s)$，其中 $o_s$ 是 $d=128$ 的向量，不落完整 attention 矩阵，这也是 split-KV 能在近似线性的开销内完成的原因。
 
-\begin{reportcode}{\texttt{paged\_decode\_attention.py:169-193}：页对齐主循环与 base-2 在线 softmax}
-\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=169,lastline=193]{python}{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
+\begin{reportcode}{\texttt{paged\_decode\_attention.py:154-193}：页对齐主循环与 base-2 在线 softmax}
+\inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=154,lastline=193]{python}{\GemsCode/src/flag_gems/fused/paged_decode_attention.py}
 \end{reportcode}
 
 \begin{reportcode}{\texttt{paged\_decode\_attention.py:207-223}：分段结果的在线归并}
@@ -642,7 +642,7 @@ m=\max_s m_s,\qquad \ell=\sum_s \ell_s\,2^{m_s-m},\qquad o=\frac{1}{\ell}\sum_s 
 \caption{stock 3D decode 内核的单步耗时分解：loads+QK 已达实测 copy 带宽的 87\%，可消除的开销集中在 PV 的 MMA 布局转换\label{fig:decode-breakdown}}
 \end{figure}
 
-BI-A20 阶段的页对齐微基准中，stock 为 0.939 ms/层、286 GB/s，BI-A20 为 0.588 ms/层、457 GB/s，加速比 1.60$\times$（图~\ref{fig:decode-bw}）；等长与 ragged 的最大误差分别为 $3.05\times10^{-5}$ 和 $6.10\times10^{-5}$。两组官方 A/B 的 4k 结果为：BI-A7 3855.31→BI-A20 4087.91（+6.0\%），BI-A7 3840.80→BI-A20 4722.22（+22.9\%）；16k 结果为：BI-A7 3568.31→BI-A20 4520.19（+26.7\%），BI-A7 3570.61→BI-A20 4520.10（+26.6\%）。两组 16k TTFT 分别为 111.64 s 和 111.67 s，较 BI-A7 降低 18.5\% 和 18.4\%。该阶段两次 MATH-500 Level 3 为 96.19\% 和 98.1\%。
+BI-A20 阶段的页对齐微基准中，stock 为 0.939 ms/层、286 GB/s，BI-A20 为 0.588 ms/层、457 GB/s，加速比 1.60$\times$（图~\ref{fig:decode-bw}）；等长与 ragged 的最大误差分别为 $3.05\times10^{-5}$ 和 $6.10\times10^{-5}$。两组官方 A/B 的 4k 结果为：BI-A7 3855.31→BI-A20 4087.91（+6.0\%），BI-A7 3840.80→BI-A20 4722.22（+22.9\%）；16k 结果为：BI-A7 3568.31→BI-A20 4520.19（+26.7\%），BI-A7 3570.61→BI-A20 4520.10（+26.6\%）。两组 16k TTFT 分别为 111.64 s 和 111.67 s，较 BI-A7 降低 18.5\% 和 18.4\%。该阶段的 A/B 只测吞吐，精度沿用同一代码路径的交付栈测量：BI-V150 为 98.1\%（103/105，见 \secref{sec:throughput}）。
 
 \begin{figure}[!htbp]
 \centering
@@ -653,13 +653,13 @@ BI-A20 阶段的页对齐微基准中，stock 为 0.939 ms/层、286 GB/s，BI-A
 两组 A7/A20 同日对照与后续各阶段的对照一并画在图~\ref{fig:bi-stage} 中。
 
 \subsection{批量一致性与路径检查}\label{sec:bi-check}
-每个（seq, kv\_head, segment）只依赖自身的 q、KV 页和 seq\_lens，段长仅由序列长度决定。交付中的 \path{tests/test_paged_decode_attention.py} 包含 8 个 fp32 参考对照用例和一个批量不变性用例，在 BI-V150 上实测 \textbf{9 passed}。批量测试覆盖单条、两条、半批、全批和逆序全批，并重复执行同一批组成。混合步的 decode 切片每 4000 次调用记录 used/skipped；当前日志为 used=132000、skipped=0。
+每个（seq, kv\_head, segment）只依赖自身的 q、KV 页和 seq\_lens，段长仅由序列长度决定。交付中的 \path{tests/test_paged_decode_attention.py} 包含 8 个 fp32 参考对照用例和一个批量不变性用例，在 BI-V150 上实测 \textbf{9 passed}。批量测试覆盖单条（首、尾）、三条、半批、全批和逆序全批。这些用例的容差为 atol=2e-2、rtol=1.6e-2，只用于捕捉结构性错误；精度证据来自上文的独立 fp32 对照微基准。混合步的 decode 切片每 4000 次调用记录 used/skipped；当前日志为 used=132000、skipped=0。
 
 \begin{reportcode}{\texttt{decode\_attn\_fast.py:186-205}：混合步 decode 切片的资格检查、计数与异常回退}
 \inputminted[linenos,fontsize=\scriptsize,breaklines,tabsize=4,firstline=186,lastline=205]{python}{\PluginCode/vllm_fl/dispatch/backends/vendor/iluvatar/impl/decode_attn_fast.py}
 \end{reportcode}
 
-满足形状与特征条件时进入新内核；遇到不支持的特征或异常则回到原实现。used 在内核执行前递增，表示通过资格检查并尝试 fast path；同时检查了 fallback 日志，未出现 decode fast-path 异常回退。
+满足 $q$ 头数 16、$d=128$、KV 头数 2、batch $\le$ 64、页大小 16、bf16/fp16 且无 alibi/sinks 等特征时进入新内核；遇到不支持的特征或异常则回到原实现。used 在内核执行前递增，表示通过资格检查并尝试 fast path；同时检查了 fallback 日志，未出现 decode fast-path 异常回退。
 
 \subsection{配置缓存与单表反射（BI-A31）}\label{sec:bi-a31}
 设备 trace 显示，部分反复间隙出现在 \texttt{\_index\_linearized\_jit\_function} 之前。进一步对 \texttt{ModelRunnerFL.execute\_model} 做 cProfile，发现这些间隙主要来自算子配置读取和 SQLAlchemy 模型反射，而不是 index kernel 本身：原版 \texttt{get\_config} 累计约 65.14 s，全库 reflection 约 53.76 s。该问题属于执行线程中的配置与元数据开销，不能通过单纯加快 attention kernel 解决。host 调用路径见图~\ref{fig:a31-path}，开销与端到端效果见图~\ref{fig:a31}。
@@ -694,7 +694,7 @@ BI-A31 在 \texttt{utils/libentry.py} 中为同一 shape 的配置和缺失结�
 \resizebox{\linewidth}{!}{%
 \input{fig-a31-path.tex}
 }
-\caption{BI-A31 的 host 调用路径：优化前每个新 shape 都要走一次全库 automap 反射再查库，profile 窗口内累计 65.14 s 与 53.76 s；优化后命中进程内缓存直接返回，缺失时只反射目标表\label{fig:a31-path}}
+\caption{BI-A31 的 host 调用路径：优化前每个新 shape 都要查一次库，首次遇到某张表还要做一次全库 automap 反射（8 张表），profile 窗口内累计 65.14 s 与 53.76 s；优化后同 shape 命中进程内缓存直接返回，新表只反射目标表\label{fig:a31-path}}
 \end{figure}
 
 BI-A31 的 MATH-500 Level 3 为 98.1\%，105/105 请求成功、0 错误。4k 的提升来自减少配置和 host 开销。16k 的原版配置获取仍累计约 48.47 s，但 BI-A31 后总 host 时间仅从 148.42 s 降至 141.48 s，attention metadata、copy 与设备计算成为主要部分，因此 16k 官方吞吐基本持平，4k 的收益未在 16k 重现。原始证据见 \path{docs/experiments/runs/a31-config-local-cache/}。
@@ -712,10 +712,10 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
   \foreach \y in {0.3,0.6,...,2.71} \draw[mainblue!18] (0,\y) -- (5.2,\y);
   \foreach \y in {1.5,1.8,2.1,2.4} \fill[accentred!70] (1.7,\y+0.04) rectangle (3.0,\y+0.26);
   \draw[accentred, thick, dashed] (1.62,1.44) rectangle (3.08,2.76);
-  \node[above] at (2.6,3.0) {原布局 $B[K,N]$，行主序};
+  \node[above] at (2.6,3.0) {原布局：$B[K,N]$ 的转置视图（K 连续）};
   \draw[<->, codegray] (-0.22,0) -- (-0.22,3.0) node[midway, left] {$K$};
   \draw[<->, codegray] (0,-0.22) -- (5.2,-0.22) node[midway, below] {$N$};
-  \node[accentred, align=left, anchor=west, fill=mainblue!4, inner sep=1.5pt] at (3.2,2.1) {一个 tile：\\$BK$ 个行段\\行距 $N$};
+  \node[accentred, align=left, anchor=west, fill=mainblue!4, inner sep=1.5pt] at (3.2,2.1) {一个 tile：$N/BN$ 段 × $BK$ 元素\\段距 $N$};
   % ---- arrow ----
   \draw[flowarrow] (5.75,1.5) -- (7.55,1.5) node[midway, above, align=center, text=mainblue] {预打包一次\\并缓存};
   % ---- right: tile-packed layout ----
@@ -753,7 +753,7 @@ BI-A60 保留上述数值路径，仅改变 B 矩阵的物理布局。设 \(BK=3
 \end{tabular*}
 \end{table}
 
-该轮 MATH-500 Level 3 为 96.19\%，16k TTFT 相比 A48 对照增加 7.61\%，但仍远低于官网基线及其 +1\% 上限。官网约束按表~\ref{tab:ttft} 判定。
+该轮未单独测精度；同一路径的交付栈为 98.1\%（103/105）。16k TTFT 相比 A48 对照增加 7.61\%，但仍远低于官网基线及其 +1\% 上限。官网约束按表~\ref{tab:ttft} 判定。
 
 镜像基线重放后的 A20+A31+A48+A60 组合结果统一列于表~\ref{tab:throughput} 和表~\ref{tab:ttft}，测量与交付版本见表~\ref{tab:environment}。它们与上表的公开 tag 开发期对照分开报告。原始 CSV、日志与精度报告在附录证据索引中分别归入 A60 和镜像对齐记录。
 
