@@ -123,7 +123,7 @@
 \setlength{\parindent}{2em}
 本研究在 FlagOS 上优化 MiniCPM5-2B 于天数 BI-V150 和沐曦曦云 C500 的推理吞吐。模型、服务参数和评测脚本保持官方设置。C500 优化采样、矩阵乘法（GEMM）布局与 prefill 元数据；BI-V150 接入厂商 attention、重写分页 decode attention，并优化配置查询和门控矩阵乘法。
 
-C500 最终交付提交的 4k/16k 总吞吐为 12451.84/11097.29 tok/s，分别达到官网基线的 2.45/1.58 倍。BI-V150 父提交（2026-11-11）的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍，交付提交复测为 5191.26/4511.90 tok/s（\secref{sec:repro-notes}）。按官方指标取两场景平均，C500 为 11774.57 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。C500 最终提交的 MATH-500 Level 3 为 96.19\%，早期交付栈为 98.1\%；BI 父提交为 98.1\%、交付提交复测为 97.1\%；C500 最终复测的平均 TTFT 为 1616.56/17980.89 ms（4k/16k）。
+C500 最终交付提交的 4k/16k 总吞吐为 12451.84/11097.29 tok/s，分别达到官网基线的 2.45/1.58 倍。BI-V150 父提交（2026-11-11）的镜像对齐测量为 5292.46/4618.41 tok/s，分别达到官网基线的 2.61/5.05 倍；交付提交在官方统一复验的 FlagTree 0.7.1a2 上复测为 5045.20/4401.06 tok/s（\secref{sec:repro-notes}）。按官方指标取两场景平均，C500 为 11774.57 tok/s，是官网基线的 1.94 倍（图~\ref{fig:headline}）。C500 最终提交的 MATH-500 Level 3 为 96.19\%，早期交付栈为 98.1\%；BI 父提交为 98.1\%、交付提交复测为 97.1\%；C500 最终复测的平均 TTFT 为 1616.56/17980.89 ms（4k/16k）。
 
 C500 数值测于交付提交（实测提交 \texttt{d69e766} 与交付提交 \texttt{e4b5854} 仅差注释），服务参数与官网命令完全一致，未设置额外环境变量。BI 数值测于交付提交的父提交，后续提交只规范换行并调整 Metax 侧默认开关，BI 路径未改动；交付提交的复测见 \secref{sec:repro-notes}。
 
@@ -153,7 +153,7 @@ C500 数值测于交付提交（实测提交 \texttt{d69e766} 与交付提交 \t
 
 This report optimizes the inference throughput of MiniCPM5-2B on the Iluvatar BI-V150 and the MetaX C500 within the FlagOS stack. The model, the serving parameters and the evaluation scripts follow the official settings. On C500 we optimize the sampling chain, the GEMM weight layout and the prefill metadata; on BI-V150 we integrate the vendor attention kernel, rewrite the paged decode attention, and reduce configuration lookup and gated-MLP overhead.
 
-The final C500 submission reaches 12451.84/11097.29 tok/s at 4k/16k, i.e. 2.45$\times$/1.58$\times$ the official baseline. The BI-V150 parent commit measures 5292.46/4618.41 tok/s (2.61$\times$/5.05$\times$), and the re-test on the delivered commit gives 5191.26/4511.90 tok/s (\secref{sec:repro-notes}). Averaged over the two scenarios as required by the official metric, C500 reaches 11774.57 tok/s, 1.94$\times$ the baseline (Fig.~\ref{fig:headline}). MATH-500 Level 3 accuracy is 96.19\% on the final C500 submission (98.1\% on an earlier stack), 98.1\% on the BI parent commit and 97.1\% on the re-test. Mean TTFT on the final C500 submission is 1616.56/17980.89 ms at 4k/16k.
+The final C500 submission reaches 12451.84/11097.29 tok/s at 4k/16k, i.e. 2.45$\times$/1.58$\times$ the official baseline. The BI-V150 parent commit measures 5292.46/4618.41 tok/s (2.61$\times$/5.05$\times$), and the delivered commit gives 5045.20/4401.06 tok/s on the official re-verification compiler build, FlagTree 0.7.1a2 (\secref{sec:repro-notes}). Averaged over the two scenarios as required by the official metric, C500 reaches 11774.57 tok/s, 1.94$\times$ the baseline (Fig.~\ref{fig:headline}). MATH-500 Level 3 accuracy is 96.19\% on the final C500 submission (98.1\% on an earlier stack), 98.1\% on the BI parent commit and 97.1\% on the re-test. Mean TTFT on the final C500 submission is 1616.56/17980.89 ms at 4k/16k.
 
 C500 numbers were measured on the delivered commit, whose measured binary differs from the shipped one only in comments, using the official command line and no extra environment variables. BI-V150 numbers were measured on the parent commit; later commits only normalize line endings and adjust Metax-side defaults, leaving the BI execution path unchanged. The delivered commit was re-tested on BI-V150 on 2026-11-17 (see \secref{sec:repro-notes}).
 
@@ -245,7 +245,7 @@ TTFT 要求 & 不得超过基线的 $+1\%$\\
 \bottomrule
 \end{tabular*}
 \par\vspace{3pt}{\footnotesize\raggedright
-注：BI-V150 各值均为交付提交父提交（插件 \texttt{58bae94}、FlagGems \texttt{85b4ba82}）在 2026-11-11 的测量，其中 4k 取三次独立测量的中位数、16k 为唯一一次四轮测量；交付提交的复测值（4k 5191.26、16k 4511.90 tok/s）见 \secref{sec:repro-notes}。“相对官网”列不受参照选择影响。“相对原生栈”列取 2026-10-25 同实例复测；同栈在 2026-09-22 的另一组复测为 4763.32/7043.35 tok/s（16k 按脚本汇总口径与官网基线相差 +0.19\%，按四轮均值口径为 +0.13\%），两次相差 13\%--20\%，该列随参照在 2.61--2.96$\times$ 与 1.58--1.89$\times$ 之间变化。表中“平均”行的倍数由两场景平均吞吐相除得到，不是两个场景倍数的算术平均。\par}
+注：BI-V150 各值均为交付提交父提交（插件 \texttt{58bae94}、FlagGems \texttt{85b4ba82}）在 2026-11-11 的测量，其中 4k 取三次独立测量的中位数、16k 为唯一一次四轮测量；交付提交在 0.6.2a3 上的复测值为 4k 5191.26、16k 4511.90 tok/s，在官方复验版本 FlagTree 0.7.1a2 上为 5045.20 / 4401.06 tok/s，均见 \secref{sec:repro-notes}。“相对官网”列不受参照选择影响。“相对原生栈”列取 2026-10-25 同实例复测；同栈在 2026-09-22 的另一组复测为 4763.32/7043.35 tok/s（16k 按脚本汇总口径与官网基线相差 +0.19\%，按四轮均值口径为 +0.13\%），两次相差 13\%--20\%，该列随参照在 2.61--2.96$\times$ 与 1.58--1.89$\times$ 之间变化。表中“平均”行的倍数由两场景平均吞吐相除得到，不是两个场景倍数的算术平均。\par}
 \end{table}
 
 \begin{figure}[!htbp]
@@ -330,11 +330,11 @@ CPU / 内存 & Xeon Gold 6330 / 503 GiB & 型号未采集 / 128 GiB \\
 PyTorch & 2.10.0+corex.4.5.0 & 2.8.0+metax3.7.0.7 \\
 框架 / 编译器 & vLLM 0.24.0 / Triton 3.6.0 & vLLM 0.24.0 / Triton 3.0.0+metax3.7.0.7 \\
 芯片栈 / 驱动 & IX-ML 4.4.0 / 4.5.0 & MACA 3.7.0.38 / 3.8.30 \\
-软件包 & FlagTree 0.6.2a3+iluvatar3.6；evalscope 1.11.1 & evalscope 1.11.1 \\
+软件包 & FlagTree 0.7.1a2+iluvatar3.6（官方统一复验版本）；evalscope 1.11.1 & 镜像环境，未安装 flagtree；evalscope 1.11.1 \\
 性能测量提交 & 58bae94 / 85b4ba82 & d69e766 / ef516137 \\
 精度测量提交 & 58bae94 / 85b4ba82 & d69e766 / ef516137 \\
 交付提交 & e4b5854 / ef516137 & e4b5854 / ef516137 \\
-测量日期 & 2026-11-11 & 2026-11-16 \\
+测量日期 & 2026-11-11；官方复验版本 2026-11-19 & 2026-11-16；官方口径 2026-11-19 \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -984,6 +984,8 @@ python3 /workspace/vllm-plugin-FL/benchmarks/benchmark_throughput_serve.py \
 
 {\sloppy\hbadness=10000 \item \textbf{BI-V150 交付提交复测。}2026-11-17 在 BI-V150（32 GB）上，按交付包 \texttt{readme.md} 的原始安装命令（\texttt{pip install --no-build-isolation .}，非可编辑）安装交付 ZIP 解包出的源码树，再用官方启动命令与官方评测脚本完成 4k/16k 各四轮与 MATH-500：4k 逐轮 5153.39 / 5202.97 / 5184.00 / 5186.80，后三轮均值 \textbf{5191.26 tok/s}、TTFT 4050.56 ms；16k 逐轮 4444.74 / 4514.34 / 4512.79 / 4508.57，后三轮均值 \textbf{4511.90 tok/s}、TTFT 111878.60 ms；精度 \textbf{97.1\%}（102/105 正确，105/105 请求成功），prefix cache 峰值 0.3\%，KV 池 523,344 tokens。同日另一次可编辑安装的复测为 5162.05/4515.29 tok/s、98.1\%，两次相差小于 0.6\%，两者的 4k 值都落在父提交 11-11 三次 4k 测量（5131.78/5292.46/5292.99）的区间内，16k 均比父提交单次低约 2.3\%，因此表~\ref{tab:throughput} 与表~\ref{tab:ttft} 仍取父提交中位数。复测中确认了上游 \texttt{setup.py} 的 \texttt{find\_packages} 不会打包缺 \texttt{\_\_init\_\_.py} 的 \texttt{flag\_gems/fused/DSA}，交付包已补占位文件，本次非可编辑安装后可正常导入。证据见文档仓库 \path{docs/experiments/runs/bi-final-official-replay-20261117/} 与 \path{docs/experiments/runs/bi-final-retest-20261117/}。
 \item \textbf{C500 官方口径复测。}2026-11-19 在 C500 上按官网启动命令追加 \path{--no-enable-prefix-caching}（官方性能复核口径）重测 4k/16k：逐轮 11234.24 / 12479.51 / 12458.26 / 12353.16 与 11098.84 / 11109.47 / 11108.61 / 11100.18，后三轮均值 \textbf{12430.31} / \textbf{11106.09 tok/s}、TTFT 1625.04 / 17996.83 ms，prefix cache 命中率 0.0\%，KV 池 1,202,096 tokens。与默认命令的 12451.84 / 11097.29 相差 $-0.17\%$ / $+0.08\%$，说明该开关对本提交无实质影响。证据见 \path{docs/experiments/runs/c500-official-flag-20261119/}。
+
+\item \textbf{官方复验版本（FlagTree 0.7.1a2）复测。}2026-11-19 在 BI-V150 上按赛事方指定装 \texttt{flagtree==0.7.1a2+iluvatar3.6}（源：\path{resource.flagos.net}），安装与启动命令不变，重测 4k/16k：逐轮 4048.35 / 4796.58 / 5101.64 / 5237.38 与 4187.75 / 4394.57 / 4390.72 / 4417.88，后三轮均值 \textbf{5045.20} / \textbf{4401.06 tok/s}、平均 TTFT 4149.48 / 115735.63 ms，KV 池 522{,}032 tokens。与 0.6.2a3 下的 5191.26 / 4511.90 相比低 2.81\% / 2.46\%，TTFT 高 2.44\% / 3.45\%。两次 MATH-500 Level 3 分别为 95.24\%（100/105）与 98.10\%（103/105），落在该设置的历史波动区间内。两版编译器下内核级探针结果一致（A20 最大误差 $5.4\times10^{-4}$、A48/A60 为 $3.9\times10^{-3}$），差异集中在端到端吞吐；由于两次测量不在同一实例上，不能把全部差异归因于编译器。证据见 \path{docs/experiments/runs/bi-flagtree-071a2/}。
 \par}
 \end{enumerate}
 

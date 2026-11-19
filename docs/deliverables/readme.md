@@ -37,7 +37,7 @@ git clone --single-branch --branch integration/flaggems \
 
 **C500 最终提交实测版本（64GB GPU / 128GB RAM）**：2026-11-16 在交付 commit `e4b5854` / `ef516137` 上完成 4k、16k 各四轮测试，实测二进制 `d69e766` 与 `e4b5854` 只差注释。服务命令与官网一致，未设额外环境变量；早期默认开启的启动期 GEMM 预热已改为可选、默认关闭。4k 后三轮均值 **12451.84 tok/s**，16k **11097.29 tok/s**，MATH-500 **96.19%**（101/105）。同日双布局提交 `58b750e` 的另一次评测为 103/105（98.1%），差异更可能来自 temperature=1.0 的采样随机性；2026-10-25 的早期交付栈两次也是 98.1%。逐轮数据、日志与 manifest 见 `docs/experiments/runs/c500-optimization-program/final-c500-warmup-off-20261116-003450-summary.md`。
 
-下表中的 BI-V150 数值取自父提交（2026-11-11）。2026-11-17 按本说明的安装与评测命令在 BI-V150 上复测：4k/16k 后三轮均值 5191.26/4511.90 tok/s，TTFT 4050.56/111878.60 ms，MATH-500 97.1%（102/105 正确，105/105 请求成功）。4k 落在 11-11 三次测量（5131.78/5292.46/5292.99）的区间内，16k 比单次 4618.41 低 2.3%；同日可编辑安装下另测一次为 5162.05/4515.29 tok/s、98.1%，两次差 0.6% 以内。数据与日志见 `docs/experiments/runs/bi-final-official-replay-20261117/` 与 `docs/experiments/runs/bi-final-retest-20261117/`。
+下表中的 BI-V150 数值取自父提交（2026-11-11）。2026-11-17 按本说明的安装与评测命令在 BI-V150 上复测：4k/16k 后三轮均值 5191.26/4511.90 tok/s，TTFT 4050.56/111878.60 ms，MATH-500 97.1%（102/105 正确，105/105 请求成功）。4k 落在 11-11 三次测量（5131.78/5292.46/5292.99）的区间内，16k 比单次 4618.41 低 2.3%；同日可编辑安装下另测一次为 5162.05/4515.29 tok/s、98.1%，两次差 0.6% 以内。数据与日志见 `docs/experiments/runs/bi-final-official-replay-20261117/` 与 `docs/experiments/runs/bi-final-retest-20261117/`。2026-11-19 按赛事方口径把 FlagTree 升到 `0.7.1a2+iluvatar3.6` 后复测交付提交：4k/16k 后三轮均值 **5045.20 / 4401.06 tok/s**、平均 TTFT 4149.48 / 115735.63 ms，比 0.6.2a3 低 2.81% / 2.46%；两次 MATH-500 Level 3 为 95.24% 与 98.10%（100/105、103/105），证据见 `docs/experiments/runs/bi-flagtree-071a2/`。
 
 ## 0.1 环境要求与启动耗时
 
@@ -48,6 +48,7 @@ git clone --single-branch --branch integration/flaggems \
 | **CPU 内存（最终实测实例）** | 503 GiB | 128 GiB；**复现建议 ≥128 GB**（见下） |
 | PyTorch | 2.10.0+corex.4.5.0 | 2.8.0+metax3.7.0.7 |
 | vLLM / Triton | 0.24.0 / 3.6.0 | 0.24.0 / 3.0.0+metax3.7.0.7 |
+| FlagTree | 0.7.1a2+iluvatar3.6（官方统一复验版本） | 未安装（镜像环境） |
 | 芯片软件栈 | IX-ML 4.4.0，驱动 4.5.0 | MACA 3.7.0.38，驱动 3.8.30 |
 | evalscope | 1.11.1 | 1.11.1 |
 | 启动命令中的 `--compilation-config` | `{"cudagraph_mode": "FULL_DECODE_ONLY"}` | **不要加**（与官方一致） |
@@ -398,8 +399,9 @@ PY
 | BI-V150 镜像对齐最终复测 | `docs/experiments/runs/image-baseline-align/` 下的 `bench-evidence.tar.gz`、`eval-evidence.tar.gz`、`tests.tar.gz` 与 `manifest.txt` |
 | 双平台环境与固定提交 | 两目录各自的 `manifest.txt`；C500 为 `healthy-final-manifest.txt` |
 | BI-V150 交付提交复测（2026-11-17） | `docs/experiments/runs/bi-final-official-replay-20261117/`（按官方安装与评测命令的完整回放：安装日志、逐轮 CSV、bench/serve/eval 日志、MATH-500 JSON、manifest）与 `docs/experiments/runs/bi-final-retest-20261117/`（同日可编辑安装的对照） |
+| BI 官方复验版本（FlagTree 0.7.1a2，2026-11-19） | `docs/experiments/runs/bi-flagtree-071a2/`：安装日志、内核探针、逐轮 CSV、bench/serve/eval 日志、两次 MATH-500 JSON 与 manifest |
 | C500 官方口径复测（2026-11-19） | `docs/experiments/runs/c500-official-flag-20261119/` 下的 `raw_runs_20261119_112157.csv`、`summary_20261119_112157.csv`、`bench.log`、`serve.log` 与 `manifest.txt`（启动命令追加 `--no-enable-prefix-caching`） |
 
 官网基线来源为[赛道二页面](https://flagos.io/race-detail-season2?id=539vlt2p&lang=cn)“4.3 评审方案”的两张基线表（访问日期 2026-11-11）。原图归档于 `docs/deliverables/latex/official_baseline_biv150.png` 和 `official_baseline_c500.png`，报告附录给出原始图片链接。
 
-天数最终 FlagGems 基线以镜像提交 `4df52d91` 为准，而不是公开 tag 另外包含的 7 个提交；FlagTree 保持镜像的 `0.6.2a3+iluvatar3.6`。
+天数最终 FlagGems 基线以镜像提交 `4df52d91` 为准，而不是公开 tag 另外包含的 7 个提交；FlagTree 按赛事方口径升到 `0.7.1a2+iluvatar3.6`（镜像原为 `0.6.2a3`），C500 维持镜像环境、未安装 flagtree。两版 FlagTree 的数据都在第 5 节索引里。

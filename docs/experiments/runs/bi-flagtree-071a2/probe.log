@@ -1,0 +1,8 @@
+triton=3.6.0 torch=2.10.0
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:738: DeprecationWarning: use_cuda_graph is deprecated; use benchmark_mode='replay' or benchmark_mode='event'
+  super().__init__(*args, **kwargs)
+/usr/local/lib/python3.12/site-packages/flag_gems/utils/libentry.py:421: RuntimeWarning: active Triton backend does not provide a registered replay benchmarker; falling back to event timing
+  resolved_benchmark = resolve_benchmarker(
+[PASS] A20 paged decode: max|diff|=5.365e-04 (bf16 容差 5e-2)
+[PASS] A48/A60 gated MLP: max|diff|=3.905e-03
+PROBE_OK

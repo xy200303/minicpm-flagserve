@@ -1,0 +1,12 @@
+date=2026-11-19
+host=6d56ac5d7842
+flagtree=0.7.1a2+iluvatar3.6
+triton=3.6.0
+torch=2.10.0
+vllm=INFO 11-19 21:11:21 [__init__.py:44] Available plugins for group vllm.platform_plugins:
+INFO 11-19 21:11:21 [__init__.py:46] - fl -> vllm_fl:register
+INFO 11-19 21:11:21 [__init__.py:58] Loading plugin fl
+INFO 11-19 21:11:28 [__init__.py:237] Platform plugin fl is activated
+0.24.0
+zip_md5=5b7bbcb5d7e5a22ddf77a8e5413833e2
+(EngineCore pid=8820) INFO 11-19 19:51:59 [kv_cache_utils.py:2146] GPU KV cache size: 522,032 tokens

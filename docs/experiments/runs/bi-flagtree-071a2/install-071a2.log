@@ -1,0 +1,12 @@
+Looking in indexes: https://mirrors.aliyun.com/pypi/simple
+Processing /workspace/flagtree-0.7.1a2+iluvatar3.6-cp312-cp312-linux_x86_64.whl
+Installing collected packages: flagtree
+  Attempting uninstall: flagtree
+    Found existing installation: flagtree 0.7.1a2+iluvatar3.6
+    Uninstalling flagtree-0.7.1a2+iluvatar3.6:
+      Successfully uninstalled flagtree-0.7.1a2+iluvatar3.6
+Successfully installed flagtree-0.7.1a2+iluvatar3.6
+WARNING: Running pip as the 'root' user can result in broken permissions and conflicting behaviour with the system package manager, possibly rendering your system unusable. It is recommended to use a virtual environment instead: https://pip.pypa.io/warnings/venv. Use the --root-user-action option if you know what you are doing and want to suppress this warning.
+
+[notice] A new release of pip is available: 26.1.2 -> 26.3
+[notice] To update, run: pip install --upgrade pip
