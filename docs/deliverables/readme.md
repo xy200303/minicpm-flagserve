@@ -370,6 +370,7 @@ PY
 | `pip check` 报 setuptools 版本不符 | 插件要求 `>=77.0.3,<81`、FlagGems 要求 `>=64,<77`，两者没有交集 | 按 4.1 的顺序分两次安装；装完可执行 `pip install "setuptools>=77.0.3,<81"` 恢复，不影响已装好的两个包 |
 | C500 启动阶段进程被杀 | 64 GB CPU 内存实例在 Inductor 编译期触顶，纯镜像原版同样会复现 | 换 ≥128 GB 内存的实例 |
 | 吞吐偏高且 TTFT 异常低 | prefix cache 命中（benchmark 用 seed=0） | 新起 serve 重测，或换 `input_len` 后再测 |
+| 日志出现 `does not provide a registered replay benchmarker` | Triton 的 replay 基准白名单按驱动模块名硬编码，天数驱动不在名单内，属预期降级 | **不要**自行给它加白名单：实测开启后前两轮请求返回 0 tok/s（graph replay 与服务的 CUDA graph 捕获冲突），保持默认即可 |
 | 首次启动或首轮很慢 | Triton 内核首次遇到形状时 JIT 编译 | 正常现象；官方脚本弃首轮，报告值取后三轮 |
 | BI 上出现 `patch failed` 或回退记录 | 插件路由未命中，走了原始路径 | 核对启动时 `VLLM_PLUGINS=fl`、安装路径与 4.7 节的生效检查项 |
 
