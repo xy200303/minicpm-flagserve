@@ -370,7 +370,7 @@ PY
 | `pip check` 报 setuptools 版本不符 | 插件要求 `>=77.0.3,<81`、FlagGems 要求 `>=64,<77`，两者没有交集 | 按 4.1 的顺序分两次安装；装完可执行 `pip install "setuptools>=77.0.3,<81"` 恢复，不影响已装好的两个包 |
 | C500 启动阶段进程被杀 | 64 GB CPU 内存实例在 Inductor 编译期触顶，纯镜像原版同样会复现 | 换 ≥128 GB 内存的实例 |
 | 吞吐偏高且 TTFT 异常低 | prefix cache 命中（benchmark 用 seed=0） | 新起 serve 重测，或换 `input_len` 后再测 |
-| 日志出现 `does not provide a registered replay benchmarker` | Triton 的 replay 基准白名单按驱动模块名硬编码，天数驱动不在名单内，属预期降级 | 不需要处理。实测给它加白名单后警告消失、但 4k 吞吐只差 +0.20%（5045.20 → 5055.47），无实质收益，且属改动 FlagTree 安装包，不建议动；见 `docs/experiments/runs/bi-replay-benchmark-probe/` |
+| 日志出现 `does not provide a registered replay benchmarker` | Triton 的 replay 基准白名单按驱动模块名硬编码，天数驱动不在名单内，属预期降级 | 不需要处理。实测加白名单后警告消失、4k 吞吐只差 +0.20%（5045.20 → 5055.47），但**服务启动从约 218s 拉长到 270s 以上**（graph replay 逐 config 捕获 CUDA graph），属改动 FlagTree 安装包且无收益，不建议动；见 `docs/experiments/runs/bi-replay-benchmark-probe/` |
 | 首次启动或首轮很慢 | Triton 内核首次遇到形状时 JIT 编译 | 正常现象；官方脚本弃首轮，报告值取后三轮 |
 | BI 上出现 `patch failed` 或回退记录 | 插件路由未命中，走了原始路径 | 核对启动时 `VLLM_PLUGINS=fl`、安装路径与 4.7 节的生效检查项 |
 
